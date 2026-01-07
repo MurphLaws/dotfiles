@@ -1,0 +1,14 @@
+# Font Configuration
+font-family = JetBrainsMono NF SemiBold
+
+# Changed from SemiBold to Bold
+font-size = 20
+font-thicken = true
+
+# Theme
+theme = banana blueberry
+
+# Transparency
+background-opacity = 0.95
+background-blur-radius = 20
+keybind = shift+enter=text:\x1b\r
