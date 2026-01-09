@@ -75,9 +75,9 @@ return {
 			{
 				"<leader>po",
 				function()
-					require("snacks").picker.files({ cwd = "~/notes", glob = "*.norg" })
+					require("snacks").picker.files({ cwd = "~/orgfiles", glob = "*.org" })
 				end,
-				desc = "Find Neorg Files",
+				desc = "Find Org Files",
 			},
 			{
 				"<leader>ps",
