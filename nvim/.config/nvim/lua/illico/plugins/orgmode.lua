@@ -4,14 +4,20 @@ return {
 	ft = { "org" },
 	dependencies = {
 		{ "nvim-treesitter/nvim-treesitter", lazy = true },
-		-- Plugin para "embellecer" los símbolos (bullets, headlines)
 		{ "akinsho/org-bullets.nvim", config = true },
 	},
 	config = function()
-		-- Configuración de Org-Bullets (El "Concealer Bonito")
+		-- 1. DEFINE PATHS
+		local local_path = os.getenv("HOME") .. "/orgfiles"
+		local icloud_path = os.getenv("HOME")
+			.. "/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org"
+
+		local local_refile_file = local_path .. "/refile.org"
+		local phone_refile_file = icloud_path .. "/phone-refile.org"
+
+		-- 2. SETUP ORG-BULLETS
 		require("org-bullets").setup({
 			symbols = {
-				-- Puedes personalizar los iconos aquí si quieres
 				list = "•",
 				headlines = { "◉", "○", "✸", "✿" },
 				checkboxes = {
@@ -22,42 +28,32 @@ return {
 			},
 		})
 
-		-- Configuración Principal de Orgmode
+		-- 3. SETUP ORGMODE
 		require("orgmode").setup({
-			org_agenda_files = { "~/orgfiles/**/*" },
-			org_default_notes_file = "~/orgfiles/refile.org",
+			-- Agenda looks at BOTH your local folder and your iCloud/Beorg folder
+			org_agenda_files = {
+				local_path .. "/**/*",
+				icloud_path .. "/**/*",
+			},
 
-			-- Ocultar los marcadores de formato (*bold*, /italic/, _underline_)
-			-- Esto hace que el texto se vea limpio como en un procesador de texto.
+			-- Default capture goes to local machine
+			org_default_notes_file = local_refile_file,
+
 			org_hide_emphasis_markers = true,
 
-			-- UI básica
-			ui = {
-				menu = {
-					handler = function(data)
-						local options = {}
-						for _, item in ipairs(data.items) do
-							table.insert(options, item.label .. " " .. item.desc)
-						end
-						vim.ui.select(options, {
-							prompt = data.prompt,
-						}, function(choice, idx)
-							if choice then
-								data.items[idx].action()
-							end
-						end)
-					end,
-				},
-			},
+			-- Note: <leader>oa (Agenda) and <leader>oc (Capture) are enabled by default
 		})
 
-		-- Mapeos esenciales (Agenda y Captura)
-		vim.keymap.set("n", "<leader>oa", function()
-			require("orgmode").action("agenda.prompt")
-		end, { desc = "Org Agenda" })
+		-- 4. CUSTOM KEYMAPS (Only the ones you invented)
 
-		vim.keymap.set("n", "<leader>oc", function()
-			require("orgmode").action("capture.prompt")
-		end, { desc = "Org Capture" })
+		-- <leader>or -> Opens Local Refile
+		vim.keymap.set("n", "<leader>or", function()
+			vim.cmd.edit(local_refile_file)
+		end, { desc = "Edit Local Refile" })
+
+		-- <leader>op -> Opens Phone (Beorg) Refile
+		vim.keymap.set("n", "<leader>op", function()
+			vim.cmd.edit(phone_refile_file)
+		end, { desc = "Edit Phone Refile" })
 	end,
 }
