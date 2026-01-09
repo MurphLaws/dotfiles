@@ -5,17 +5,16 @@ return {
 	dependencies = {
 		{ "nvim-treesitter/nvim-treesitter", lazy = true },
 		{ "akinsho/org-bullets.nvim", config = true },
-		-- Extensión vital para usar Telescope en Orgmode
-		{ "nvim-orgmode/telescope-orgmode.nvim" },
+		{ "nvim-telescope/telescope.nvim" },
 	},
 	config = function()
-		-- 1. DEFINE PATHS (Todo centralizado en iCloud para Beorg)
-		-- Ruta real de iCloud Drive para Beorg
+		-- 1. DEFINE PATHS
+		local local_path = os.getenv("HOME") .. "/orgfiles"
+		-- Ruta larga de iCloud
 		local icloud_path = os.getenv("HOME")
 			.. "/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org"
 
-		-- Definimos los dos archivos principales de refile
-		-- IMPORTANTE: Renombra tu archivo 'refile.org' a 'macbook-refile.org' en Finder/iCloud
+		-- Definición de archivos específicos (Basado en tus nombres preferidos)
 		local macbook_refile_file = icloud_path .. "/macbook-refile.org"
 		local phone_refile_file = icloud_path .. "/phone-refile.org"
 
@@ -32,80 +31,161 @@ return {
 			},
 		})
 
-		-- 3. SETUP TELESCOPE EXTENSION
-		-- Cargamos la extensión antes de configurar Orgmode
-		require("telescope").load_extension("orgmode")
+		-- 3. DEFINE TEMPLATES LOCALLY
+		local custom_templates = {
+			-- Aquí puedes añadir tus plantillas personalizadas en el futuro
+			-- j = { description = "Journal", template = "* %?\n  %u" }
+		}
 
-		-- 4. SETUP ORGMODE
-		require("orgmode").setup({
-			-- La agenda busca recursivamente (**) en tu carpeta de iCloud
+		-- 3.1 SETUP ORGMODE
+		local orgmode = require("orgmode")
+		orgmode.setup({
 			org_agenda_files = {
+				local_path .. "/**/*",
 				icloud_path .. "/**/*",
 			},
-			-- Las capturas por defecto (capture) van al archivo del Macbook
+			-- Usamos macbook-refile como el archivo de notas por defecto
 			org_default_notes_file = macbook_refile_file,
 			org_hide_emphasis_markers = true,
+			org_capture_templates = custom_templates,
 
-			-- UI Configuration (Mejora visual de las ventanas "blandas")
-			win_border = "rounded",
-			org_agenda_min_height = 16,
-
-			-- MAPPINGS CONFIGURATION
+			-- Desactivar mapeos por defecto para usar los nuestros con Telescope
 			mappings = {
 				global = {
-					org_agenda = "<leader>oa",
-					org_capture = "<leader>oc",
-				},
-				org = {
-					-- 🔴 DESACTIVAMOS el refile nativo para forzar el uso de Telescope
-					refile = false,
+					org_agenda = false,
+					org_capture = false,
 				},
 			},
 		})
 
-		-- 5. KEYMAPS AVANZADOS (Sobrescriben comportamientos por defecto)
+		-- 4. CUSTOM TELESCOPE PICKERS
 
-		-- Usamos un autocmd para asegurar que estos atajos tengan prioridad en buffers .org
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = "org",
-			callback = function()
-				-- REFILE CON TELESCOPE (<leader>or)
-				-- Al pulsar esto, se abrirá Telescope. Escribe el nombre del archivo (ej: "phone")
-				-- o el headline directamente para mover la tarea.
-				vim.keymap.set("n", "<leader>or", require("telescope").extensions.orgmode.refile_heading, {
-					buffer = true,
-					desc = "Refile Headline (Telescope)",
+		-- Agenda Picker
+		local function telescope_org_agenda()
+			local actions = require("telescope.actions")
+			local action_state = require("telescope.actions.state")
+			local pickers = require("telescope.pickers")
+			local finders = require("telescope.finders")
+			local conf = require("telescope.config").values
+			local themes = require("telescope.themes")
+
+			local agenda_options = {
+				{ label = "Agenda for current week or day", action = "agenda" },
+				{ label = "List of all TODO entries", action = "todos" },
+				{ label = "Match a TAGS/PROP/TODO query", action = "match" },
+				{ label = "Search for keywords", action = "search" },
+			}
+
+			pickers
+				.new(themes.get_dropdown({}), {
+					prompt_title = "Org Agenda",
+					finder = finders.new_table({
+						results = agenda_options,
+						entry_maker = function(entry)
+							return {
+								value = entry,
+								display = entry.label,
+								ordinal = entry.label,
+							}
+						end,
+					}),
+					sorter = conf.generic_sorter({}),
+					attach_mappings = function(prompt_bufnr, map)
+						actions.select_default:replace(function()
+							actions.close(prompt_bufnr)
+							local selection = action_state.get_selected_entry()
+							if selection then
+								local cmd = selection.value.action
+								if cmd == "agenda" then
+									orgmode.action("agenda.agenda")
+								elseif cmd == "todos" then
+									orgmode.action("agenda.todos")
+								elseif cmd == "match" then
+									orgmode.action("agenda.tags")
+								elseif cmd == "search" then
+									orgmode.action("agenda.search")
+								end
+							end
+						end)
+
+						-- Mapear 'q' en modo Normal para cerrar la ventana
+						map("n", "q", actions.close)
+
+						return true
+					end,
 				})
+				:find()
+		end
 
-				-- SEARCH HEADLINGS (<leader>os)
-				-- Alternativa a la agenda: busca cualquier tarea en todos tus archivos con Telescope
-				vim.keymap.set("n", "<leader>os", require("telescope").extensions.orgmode.search_headings, {
-					buffer = true,
-					desc = "Search Org Headings",
+		-- Capture Picker
+		local function telescope_org_capture()
+			local actions = require("telescope.actions")
+			local action_state = require("telescope.actions.state")
+			local pickers = require("telescope.pickers")
+			local finders = require("telescope.finders")
+			local conf = require("telescope.config").values
+			local themes = require("telescope.themes")
+
+			local template_list = {}
+
+			-- 1. Añadir Plantillas Personalizadas
+			for key, tpl in pairs(custom_templates) do
+				table.insert(template_list, { key = key, description = tpl.description or "No description" })
+			end
+
+			-- 2. Añadir Tarea por Defecto (siempre útil)
+			if #template_list == 0 then
+				table.insert(template_list, { key = "t", description = "Task" })
+			end
+
+			pickers
+				.new(themes.get_dropdown({}), {
+					prompt_title = "Org Capture",
+					finder = finders.new_table({
+						results = template_list,
+						entry_maker = function(entry)
+							-- FIX: Usamos entry directamente para evitar error de nil value
+							return {
+								value = entry,
+								display = string.format("[%s] %s", entry.key, entry.description),
+								ordinal = entry.key .. " " .. entry.description,
+							}
+						end,
+					}),
+					sorter = conf.generic_sorter({}),
+					attach_mappings = function(prompt_bufnr, map)
+						actions.select_default:replace(function()
+							actions.close(prompt_bufnr)
+							local selection = action_state.get_selected_entry()
+							if selection then
+								require("orgmode.capture"):open_template(selection.value.key)
+							end
+						end)
+
+						-- Mapear 'q' en modo Normal para cerrar la ventana
+						map("n", "q", actions.close)
+
+						return true
+					end,
 				})
-			end,
-		})
+				:find()
+		end
 
-		-- Atajos globales para editar rápidamente tus archivos de inbox/refile
+		-- 5. KEYMAPS
+
+		-- Integración con Telescope
+		vim.keymap.set("n", "<leader>oa", telescope_org_agenda, { desc = "Org Agenda (Telescope)" })
+		vim.keymap.set("n", "<leader>oc", telescope_org_capture, { desc = "Org Capture (Telescope)" })
+
+		-- Atajos de archivos (Corregidos nombres y mapeos)
+		-- <leader>om -> Abre Macbook Refile
 		vim.keymap.set("n", "<leader>om", function()
 			vim.cmd.edit(macbook_refile_file)
 		end, { desc = "Edit Macbook Refile" })
 
+		-- <leader>op -> Abre Phone Refile
 		vim.keymap.set("n", "<leader>op", function()
 			vim.cmd.edit(phone_refile_file)
 		end, { desc = "Edit Phone Refile" })
-
-		-- 6. FIX UI: Limpieza visual de los menús de Agenda y Capture
-		-- Elimina los números de línea y columnas extra que hacían que el menú se viera "feo" y desalineado
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "orgagenda", "orgcapture" },
-			callback = function()
-				vim.opt_local.signcolumn = "no"
-				vim.opt_local.number = false
-				vim.opt_local.relativenumber = false
-				-- Opcional: Centrar cursor o resaltar línea actual si prefieres
-				vim.opt_local.cursorline = true
-			end,
-		})
 	end,
 }
