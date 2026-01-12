@@ -4,50 +4,87 @@ return {
 	ft = { "org" },
 	dependencies = {
 		{ "nvim-treesitter/nvim-treesitter", lazy = true },
-		{ "akinsho/org-bullets.nvim", config = true },
+		-- 1. MENÚ MODERNO (Solo para la ventana flotante de acciones)
+		{ "danilshvalov/org-modern.nvim" },
+		-- 2. ICONOS (Solo cambiamos los asteriscos por puntos/círculos)
+		{ "akinsho/org-bullets.nvim" },
+		-- (Eliminado headlines.nvim para quitar fondos y espaciado extra)
 	},
 	config = function()
-		-- 1. DEFINE PATHS
-		-- Configuración exclusiva para iCloud
-		local icloud_path = os.getenv("HOME")
-			.. "/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org"
+		-- ==========================================
+		-- 1. CONFIGURACIÓN VISUAL (MINIMALISTA)
+		-- ==========================================
 
-		-- Cambio realizado: de phone-refile.org a refile.org
-		local refile_file = icloud_path .. "/refile.org"
-
-		-- 2. SETUP ORG-BULLETS
+		-- Configuración de iconos simples
 		require("org-bullets").setup({
 			symbols = {
 				list = "•",
 				headlines = { "◉", "○", "✸", "✿" },
 				checkboxes = {
-					half = { "", "OrgTSCheckboxHalfChecked" },
-					done = { "✓", "OrgDone" },
-					todo = { " ", "OrgTODO" },
+					half = { "", "@org.agenda.scheduled" },
+					done = { "✓", "@org.keyword.done" },
+					todo = { " ", "@org.keyword.todo" },
 				},
 			},
 		})
 
-		-- 3. SETUP ORGMODE
-		require("orgmode").setup({
-			-- Agenda looks ONLY at your iCloud/Beorg folder
-			org_agenda_files = {
-				icloud_path .. "/**/*",
-			},
-
-			-- Default capture goes to iCloud refile
-			org_default_notes_file = refile_file,
-
-			org_hide_emphasis_markers = true,
-
-			-- Note: <leader>oa (Agenda) and <leader>oc (Capture) are enabled by default
+		-- Ocultar asteriscos (*bold*) y marcadores de sintaxis para limpieza visual
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "org",
+			callback = function()
+				vim.opt_local.conceallevel = 2
+				vim.opt_local.concealcursor = "nc"
+			end,
 		})
 
-		-- 4. CUSTOM KEYMAPS
+		-- ==========================================
+		-- 2. CONFIGURACIÓN PRINCIPAL ORGMODE
+		-- ==========================================
 
-		-- <leader>or -> Opens Refile (iCloud)
+		local icloud_path = os.getenv("HOME")
+			.. "/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org"
+		local refile_file = icloud_path .. "/refile.org"
+
+		-- Importamos el módulo del menú moderno
+		local Menu = require("org-modern.menu")
+
+		require("orgmode").setup({
+			org_agenda_files = { icloud_path .. "/**/*" },
+			org_default_notes_file = refile_file,
+			org_hide_emphasis_markers = true,
+
+			-- MAPPINGS
+			mappings = {
+				global = {
+					org_agenda = "<leader>oa",
+					org_capture = "<leader>oc",
+				},
+			},
+
+			-- UI MENU HANDLER: Estilo Moderno Flotante
+			ui = {
+				menu = {
+					handler = function(data)
+						Menu:new({
+							window = {
+								margin = { 1, 0, 1, 0 },
+								padding = { 0, 1, 0, 1 },
+								title_pos = "center",
+								border = "single",
+								zindex = 1000,
+							},
+							icons = {
+								separator = "➜",
+							},
+						}):open(data)
+					end,
+				},
+			},
+		})
+
+		-- KEYMAPS EXTRA
 		vim.keymap.set("n", "<leader>or", function()
 			vim.cmd.edit(refile_file)
-		end, { desc = "Edit Refile (iCloud)" })
+		end, { desc = "Edit Refile" })
 	end,
 }
