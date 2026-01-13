@@ -6,7 +6,7 @@ return {
 			require("0x96f").setup()
 			vim.cmd.colorscheme("0x96f")
 
-			-- 🟢 FORCE TRANSPARENCY & FIX BORDERS
+			--  FORCE TRANSPARENCY & FIX BORDERS
 			-- Global elements
 			vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 			vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
