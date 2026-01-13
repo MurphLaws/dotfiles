@@ -28,7 +28,6 @@ return {
 				gitsigns = true,
 				telescope = {
 					enabled = true,
-					-- ⚠️ This helps, but custom_highlights below finishes the job
 				},
 				which_key = true,
 				native_lsp = {
@@ -43,10 +42,10 @@ return {
 				mason = true,
 			},
 
-			-- 🟢 FORCE TELESCOPE TRANSPARENCY
+			-- 🟢 CUSTOM HIGHLIGHTS (The Source of Truth)
 			custom_highlights = function(colors)
 				return {
-					-- Force transparent backgrounds for all Telescope elements
+					-- 1. TELESCOPE TRANSPARENCY
 					TelescopeNormal = { bg = "NONE" },
 					TelescopeBorder = { bg = "NONE" },
 					TelescopePromptNormal = { bg = "NONE" },
@@ -56,8 +55,32 @@ return {
 					TelescopePreviewNormal = { bg = "NONE" },
 					TelescopePreviewBorder = { bg = "NONE" },
 
-					-- Optional: Make the selection transparent too (or keep it colored)
-					-- TelescopeSelection = { bg = "NONE", fg = colors.red },
+					-- 2. ORGMODE HEADLINES (Official Catppuccin Palette)
+					-- Using the colors object ensures perfect theme integration
+					OrgHeadlineLevel1 = { fg = colors.red, bold = true },
+					OrgHeadlineLevel2 = { fg = colors.peach, bold = true },
+					OrgHeadlineLevel3 = { fg = colors.yellow, bold = true },
+					OrgHeadlineLevel4 = { fg = colors.green, bold = true },
+					OrgHeadlineLevel5 = { fg = colors.sapphire, bold = true },
+					OrgHeadlineLevel6 = { fg = colors.mauve, bold = true },
+					OrgHeadlineLevel7 = { fg = colors.teal, bold = true },
+					OrgHeadlineLevel8 = { fg = colors.maroon, bold = true },
+
+					-- 3. MARKDOWN HEADLINES (Standard Syntax)
+					markdownH1 = { link = "OrgHeadlineLevel1" },
+					markdownH2 = { link = "OrgHeadlineLevel2" },
+					markdownH3 = { link = "OrgHeadlineLevel3" },
+					markdownH4 = { link = "OrgHeadlineLevel4" },
+					markdownH5 = { link = "OrgHeadlineLevel5" },
+					markdownH6 = { link = "OrgHeadlineLevel6" },
+
+					-- 4. MARKDOWN HEADLINES (Treesitter Syntax)
+					["@markup.heading.1.markdown"] = { link = "OrgHeadlineLevel1" },
+					["@markup.heading.2.markdown"] = { link = "OrgHeadlineLevel2" },
+					["@markup.heading.3.markdown"] = { link = "OrgHeadlineLevel3" },
+					["@markup.heading.4.markdown"] = { link = "OrgHeadlineLevel4" },
+					["@markup.heading.5.markdown"] = { link = "OrgHeadlineLevel5" },
+					["@markup.heading.6.markdown"] = { link = "OrgHeadlineLevel6" },
 				}
 			end,
 		},

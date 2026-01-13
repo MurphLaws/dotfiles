@@ -6,65 +6,15 @@ return {
 		{ "nvim-treesitter/nvim-treesitter", lazy = true },
 		{ "danilshvalov/org-modern.nvim" },
 		{ "akinsho/org-bullets.nvim" },
-		{ "lukas-reineke/headlines.nvim", dependencies = "nvim-treesitter/nvim-treesitter" },
 	},
 	config = function()
 		-- ==========================================
-		-- 1. FIX COLORS (RAINBOW TEXT)
-		-- ==========================================
-		local function set_org_headline_colors()
-			local colors = {
-				level1 = "#f38ba8", -- Red
-				level2 = "#fab387", -- Peach
-				level3 = "#f9e2af", -- Yellow
-				level4 = "#a6e3a1", -- Green
-				level5 = "#89b4fa", -- Blue
-				level6 = "#cba6f7", -- Mauve
-				level7 = "#94e2d5", -- Teal
-				level8 = "#f5c2e7", -- Pink
-			}
-
-			local set_hl = vim.api.nvim_set_hl
-			set_hl(0, "OrgHeadlineLevel1", { fg = colors.level1, bold = true })
-			set_hl(0, "OrgHeadlineLevel2", { fg = colors.level2, bold = true })
-			set_hl(0, "OrgHeadlineLevel3", { fg = colors.level3, bold = true })
-			set_hl(0, "OrgHeadlineLevel4", { fg = colors.level4, bold = true })
-			set_hl(0, "OrgHeadlineLevel5", { fg = colors.level5, bold = true })
-			set_hl(0, "OrgHeadlineLevel6", { fg = colors.level6, bold = true })
-			set_hl(0, "OrgHeadlineLevel7", { fg = colors.level7, bold = true })
-			set_hl(0, "OrgHeadlineLevel8", { fg = colors.level8, bold = true })
-		end
-
-		set_org_headline_colors()
-		vim.api.nvim_create_autocmd("ColorScheme", {
-			pattern = "*",
-			callback = set_org_headline_colors,
-		})
-
-		-- ==========================================
-		-- 2. HEADLINES (LINES & BLOCKS)
-		-- ==========================================
-		require("headlines").setup({
-			org = {
-				headline_highlights = { "Headline1", "Headline2", "Headline3" },
-				-- Makes the 5 dashes (-----) look like a solid line
-				dash_highlight = "Dash",
-				dash_string = "—",
-
-				fat_headlines = true,
-				fat_headline_upper_string = " ",
-				fat_headline_lower_string = " ",
-			},
-		})
-
-		-- ==========================================
-		-- 3. ICONS (CLEAN GEOMETRIC)
+		-- 1. ICONOS ESTILO NEORG (GEOMÉTRICOS)
 		-- ==========================================
 		require("org-bullets").setup({
 			symbols = {
 				list = "•",
-				-- Clean progression: Solid Circle > Open Circle > Diamond > Square
-				headlines = { "◉", "○", "◆", "◇", "◼", "◻" },
+				headlines = { "◉", "○", "●", "◈", "◆", "▪" },
 				checkboxes = {
 					half = { "", "@org.agenda.scheduled" },
 					done = { "✓", "@org.keyword.done" },
@@ -73,7 +23,9 @@ return {
 			},
 		})
 
-		-- Visual Cleanup
+		-- ==========================================
+		-- 2. LIMPIEZA VISUAL (Ocultar sintaxis)
+		-- ==========================================
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = "org",
 			callback = function()
@@ -83,7 +35,7 @@ return {
 		})
 
 		-- ==========================================
-		-- 4. CORE ORGMODE CONFIG
+		-- 3. LÓGICA CORE DE ORGMODE
 		-- ==========================================
 		local icloud_path = os.getenv("ICLOUD_ORG_PATH")
 			or (os.getenv("HOME") .. "/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org")
@@ -94,6 +46,7 @@ return {
 			org_agenda_files = { icloud_path .. "/**/*" },
 			org_default_notes_file = refile_file,
 			org_hide_emphasis_markers = true,
+			org_startup_indented = true,
 
 			org_capture_templates = {
 				t = {
@@ -104,12 +57,18 @@ return {
 				},
 			},
 
+			-- --- UPDATE HERE ---
 			mappings = {
 				global = {
 					org_agenda = "<leader>oa",
 					org_capture = "<leader>oc",
 				},
+				org = {
+					-- Remap the checkbox toggle to <leader>cc
+					org_toggle_checkbox = "<leader>cc",
+				},
 			},
+			-- -------------------
 
 			ui = {
 				menu = {
@@ -132,5 +91,28 @@ return {
 		vim.keymap.set("n", "<leader>or", function()
 			vim.cmd.edit(refile_file)
 		end, { desc = "Edit Refile" })
+
+		-- ==========================================
+		-- 4. COLORES PERSONALIZADOS (PASTEL + LINKS)
+		-- ==========================================
+		vim.api.nvim_create_autocmd("ColorScheme", {
+			pattern = "*",
+			callback = function()
+				-- Headlines (Pastel Macaron Palette)
+				vim.api.nvim_set_hl(0, "@org.headline.level1", { fg = "#F28FAD", bold = true }) -- Pastel Flamingo
+				vim.api.nvim_set_hl(0, "@org.headline.level2", { fg = "#F8BD96", bold = true }) -- Pastel Peach
+				vim.api.nvim_set_hl(0, "@org.headline.level3", { fg = "#FAE3B0", bold = true }) -- Pastel Wheat
+				vim.api.nvim_set_hl(0, "@org.headline.level4", { fg = "#ABE9B3", bold = true }) -- Pastel Matcha
+				vim.api.nvim_set_hl(0, "@org.headline.level5", { fg = "#96CDFB", bold = true }) -- Pastel Sky
+				vim.api.nvim_set_hl(0, "@org.headline.level6", { fg = "#DDB6F2", bold = true }) -- Pastel Lavender
+
+				-- Links (Italic + Underlined + Pastel Teal)
+				local link_opts = { fg = "#94E2D5", underline = true, italic = true }
+				vim.api.nvim_set_hl(0, "@org.hyperlink", link_opts)
+				vim.api.nvim_set_hl(0, "@org.hyperlink.desc", link_opts)
+			end,
+		})
+
+		vim.cmd("doautocmd ColorScheme")
 	end,
 }
