@@ -1,5 +1,5 @@
 vim.g.mapleader = " "
---test0
+--test02
 require("illico.core")
 require("illico.lazy")
 
