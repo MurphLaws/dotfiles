@@ -13,9 +13,9 @@ return {
 			vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
 			vim.api.nvim_set_hl(0, "SignColumn", { bg = "none" })
 			vim.api.nvim_set_hl(0, "Pmenu", { bg = "none" })
-			vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" }) -- Fix generic floating borders
+			vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
 
-			-- Fix Telescope Borders (Remove black background)
+			-- Fix Telescope Borders
 			vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
 			vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
 			vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "none" })
@@ -28,6 +28,16 @@ return {
 			-- Fix WhichKey Borders
 			vim.api.nvim_set_hl(0, "WhichKeyFloat", { bg = "none" })
 			vim.api.nvim_set_hl(0, "WhichKeyBorder", { bg = "none" })
+
+			-- 🟢 Fix Snacks Picker Transparency (New addition)
+			-- Esto asegura que los menús de Snacks se vean iguales a Telescope
+			vim.api.nvim_set_hl(0, "SnacksPicker", { bg = "none" })
+			vim.api.nvim_set_hl(0, "SnacksPickerNormal", { bg = "none" })
+			vim.api.nvim_set_hl(0, "SnacksPickerBorder", { bg = "none" })
+			vim.api.nvim_set_hl(0, "SnacksPickerTitle", { bg = "none" })
+			vim.api.nvim_set_hl(0, "SnacksPickerPrompt", { bg = "none" })
+			vim.api.nvim_set_hl(0, "SnacksPickerInput", { bg = "none" })
+			vim.api.nvim_set_hl(0, "SnacksPickerList", { bg = "none" })
 		end,
 	},
 }

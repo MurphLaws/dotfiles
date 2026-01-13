@@ -1,4 +1,11 @@
+
+
+
 -- illico/core/options.lua
+
+-- 🟢 FIX: Disable netrw at the very start to prevent flickering when opening Neo-tree
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 
 -- ===== Basics =====
 -- Configuración del cursor:
@@ -34,6 +41,14 @@ vim.opt.viewdir = vim.fn.stdpath("state") .. "/view"
 vim.fn.mkdir(vim.opt.viewdir:get(), "p")
 
 -- Save/load folds (and cursor, etc.) in views
+vim.opt.viewoptions = { "cursor", "folds" }
+
+vim.o.wildmenu = false
+vim.o.wildoptions = "" -- IMPORTANT: removes the built-in popupmenu behavior
+
+-- Transparency: Clear background for main window and floating windows
+vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })-- Save/load folds (and cursor, etc.) in views
 vim.opt.viewoptions = { "cursor", "folds" }
 
 vim.o.wildmenu = false
