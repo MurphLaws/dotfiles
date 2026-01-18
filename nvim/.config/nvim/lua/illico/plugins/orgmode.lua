@@ -98,13 +98,13 @@ return {
 		vim.api.nvim_create_autocmd("ColorScheme", {
 			pattern = "*",
 			callback = function()
-				-- Headlines (Pastel Macaron Palette)
-				vim.api.nvim_set_hl(0, "@org.headline.level1", { fg = "#F28FAD", bold = true }) -- Pastel Flamingo
-				vim.api.nvim_set_hl(0, "@org.headline.level2", { fg = "#F8BD96", bold = true }) -- Pastel Peach
-				vim.api.nvim_set_hl(0, "@org.headline.level3", { fg = "#FAE3B0", bold = true }) -- Pastel Wheat
-				vim.api.nvim_set_hl(0, "@org.headline.level4", { fg = "#ABE9B3", bold = true }) -- Pastel Matcha
-				vim.api.nvim_set_hl(0, "@org.headline.level5", { fg = "#96CDFB", bold = true }) -- Pastel Sky
-				vim.api.nvim_set_hl(0, "@org.headline.level6", { fg = "#DDB6F2", bold = true }) -- Pastel Lavender
+				-- Headlines (Vibrant Palette: Green, Purple, Cyan, etc.)
+				vim.api.nvim_set_hl(0, "@org.headline.level1", { fg = "#9ece6a", bold = true }) -- Vibrant Green
+				vim.api.nvim_set_hl(0, "@org.headline.level2", { fg = "#bb9af7", bold = true }) -- Vibrant Purple
+				vim.api.nvim_set_hl(0, "@org.headline.level3", { fg = "#7dcfff", bold = true }) -- Vibrant Cyan
+				vim.api.nvim_set_hl(0, "@org.headline.level4", { fg = "#e0af68", bold = true }) -- Vibrant Yellow
+				vim.api.nvim_set_hl(0, "@org.headline.level5", { fg = "#ff9e64", bold = true }) -- Vibrant Orange
+				vim.api.nvim_set_hl(0, "@org.headline.level6", { fg = "#f7768e", bold = true }) -- Vibrant Red
 
 				-- Links (Italic + Underlined + Pastel Teal)
 				local link_opts = { fg = "#94E2D5", underline = true, italic = true }
