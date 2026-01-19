@@ -1,7 +1,8 @@
 # Font Configuration
-font-family = JetBrainsMono NF SemiBold
+# font-family = JetBrainsMono NF SemiBold
+font-family = Monocraft
 
-# Changed from SemiBold to Bold
+# Keep your size, but Monocraft can be large, so adjust if needed
 font-size = 20
 font-thicken = true
 

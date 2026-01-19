@@ -24,13 +24,19 @@ return {
 		})
 
 		-- ==========================================
-		-- 2. LIMPIEZA VISUAL (Ocultar sintaxis)
+		-- 2. LIMPIEZA VISUAL (Ocultar sintaxis + Wrapping)
 		-- ==========================================
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = "org",
 			callback = function()
 				vim.opt_local.conceallevel = 2
 				vim.opt_local.concealcursor = "nc"
+
+				-- --- FIX: WRAPPING SETTINGS ---
+				vim.opt_local.wrap = true -- Soft wrap lines
+				vim.opt_local.linebreak = true -- Break at words, not chars
+				vim.opt_local.breakindent = true -- Indent wrapped lines to match start
+				-- ------------------------------
 			end,
 		})
 
@@ -57,7 +63,6 @@ return {
 				},
 			},
 
-			-- --- UPDATE HERE ---
 			mappings = {
 				global = {
 					org_agenda = "<leader>oa",
@@ -68,7 +73,6 @@ return {
 					org_toggle_checkbox = "<leader>cc",
 				},
 			},
-			-- -------------------
 
 			ui = {
 				menu = {

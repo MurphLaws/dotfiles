@@ -6,38 +6,52 @@ return {
 			require("0x96f").setup()
 			vim.cmd.colorscheme("0x96f")
 
-			--  FORCE TRANSPARENCY & FIX BORDERS
-			-- Global elements
-			vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-			vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-			vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SignColumn", { bg = "none" })
-			vim.api.nvim_set_hl(0, "Pmenu", { bg = "none" })
-			vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none" })
+			-- 🔹 CHANGE SIDE INDICATORS (End of Buffer)
+			vim.opt.fillchars:append({ eob = "·" })
+			vim.api.nvim_set_hl(0, "EndOfBuffer", { fg = "#ffffff", bg = "none" })
 
-			-- Fix Telescope Borders
-			vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopeResultsNormal", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopePreviewNormal", { bg = "none" })
-			vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "none" })
+			--  FORCE TRANSPARENCY & FIX BORDERS
+			local highlights = {
+				"Normal",
+				"NormalFloat",
+				"NormalNC",
+				"SignColumn",
+				"Pmenu",
+				"FloatBorder",
+				"TelescopeNormal",
+				"TelescopeBorder",
+				"TelescopePromptNormal",
+				"TelescopePromptBorder",
+				"TelescopeResultsNormal",
+				"TelescopeResultsBorder",
+				"TelescopePreviewNormal",
+				"TelescopePreviewBorder",
+				"WhichKeyFloat",
+				"WhichKeyBorder",
+				"SnacksPicker",
+				"SnacksPickerNormal",
+				"SnacksPickerBorder",
+				"SnacksPickerTitle",
+				"SnacksPickerPrompt",
+				"SnacksPickerInput",
+				"SnacksPickerList",
+			}
 
-			-- Fix WhichKey Borders
-			vim.api.nvim_set_hl(0, "WhichKeyFloat", { bg = "none" })
-			vim.api.nvim_set_hl(0, "WhichKeyBorder", { bg = "none" })
+			for _, group in ipairs(highlights) do
+				vim.api.nvim_set_hl(0, group, { bg = "none" })
+			end
 
-			-- 🟢 Fix Snacks Picker Transparency (New addition)
-			-- Esto asegura que los menús de Snacks se vean iguales a Telescope
-			vim.api.nvim_set_hl(0, "SnacksPicker", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SnacksPickerNormal", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SnacksPickerBorder", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SnacksPickerTitle", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SnacksPickerPrompt", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SnacksPickerInput", { bg = "none" })
-			vim.api.nvim_set_hl(0, "SnacksPickerList", { bg = "none" })
+			-- 🟢 FIX ORGMODE COLORS
+			local lime_green = "#C6E472"
+			local theme_red = "#fb5e5b" -- Red from 0x96f palette
+
+			-- Set TODO to Red
+			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = theme_red, bg = "none", bold = true })
+
+			-- Keep DONE and Checks as Green
+			vim.api.nvim_set_hl(0, "@org.keyword.done", { fg = lime_green, bg = "none", bold = true })
+			vim.api.nvim_set_hl(0, "@org.checkbox.checked", { fg = lime_green, bg = "none", bold = true })
+			vim.api.nvim_set_hl(0, "@org.checkbox.half_checked", { fg = lime_green, bg = "none", bold = true })
 		end,
 	},
 }
