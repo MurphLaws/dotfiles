@@ -24,7 +24,7 @@ vim.opt.timeoutlen = 300
 
 -- Wrapping global desactivado (ideal para código)
 -- Se activa localmente en orgmode/markdown según sea necesario
-vim.opt.wrap = false
+vim.opt.wrap = true
 
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
