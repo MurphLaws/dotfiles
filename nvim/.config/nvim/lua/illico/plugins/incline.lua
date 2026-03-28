@@ -40,6 +40,9 @@ return {
 					"iCloud/org"
 				)
 
+				-- Shorten Claude Code temp buffer paths
+				display_path = display_path:gsub(".*/T/claude%-prompt%-[%w%-]+", "Claude")
+
 				local filename = vim.fn.fnamemodify(full_path, ":t")
 				if filename == "" then
 					filename = "[No Name]"
