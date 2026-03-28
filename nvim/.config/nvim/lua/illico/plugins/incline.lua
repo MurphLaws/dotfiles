@@ -43,6 +43,9 @@ return {
 				-- Shorten Claude Code temp buffer paths
 				display_path = display_path:gsub(".*/T/claude%-prompt%-[%w%-]+", "Claude")
 
+				-- Shorten macOS temp folder paths (/private/var/folders/...)
+				display_path = display_path:gsub("^/private/var/folders/.*", "tmp")
+
 				local filename = vim.fn.fnamemodify(full_path, ":t")
 				if filename == "" then
 					filename = "[No Name]"
