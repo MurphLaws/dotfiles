@@ -12,3 +12,6 @@ theme = 0x96f
 background-opacity = 0.95
 background-blur-radius = 20
 keybind = shift+enter=text:\x1b\r
+
+# Auto-start tmux
+command = tmux new-session -A -s main
