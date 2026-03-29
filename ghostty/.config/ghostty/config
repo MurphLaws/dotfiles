@@ -12,7 +12,6 @@ theme = 0x96f
 background-opacity = 0.95
 background-blur-radius = 20
 macos-non-native-fullscreen = visible-menu
-fullscreen = true
 window-decoration = false
 keybind = shift+enter=text:\x1b\r
 
