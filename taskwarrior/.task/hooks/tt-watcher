@@ -14,7 +14,7 @@ mkdir -p "$NOTE_DIR"
 
 # Build ID->UUID cache file (id:uuid per line, no hooks triggered)
 refresh_cache() {
-    task rc.hooks=off rc.verbose=nothing export status:pending 2>/dev/null | \
+    task rc.hooks=off status:pending export 2>/dev/null | \
         sed -n 's/.*"id":\([0-9]*\).*"uuid":"\([^"]*\)".*/\1:\2/p' > "$CACHE_FILE"
 }
 
@@ -53,7 +53,7 @@ while true; do
         fi
     fi
 
-    sleep 0.5
+    sleep 0.1
 done
 
 rm -f "$CACHE_FILE"
