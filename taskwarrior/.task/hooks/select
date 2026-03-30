@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-FZF_OPTS="--layout=reverse"
+FZF_OPTS="--layout=reverse --ansi"
 
-selected=$(task list rc.verbose=nothing 2>/dev/null | fzf $FZF_OPTS --header-lines=1)
+# Color completed tasks (ID = -) in red
+selected=$(task list rc.verbose=nothing rc._forcecolor=on 2>/dev/null | \
+    awk 'NR<=1 {print; next} {if ($1 == "-") printf "\033[31m%s\033[0m\n", $0; else print}' | \
+    fzf $FZF_OPTS --header-lines=1)
 [ -z "$selected" ] && exit 0
-uuid=$(echo "$selected" | awk '{print $2}')
+
+# Strip ANSI codes before extracting UUID
+uuid=$(echo "$selected" | sed 's/\x1b\[[0-9;]*m//g' | awk '{print $2}')
 
 action=$(echo -e "info\ndone\nstart\nstop\nmodify\ndelete" | fzf $FZF_OPTS --prompt="action> ")
 [ -z "$action" ] && exit 0
