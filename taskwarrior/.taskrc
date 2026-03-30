@@ -91,6 +91,16 @@ urgency.uda.effort.-.coefficient=0.0
 report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.countdown,due.relative,until.remaining,description.truncated,effort,urgency
 report.next.labels=ID,Active,Age,Deps,P,Project,Tag,Recur,S,Due,Until,Description,Effort,Urg
 
+# taskwarrior-tui configuration
+uda.taskwarrior-tui.selection.bold=yes
+uda.taskwarrior-tui.selection.italic=no
+uda.taskwarrior-tui.selection.dim=no
+uda.taskwarrior-tui.selection.blink=no
+uda.taskwarrior-tui.selection.reverse=no
+uda.taskwarrior-tui.style.report.selection=bold green
+uda.taskwarrior-tui.shortcuts.1=${HOME}/.task/hooks/tui-note
+uda.taskwarrior-tui.task-report.prompt-on-done=true
+
 # Aliases
 alias.note=execute "${HOME}/.task/hooks/note"
 alias.select=execute "${HOME}/.task/hooks/select"

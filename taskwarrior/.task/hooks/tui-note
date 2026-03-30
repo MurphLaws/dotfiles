@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Open nvim note buffer for a task (used by taskwarrior-tui shortcut)
+# Receives task ID as $1
+
+NOTE_DIR=${HOME}/.task/notes
+mkdir -p "$NOTE_DIR"
+
+uuid=$(task _get "$1".uuid)
+[ -z "$uuid" ] && exit 1
+
+note="${NOTE_DIR}/${uuid}.md"
+nvim "$note"
+
+task "$uuid" mod note:"$(date +%Y-%m-%dT%H:%M:%S)" >/dev/null
