@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+NOTE_DIR=${HOME}/.task/notes
+mkdir -p notes/
+
+if [[ $# -eq 1 ]]; then
+    uuid=$(task _get $1.uuid)
+    note="${NOTE_DIR}/${uuid}.md"
+    nvim $note || exit 1
+
+    task ${uuid} mod note:$(date +%Y-%m-%dT%H:%M:%S) >/dev/null
+else
+    nvim ${NOTE_DIR}/buffer
+fi

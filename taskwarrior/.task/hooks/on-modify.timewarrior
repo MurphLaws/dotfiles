@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Hook to integrate Taskwarrior with Timewarrior."""
+
+import json
+import subprocess
+import sys
+
+old = json.loads(sys.stdin.readline())
+new = json.loads(sys.stdin.readline())
+
+# Started task
+if old.get("status") != "completed" and new.get("start") and not old.get("start"):
+    tags = new.get("tags", [])
+    project = new.get("project", "")
+    combined = [new["description"]] + tags
+    if project:
+        combined.append(project)
+    subprocess.run(["timew", "start"] + combined)
+
+# Stopped task (task stop) or completed task
+if old.get("start") and not new.get("start"):
+    subprocess.run(["timew", "stop"])
+
+print(json.dumps(new))

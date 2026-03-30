@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+FZF_OPTS="--layout=reverse --ansi"
+
+# Color top task green+bold, completed tasks (ID = -) red
+# Remove blank first line and summary footer, keep header + separator for fzf
+selected=$(command task list 2>/dev/null | \
+    sed '/^$/d' | grep -v 'tasks\?$' | \
+    "$HOME/.task/hooks/colorize-top" | \
+    fzf $FZF_OPTS --header-lines=2)
+[ -z "$selected" ] && exit 0
+
+# Strip ANSI codes before extracting UUID
+uuid=$(echo "$selected" | sed 's/\x1b\[[0-9;]*m//g' | awk '{print $2}')
+
+action=$(echo -e "info\ndone\nstart\nstop\nmodify\ndelete" | fzf $FZF_OPTS --prompt="action> ")
+[ -z "$action" ] && exit 0
+
+if [ "$action" = "modify" ]; then
+    attr=$(echo -e "effort\npriority\nproject\ntags\ndue\ndescription\nscheduled" | fzf $FZF_OPTS --prompt="attribute> ")
+    [ -z "$attr" ] && exit 0
+    read -p "$attr: " value
+    task "$uuid" modify "$attr:$value"
+else
+    task "$uuid" "$action"
+fi
