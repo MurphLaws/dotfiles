@@ -52,7 +52,7 @@ color.summary.bar=rgb141
 report.list.columns=id,start.age,entry.age,depends.indicator,priority,project,tags,recur.indicator,scheduled.countdown,due,until.remaining,description.truncated,effort,urgency
 report.list.labels=ID,Active,Age,Dep,P,Project,Tag,Recur,Sched,Due,Until,Description,Effort,Urg
 report.list.filter=status:pending or status:completed
-report.list.sort=status+,urgency-
+report.list.sort=status-,urgency-
 
 # Completed tasks shown in red
 color.completed=red
@@ -69,11 +69,21 @@ uda.note.label=Note
 
 # UDA for effort tracking
 # effort: 1 (trivial) to 10 (massive)
-# Adds effort/10 to urgency score (e.g. effort:5 adds 0.5)
-uda.effort.type=numeric
+# Low effort = higher urgency (quick wins first)
+# Coefficients follow (1/effort)*2 formula
+uda.effort.type=string
 uda.effort.label=Effort
 uda.effort.values=1,2,3,4,5,6,7,8,9,10
-urgency.uda.effort.coefficient=0.1
+urgency.uda.effort.1.coefficient=2.0
+urgency.uda.effort.2.coefficient=1.0
+urgency.uda.effort.3.coefficient=0.67
+urgency.uda.effort.4.coefficient=0.5
+urgency.uda.effort.5.coefficient=0.4
+urgency.uda.effort.6.coefficient=0.33
+urgency.uda.effort.7.coefficient=0.29
+urgency.uda.effort.8.coefficient=0.25
+urgency.uda.effort.9.coefficient=0.22
+urgency.uda.effort.10.coefficient=0.2
 
 # Alias to open notes in neovim
 alias.note=execute "${HOME}/.task/hooks/note"
