@@ -50,6 +50,7 @@ color.summary.bar=rgb141
 
 # Hide annotations in list view, truncate long descriptions
 report.list.columns=id,start.age,entry.age,depends.indicator,priority,project,tags,recur.indicator,scheduled.countdown,due,until.remaining,description.truncated,effort,urgency
+report.list.labels=ID,Active,Age,Dep,P,Project,Tag,Recur,Sched,Due,Until,Description,Effort,Urg
 
 # Custom 'notes' report - shows annotations only
 report.notes.description=Shows annotations for a task
