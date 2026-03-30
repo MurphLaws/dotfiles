@@ -92,13 +92,15 @@ report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,s
 report.next.labels=ID,Active,Age,Deps,P,Project,Tag,Recur,S,Due,Until,Description,Effort,Urg
 
 # taskwarrior-tui configuration
-uda.taskwarrior-tui.selection.bold=yes
+# Selection: black background highlight (reverse video)
+uda.taskwarrior-tui.selection.bold=no
 uda.taskwarrior-tui.selection.italic=no
 uda.taskwarrior-tui.selection.dim=no
 uda.taskwarrior-tui.selection.blink=no
-uda.taskwarrior-tui.selection.reverse=no
-uda.taskwarrior-tui.style.report.selection=bold green
-uda.taskwarrior-tui.shortcuts.1=${HOME}/.task/hooks/tui-note
+uda.taskwarrior-tui.selection.reverse=yes
+uda.taskwarrior-tui.selection.indicator=•
+uda.taskwarrior-tui.style.report.selection=
+uda.taskwarrior-tui.shortcuts.1=~/.task/hooks/tui-note
 uda.taskwarrior-tui.task-report.prompt-on-done=true
 
 # Aliases
