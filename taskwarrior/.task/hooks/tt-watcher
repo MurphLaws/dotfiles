@@ -7,9 +7,22 @@
 TUI_PANE="$1"
 NVIM_SOCK="$2"
 NOTE_DIR="$HOME/.task/notes"
-last_uuid=""
+last_id=""
 
 mkdir -p "$NOTE_DIR"
+
+# Build ID->UUID cache from task export (no hooks triggered)
+declare -A uuid_cache
+refresh_cache() {
+    uuid_cache=()
+    while IFS= read -r line; do
+        id=$(echo "$line" | sed -n 's/.*"id":\([0-9]*\).*/\1/p')
+        uuid=$(echo "$line" | sed -n 's/.*"uuid":"\([^"]*\)".*/\1/p')
+        [ -n "$id" ] && [ -n "$uuid" ] && uuid_cache[$id]="$uuid"
+    done < <(task rc.hooks=off rc.verbose=nothing export status:pending 2>/dev/null)
+}
+
+refresh_cache
 
 while true; do
     # Check if the tui pane still exists
@@ -22,17 +35,21 @@ while true; do
         # Extract the task ID (first number after the bullet)
         task_id=$(echo "$selected" | sed 's/•//' | awk '{print $1}')
 
-        if [ -n "$task_id" ] && [ "$task_id" != "-" ]; then
-            uuid=$(task _get "$task_id".uuid 2>/dev/null)
+        if [ -n "$task_id" ] && [ "$task_id" != "-" ] && [ "$task_id" != "$last_id" ]; then
+            uuid="${uuid_cache[$task_id]}"
 
-            if [ -n "$uuid" ] && [ "$uuid" != "$last_uuid" ]; then
-                note="$NOTE_DIR/${uuid}.md"
-                # Create the note file if it doesn't exist
-                [ ! -f "$note" ] && touch "$note"
-                # Tell nvim to open it
-                nvim --server "$NVIM_SOCK" --remote-send "<Esc>:edit $note<CR>" 2>/dev/null
-                last_uuid="$uuid"
+            # Cache miss — refresh once
+            if [ -z "$uuid" ]; then
+                refresh_cache
+                uuid="${uuid_cache[$task_id]}"
             fi
+
+            if [ -n "$uuid" ]; then
+                note="$NOTE_DIR/${uuid}.md"
+                [ ! -f "$note" ] && touch "$note"
+                nvim --server "$NVIM_SOCK" --remote-send "<Esc>:edit $note<CR>" 2>/dev/null
+            fi
+            last_id="$task_id"
         fi
     fi
 
