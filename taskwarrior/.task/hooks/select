@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 FZF_OPTS="--layout=reverse --ansi"
 
-# Color completed tasks (ID = -) in red
-selected=$(task list rc.verbose=nothing rc._forcecolor=on 2>/dev/null | \
-    awk 'NR<=1 {print; next} {if ($1 == "-") printf "\033[31m%s\033[0m\n", $0; else print}' | \
-    fzf $FZF_OPTS --header-lines=1)
+# Color top task green+bold, completed tasks (ID = -) red
+# Remove blank first line and summary footer, keep header + separator for fzf
+selected=$(command task list 2>/dev/null | \
+    sed '/^$/d' | grep -v 'tasks\?$' | \
+    "$HOME/.task/hooks/colorize-top" | \
+    fzf $FZF_OPTS --header-lines=2)
 [ -z "$selected" ] && exit 0
 
 # Strip ANSI codes before extracting UUID
