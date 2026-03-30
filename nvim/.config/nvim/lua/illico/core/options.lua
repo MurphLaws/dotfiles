@@ -55,3 +55,14 @@ vim.o.wildoptions = "" -- IMPORTANT: removes the built-in popupmenu behavior
 -- Clear background for main window and floating windows
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+
+-- ===== Default filetype for new buffers =====
+-- New unnamed buffers open as markdown by default
+vim.api.nvim_create_autocmd("BufEnter", {
+	pattern = "*",
+	callback = function()
+		if vim.bo.buftype == "" and vim.fn.expand("%") == "" and vim.bo.filetype == "" then
+			vim.bo.filetype = "markdown"
+		end
+	end,
+})

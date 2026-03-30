@@ -36,7 +36,7 @@ return {
 			keyword = "wide", -- "fg", "bg", "wide", or empty
 			after = "fg", -- "fg" or "bg" or empty
 			pattern = [[.*<(KEYWORDS)\s*:]], -- pattern used for highlighting
-			comments_only = true,
+			comments_only = false,
 			max_line_len = 400,
 			exclude = {},
 		},
