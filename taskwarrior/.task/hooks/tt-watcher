@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Background watcher: polls taskwarrior-tui pane for selected task,
+# tells nvim to open the corresponding note buffer.
+#
+# Args: $1 = tmux pane ID of taskwarrior-tui, $2 = nvim socket path
+
+TUI_PANE="$1"
+NVIM_SOCK="$2"
+NOTE_DIR="$HOME/.task/notes"
+last_uuid=""
+
+mkdir -p "$NOTE_DIR"
+
+while true; do
+    # Check if the tui pane still exists
+    tmux has-session -t "$TUI_PANE" 2>/dev/null || exit 0
+
+    # Capture the tui pane and find the selected line (starts with •)
+    selected=$(tmux capture-pane -t "$TUI_PANE" -p 2>/dev/null | grep '•')
+
+    if [ -n "$selected" ]; then
+        # Extract the task ID (first number after the bullet)
+        task_id=$(echo "$selected" | sed 's/•//' | awk '{print $1}')
+
+        if [ -n "$task_id" ] && [ "$task_id" != "-" ]; then
+            uuid=$(task _get "$task_id".uuid 2>/dev/null)
+
+            if [ -n "$uuid" ] && [ "$uuid" != "$last_uuid" ]; then
+                note="$NOTE_DIR/${uuid}.md"
+                # Create the note file if it doesn't exist
+                [ ! -f "$note" ] && touch "$note"
+                # Tell nvim to open it
+                nvim --server "$NVIM_SOCK" --remote-send "<Esc>:edit $note<CR>" 2>/dev/null
+                last_uuid="$uuid"
+            fi
+        fi
+    fi
+
+    sleep 0.5
+done
