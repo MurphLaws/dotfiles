@@ -102,6 +102,7 @@ uda.taskwarrior-tui.selection.indicator=•
 uda.taskwarrior-tui.style.report.selection=
 uda.taskwarrior-tui.shortcuts.1=~/.task/hooks/tui-note
 uda.taskwarrior-tui.task-report.prompt-on-done=true
+uda.taskwarrior-tui.task-report.show-info=false
 
 # Aliases
 alias.note=execute "${HOME}/.task/hooks/note"

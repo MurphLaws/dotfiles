@@ -15,7 +15,7 @@ rm -f "$NVIM_SOCK"
 TUI_PANE=$(tmux display-message -p '#{pane_id}')
 
 # Split below: nvim with a server socket, opens a blank buffer
-tmux split-window -v -l 30% "nvim --listen $NVIM_SOCK $NOTE_DIR/buffer.md"
+tmux split-window -v -l 50% "nvim --listen $NVIM_SOCK $NOTE_DIR/buffer.md"
 
 # Get the nvim pane ID
 NVIM_PANE=$(tmux display-message -p '#{pane_id}')
