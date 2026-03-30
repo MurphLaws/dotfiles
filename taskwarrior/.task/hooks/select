@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+FZF_OPTS="--layout=reverse"
+
+selected=$(task list rc.verbose=nothing 2>/dev/null | fzf $FZF_OPTS --header-lines=1)
+[ -z "$selected" ] && exit 0
+uuid=$(echo "$selected" | awk '{print $2}')
+
+action=$(echo -e "info\ndone\nstart\nstop\nmodify\ndelete" | fzf $FZF_OPTS --prompt="action> ")
+[ -z "$action" ] && exit 0
+
+if [ "$action" = "modify" ]; then
+    attr=$(echo -e "effort\npriority\nproject\ntags\ndue\ndescription\nscheduled" | fzf $FZF_OPTS --prompt="attribute> ")
+    [ -z "$attr" ] && exit 0
+    read -p "$attr: " value
+    task "$uuid" modify "$attr:$value"
+else
+    task "$uuid" "$action"
+fi
