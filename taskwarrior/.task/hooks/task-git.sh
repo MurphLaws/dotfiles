@@ -11,24 +11,11 @@ if [ ! -d "$DATA_DIR" ]; then
   exit 1
 fi
 
-# Check if --task-git-push is passed as an argument.
-PUSH=0
-for i
-do
-  if [ "$i" == "--task-git-push" ]; then
-    # Set the PUSH flag, and remove this from the arguments list.
-    PUSH=1
-    shift
-  fi
-done
-
-# Call task, commit files and push if flag is set.
+# Call task, commit and push.
 command task $@
 cd $DATA_DIR
 git add .
 git commit -m "$TASK_COMMAND" > /dev/null
 
-if [ "$PUSH" == 1 ]; then
-  git push origin master > /dev/null
-fi
+git push origin main > /dev/null 2>&1
 exit 0
