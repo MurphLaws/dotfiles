@@ -11,11 +11,9 @@ if [ ! -d "$DATA_DIR" ]; then
   exit 1
 fi
 
-# Call task, commit and push.
+# Call task and commit changes.
 command task $@
 cd $DATA_DIR
 git add .
 git commit -m "$TASK_COMMAND" > /dev/null
-
-git push origin main > /dev/null 2>&1
 exit 0
