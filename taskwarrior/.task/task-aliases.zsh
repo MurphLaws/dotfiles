@@ -3,17 +3,16 @@
 
 task() {
     local colorize="$HOME/.task/hooks/colorize-top"
-    local taskgit="$HOME/.task/hooks/task-git.sh"
     case "$1" in
         ""|-*)
-            "$taskgit" "$@" | "$colorize"
+            command task "$@" | "$colorize"
             ;;
         list)
             shift
-            "$taskgit" list "$@" | "$colorize"
+            command task list "$@" | "$colorize"
             ;;
         *)
-            "$taskgit" "$@"
+            command task "$@"
             ;;
     esac
 }
