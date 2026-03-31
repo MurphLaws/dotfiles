@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Map effort to effort_urg (nearest int, clamped 1-20) for urgency."""
+
+import json
+import sys
+
+task = json.loads(sys.stdin.readline())
+
+effort = task.get("effort")
+if effort:
+    val = float(effort)
+    if val > 0:
+        task["effort_urg"] = str(max(1, min(20, round(val))))
+    else:
+        task.pop("effort_urg", None)
+else:
+    task.pop("effort_urg", None)
+
+print(json.dumps(task))
