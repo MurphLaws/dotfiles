@@ -68,12 +68,14 @@ uda.note.type=date
 uda.note.label=Note
 
 # UDA for effort tracking
-# effort: 0.5 to 10 (float, higher = harder)
+# effort: numeric float (higher = harder)
 # Low effort = higher urgency (quick wins first)
-# Negative coefficient so higher effort lowers urgency
+# effort_score is computed by hook as (1/effort)*2
 uda.effort.type=numeric
 uda.effort.label=Effort
-urgency.uda.effort.coefficient=-0.5
+uda.effort_score.type=numeric
+uda.effort_score.label=EScore
+urgency.uda.effort_score.coefficient=1.0
 
 # Default report (task command) with effort column
 report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.countdown,due.relative,until.remaining,description.truncated,effort,urgency
