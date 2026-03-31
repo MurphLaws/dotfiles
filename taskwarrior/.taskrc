@@ -68,14 +68,32 @@ uda.note.type=date
 uda.note.label=Note
 
 # UDA for effort tracking
-# effort: numeric float (higher = harder)
+# effort: 0.5 to 10 (float, higher = harder)
 # Low effort = higher urgency (quick wins first)
-# effort_score is computed by hook as (1/effort)*2
-uda.effort.type=numeric
+# Coefficients follow (1/effort)*2 formula
+uda.effort.type=string
 uda.effort.label=Effort
-uda.effort_score.type=numeric
-uda.effort_score.label=EScore
-urgency.uda.effort_score.coefficient=1.0
+uda.effort.values=0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10
+urgency.uda.effort.0.5.coefficient=4.0
+urgency.uda.effort.1.coefficient=2.0
+urgency.uda.effort.1.5.coefficient=1.33
+urgency.uda.effort.2.coefficient=1.0
+urgency.uda.effort.2.5.coefficient=0.8
+urgency.uda.effort.3.coefficient=0.67
+urgency.uda.effort.3.5.coefficient=0.57
+urgency.uda.effort.4.coefficient=0.5
+urgency.uda.effort.4.5.coefficient=0.44
+urgency.uda.effort.5.coefficient=0.4
+urgency.uda.effort.5.5.coefficient=0.36
+urgency.uda.effort.6.coefficient=0.33
+urgency.uda.effort.6.5.coefficient=0.31
+urgency.uda.effort.7.coefficient=0.29
+urgency.uda.effort.7.5.coefficient=0.27
+urgency.uda.effort.8.coefficient=0.25
+urgency.uda.effort.8.5.coefficient=0.24
+urgency.uda.effort.9.coefficient=0.22
+urgency.uda.effort.9.5.coefficient=0.21
+urgency.uda.effort.10.coefficient=0.2
 
 # Default report (task command) with effort column
 report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.countdown,due.relative,until.remaining,description.truncated,effort,urgency
