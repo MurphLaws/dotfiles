@@ -114,9 +114,6 @@ uda.taskwarrior-tui.shortcuts.1=~/.task/hooks/tui-note
 uda.taskwarrior-tui.task-report.prompt-on-done=true
 uda.taskwarrior-tui.task-report.show-info=false
 
-# Autocomplete projects from all tasks (including completed)
-complete.all.projects=yes
-
 # Aliases
 alias.note=execute "${HOME}/.task/hooks/note"
 alias.select=execute "${HOME}/.task/hooks/select"

@@ -4,6 +4,9 @@
 task() {
     local colorize="$HOME/.task/hooks/colorize-top"
     case "$1" in
+        _projects)
+            { command task _projects; command task status:completed _unique project } 2>/dev/null | sort -u
+            ;;
         ""|-*)
             command task "$@" | "$colorize"
             ;;
