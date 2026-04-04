@@ -119,3 +119,5 @@ uda.taskwarrior-tui.task-report.show-info=false
 alias.note=execute "${HOME}/.task/hooks/note"
 alias.select=execute "${HOME}/.task/hooks/select"
 
+defaultwidth=0
+detection=on
