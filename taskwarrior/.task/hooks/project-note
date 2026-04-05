@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Open/create a note for a project (stored by project name)
+
+NOTE_DIR="${HOME}/.task/notes/projects"
+mkdir -p "$NOTE_DIR"
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: task pnote <project>"
+    echo "Projects:"
+    task _projects
+    exit 1
+fi
+
+project="$1"
+note="${NOTE_DIR}/${project}.md"
+nvim "$note"
