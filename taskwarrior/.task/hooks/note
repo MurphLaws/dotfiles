@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 
 NOTE_DIR=${HOME}/.task/notes
-mkdir -p notes/
+mkdir -p "${NOTE_DIR}" "${NOTE_DIR}/projects"
 
-if [[ $# -eq 1 ]]; then
+if [[ "$1" == "-p" || "$1" == "--project" ]]; then
+    # Project note mode: task note -p <project>
+    project="$2"
+    if [[ -z "$project" ]]; then
+        echo "Usage: task note -p <project>"
+        echo "Projects:"
+        task _projects
+        exit 1
+    fi
+    nvim "${NOTE_DIR}/projects/${project}.md"
+elif [[ $# -eq 1 ]]; then
     uuid=$(task _get $1.uuid)
     note="${NOTE_DIR}/${uuid}.md"
     nvim $note || exit 1
