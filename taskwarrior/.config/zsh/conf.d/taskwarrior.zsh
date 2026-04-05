@@ -9,7 +9,7 @@ fi
 # Custom task completion: autocomplete project names after "task note -p"
 _task() {
   if [[ ${words[2]} == "note" && ( ${words[3]} == "-p" || ${words[3]} == "--project" ) && CURRENT -eq 4 ]]; then
-    local projects=(${(f)"$(command task _projects 2>/dev/null)"})
+    local projects=(${(f)"$({ command task _projects; command task status:completed _unique project } 2>/dev/null | sort -u)"})
     compadd -a projects
     return
   fi
