@@ -16,6 +16,10 @@ task() {
             shift
             command task list "$@" | "$colorize"
             ;;
+        next)
+            shift
+            command task next "$@" | "$colorize"
+            ;;
         *)
             command task "$@"
             ;;
