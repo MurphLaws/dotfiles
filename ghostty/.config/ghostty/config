@@ -13,7 +13,7 @@ background-opacity = 0.95
 background-blur-radius = 20
 macos-non-native-fullscreen = visible-menu
 fullscreen = true
-window-decoration = false
+macos-titlebar-style = hidden
 keybind = shift+enter=text:\x1b\r
 
 # Auto-start tmux
