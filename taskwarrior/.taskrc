@@ -123,6 +123,12 @@ alias.select=execute "${HOME}/.task/hooks/select"
 defaultwidth=120
 detection=on
 
+# Contexts
+# gamedev: only gamedev tasks
+# work: everything except gamedev
+context.gamedev.read=project:gamedev
+context.work.read=project.not:gamedev
+
 # Sync configuration (taskchampion-sync-server on Railway)
 sync.server.url=https://taskchampion-sync-production.up.railway.app
 sync.server.client_id=A95448B1-2D62-4EAB-ACDA-E581FDD9FE30
