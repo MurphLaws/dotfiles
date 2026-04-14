@@ -133,3 +133,4 @@ context.work.read=project.not:gamedev
 sync.server.url=https://taskchampion-sync-production.up.railway.app
 sync.server.client_id=A95448B1-2D62-4EAB-ACDA-E581FDD9FE30
 sync.encryption_secret=0452b761ddc045a0ed9dbe00d9770eee66c0d1c144f8aa0bc4afdb22b6ed3da9
+context=work
