@@ -5,6 +5,8 @@ return {
 		lazy = false,
 
 		opts = {
+			input = { enabled = true },
+			picker = { enabled = true },
 			notifier = {
 				enabled = true,
 				timeout = 3000,
