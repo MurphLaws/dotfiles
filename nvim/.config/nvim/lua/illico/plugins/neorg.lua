@@ -4,6 +4,19 @@ return {
 		lazy = false,
 		version = "*",
 
+		-- Neorg's tree-sitter-norg and tree-sitter-norg-meta parsers are
+		-- installed via luarocks into lazy-rocks, not nvim-treesitter's parser
+		-- dir. Add those paths to runtimepath so nvim can find norg_meta.so.
+		init = function()
+			local rocks_root = vim.fn.stdpath("data") .. "/lazy-rocks"
+			for _, rock in ipairs({ "tree-sitter-norg", "tree-sitter-norg-meta" }) do
+				local path = rocks_root .. "/" .. rock .. "/lib/lua/5.1"
+				if vim.fn.isdirectory(path) == 1 then
+					vim.opt.runtimepath:append(path)
+				end
+			end
+		end,
+
 		dependencies = {
 			{ "L3MON4D3/LuaSnip" },
 			{ "pysan3/neorg-templates", dependencies = { "L3MON4D3/LuaSnip" } },
