@@ -34,6 +34,7 @@ return {
 			{ "<leader>c", group = "Code" },
 			{ "<leader>d", group = "Debug" },
 			{ "<leader>g", group = "Git" },
+			{ "<leader>G", group = "Godot" },
 			{ "<leader>l", group = "LSP" },
 			{ "<leader>s", group = "Search" },
 			{ "<leader>t", group = "Toggle" },
