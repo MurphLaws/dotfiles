@@ -1,0 +1,201 @@
+#!/usr/bin/env python3
+"""Post-process `task` report output to render dependency trees.
+
+Reads a tabular taskwarrior report on stdin, groups child tasks under their
+parent (parent.depends -> children), and prefixes the description column with
+box-drawing characters. On any error, emits stdin verbatim so standard reports
+are never lost.
+"""
+import json
+import re
+import subprocess
+import sys
+
+CHILD_GLYPH = "│  "
+PARENT_GLYPH = "└─ "
+PARENT_TEXT_ON = "\033[34m"
+PARENT_TEXT_OFF = "\033[0m"
+
+
+def column_spans(separator_line):
+    spans = []
+    i = 0
+    n = len(separator_line)
+    while i < n:
+        if separator_line[i] == "-":
+            start = i
+            while i < n and separator_line[i] == "-":
+                i += 1
+            spans.append((start, i))
+        else:
+            i += 1
+    return spans
+
+
+def render(raw):
+    lines = raw.split("\n")
+
+    sep_idx = None
+    for i, line in enumerate(lines):
+        if "---" in line and re.fullmatch(r"[- ]+", line or ""):
+            sep_idx = i
+            break
+    if sep_idx is None or sep_idx == 0:
+        return raw
+
+    header = lines[sep_idx - 1]
+    sep = lines[sep_idx]
+    spans = column_spans(sep)
+    if not spans:
+        return raw
+
+    col_names = [header[s:e].strip() for (s, e) in spans]
+    if "ID" not in col_names or "Description" not in col_names:
+        return raw
+    id_col = col_names.index("ID")
+    desc_col = col_names.index("Description")
+    id_start, id_end = spans[id_col]
+    desc_start, desc_end = spans[desc_col]
+    desc_width = desc_end - desc_start
+
+    body_start = sep_idx + 1
+    body_end = body_start
+    while body_end < len(lines) and lines[body_end].strip():
+        body_end += 1
+    body = lines[body_start:body_end]
+
+    ids_in_order = []
+    id_to_row = {}
+    for row in body:
+        if len(row) < id_end:
+            continue
+        id_str = row[id_start:id_end].strip()
+        if id_str.isdigit():
+            ids_in_order.append(id_str)
+            id_to_row[id_str] = row
+
+    if not ids_in_order:
+        return raw
+
+    export = subprocess.run(
+        ["task", "rc.verbose=nothing"] + ids_in_order + ["export"],
+        capture_output=True, text=True,
+    )
+    if export.returncode != 0:
+        return raw
+    try:
+        tasks = json.loads(export.stdout)
+    except json.JSONDecodeError:
+        return raw
+
+    uuid_to_id = {}
+    id_to_task = {}
+    for t in tasks:
+        tid = str(t.get("id", ""))
+        uuid = t.get("uuid", "")
+        if tid and uuid:
+            uuid_to_id[uuid] = tid
+            id_to_task[tid] = t
+
+    parent_children = {}
+    child_parent = {}
+    for tid, task in id_to_task.items():
+        deps = task.get("depends", [])
+        if isinstance(deps, str):
+            deps = [d for d in deps.split(",") if d]
+        kids = []
+        for dep_uuid in deps:
+            if dep_uuid in uuid_to_id:
+                cid = uuid_to_id[dep_uuid]
+                kids.append(cid)
+                child_parent[cid] = tid
+        if kids:
+            parent_children[tid] = kids
+
+    def with_desc(row, new_desc_text):
+        content = new_desc_text
+        if len(content) > desc_width:
+            content = content[:desc_width]
+        else:
+            content = content.ljust(desc_width)
+        return row[:desc_start] + content + row[desc_end:]
+
+    def strip_desc(row):
+        return row[desc_start:desc_end].strip()
+
+    rendered = []
+    emitted = set()
+
+    def emit_group(root_id):
+        if root_id in emitted:
+            return
+        visible_kids_in_order = [
+            cid for cid in ids_in_order
+            if child_parent.get(cid) == root_id and cid in id_to_row and cid not in emitted
+        ]
+        for cid in visible_kids_in_order:
+            crow = id_to_row[cid]
+            rendered.append(with_desc(crow, CHILD_GLYPH + strip_desc(crow)))
+            emitted.add(cid)
+        if root_id in id_to_row:
+            prow = id_to_row[root_id]
+            if visible_kids_in_order:
+                glyph_len = len(PARENT_GLYPH)
+                full = PARENT_GLYPH + strip_desc(prow)
+                if len(full) > desc_width:
+                    full = full[:desc_width]
+                else:
+                    full = full.ljust(desc_width)
+                glyph_part = full[:glyph_len]
+                text_part = full[glyph_len:]
+                content = glyph_part + PARENT_TEXT_ON + text_part + PARENT_TEXT_OFF
+                parent_row = prow[:desc_start] + content + prow[desc_end:]
+                rendered.append(parent_row)
+            else:
+                rendered.append(prow)
+            emitted.add(root_id)
+
+    for tid in ids_in_order:
+        if tid in emitted:
+            continue
+        root = tid
+        while (
+            root in child_parent
+            and child_parent[root] in id_to_task
+            and child_parent[root] in id_to_row
+        ):
+            root = child_parent[root]
+        if root in parent_children and any(
+            k in id_to_row and k not in emitted for k in parent_children[root]
+        ):
+            emit_group(root)
+        else:
+            rendered.append(id_to_row[tid])
+            emitted.add(tid)
+
+    for tid in ids_in_order:
+        if tid not in emitted:
+            rendered.append(id_to_row[tid])
+            emitted.add(tid)
+
+    out = []
+    out.extend(lines[:body_start])
+    out.extend(rendered)
+    out.extend(lines[body_end:])
+    return "\n".join(out)
+
+
+def main():
+    raw = sys.stdin.read()
+    if not raw.strip():
+        sys.stdout.write(raw)
+        return
+    try:
+        sys.stdout.write(render(raw))
+    except Exception as e:
+        sys.stderr.write(f"tree-render: {e}\n")
+        sys.stdout.write(raw)
+
+
+if __name__ == "__main__":
+    main()

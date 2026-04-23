@@ -101,7 +101,7 @@ urgency.uda.effort_urg.20.coefficient=-10.0
 # Default report (task command) with effort column
 report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.relative,due.relative,until.remaining,description.truncated,effort,urgency
 report.next.labels=ID,Active,Age,Deps,P,Project,Tag,Recur,S,Due,Until,Description,Effort,Urg
-report.next.filter=status:pending -BLOCKED
+report.next.filter=status:pending
 
 # taskwarrior-tui configuration
 # Selection: black background highlight (reverse video)
@@ -119,6 +119,7 @@ uda.taskwarrior-tui.task-report.show-info=false
 # Aliases
 alias.note=execute "${HOME}/.task/hooks/note"
 alias.select=execute "${HOME}/.task/hooks/select"
+alias.split=execute "${HOME}/.task/hooks/split"
 
 defaultwidth=120
 detection=on

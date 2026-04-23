@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Split a Taskwarrior task into subtasks. Parent depends on the new children."""
+import argparse
+import json
+import shlex
+import subprocess
+import sys
+
+INHERITED_UDAS = ["effort", "note"]
+
+
+def run(argv, dry_run):
+    print("+ " + " ".join(shlex.quote(a) for a in argv), file=sys.stderr)
+    if dry_run:
+        return 0
+    return subprocess.run(argv).returncode
+
+
+def capture(argv):
+    return subprocess.run(argv, capture_output=True, text=True)
+
+
+def main():
+    p = argparse.ArgumentParser(
+        prog="task split",
+        description="Split a Taskwarrior task into subtasks. The parent stays pending and depends on the new children.",
+    )
+    p.add_argument("parent_id", help="ID or UUID of the parent task")
+    p.add_argument("subtasks", nargs="+", help="Descriptions of the new subtasks")
+    p.add_argument("--project", help="Override project (default: parent's project)")
+    p.add_argument("--dry-run", action="store_true", help="Print commands without running them")
+    args = p.parse_args()
+
+    export = capture(["task", args.parent_id, "export"])
+    if export.returncode != 0:
+        print(f"task split: failed to export parent: {export.stderr.strip()}", file=sys.stderr)
+        sys.exit(1)
+    try:
+        parsed = json.loads(export.stdout)
+    except json.JSONDecodeError as e:
+        print(f"task split: could not parse task export: {e}", file=sys.stderr)
+        sys.exit(1)
+    if not parsed:
+        print(f"task split: no task matches '{args.parent_id}'", file=sys.stderr)
+        sys.exit(1)
+    parent = parsed[0]
+
+    project = args.project or parent.get("project")
+    tags = parent.get("tags", []) or []
+    priority = parent.get("priority")
+    due = parent.get("due")
+    annotations = [a["description"] for a in parent.get("annotations", []) or []]
+    parent_desc = parent["description"]
+    parent_uuid = parent["uuid"]
+
+    child_uuids = []
+    for desc in args.subtasks:
+        add_argv = ["task", "add"]
+        if project:
+            add_argv.append(f"project:{project}")
+        if priority:
+            add_argv.append(f"priority:{priority}")
+        if due:
+            add_argv.append(f"due:{due}")
+        for t in tags:
+            add_argv.append(f"+{t}")
+        for uda in INHERITED_UDAS:
+            v = parent.get(uda)
+            if v not in (None, ""):
+                add_argv.append(f"{uda}:{v}")
+        add_argv.append(desc)
+        if run(add_argv, args.dry_run) != 0:
+            print("task split: `task add` failed, aborting", file=sys.stderr)
+            sys.exit(1)
+
+        if args.dry_run:
+            child_uuids.append(f"<new-uuid-{len(child_uuids) + 1}>")
+        else:
+            latest = capture(["task", "+LATEST", "_uuids"])
+            uuid = latest.stdout.strip().split("\n")[0].strip()
+            if not uuid:
+                print("task split: could not resolve new child's UUID", file=sys.stderr)
+                sys.exit(1)
+            child_uuids.append(uuid)
+
+        for text in [parent_desc, *annotations]:
+            rc = run(["task", "+LATEST", "annotate", text], args.dry_run)
+            if rc != 0:
+                print("task split: annotation failed, aborting", file=sys.stderr)
+                sys.exit(1)
+
+    existing_deps = parent.get("depends", [])
+    if isinstance(existing_deps, str):
+        existing_deps = [d for d in existing_deps.split(",") if d]
+    all_deps = existing_deps + child_uuids
+    rc = run(
+        ["task", f"uuid:{parent_uuid}", "modify", f"depends:{','.join(all_deps)}"],
+        args.dry_run,
+    )
+    if rc != 0:
+        print("task split: setting parent depends failed", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

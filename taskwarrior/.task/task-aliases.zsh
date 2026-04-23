@@ -3,6 +3,7 @@
 
 task() {
     local colorize="$HOME/.task/hooks/colorize-top"
+    local tree="$HOME/.task/hooks/tree-render"
     # Intercept _projects anywhere in args (zsh completion passes rc.hooks=0 _projects)
     if [[ "$*" == *_projects* ]]; then
         { command task _projects; command task status:completed _unique project } 2>/dev/null | sort -u
@@ -10,15 +11,20 @@ task() {
     fi
     case "$1" in
         ""|-*)
-            command task "$@" | "$colorize"
+            command task "$@" | "$tree" | "$colorize"
             ;;
         list)
             shift
-            command task list "$@" | "$colorize"
+            command task list "$@" | "$tree" | "$colorize"
             ;;
         next)
             shift
-            command task next "$@" | "$colorize"
+            command task next "$@" | "$tree" | "$colorize"
+            ;;
+        split)
+            # Bypass Taskwarrior's alias.split so shell-quoted args survive
+            shift
+            "$HOME/.task/hooks/split" "$@"
             ;;
         *)
             command task "$@"
