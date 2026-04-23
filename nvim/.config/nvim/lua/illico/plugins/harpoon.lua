@@ -5,6 +5,7 @@ return {
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		"nvim-telescope/telescope.nvim",
+		"letieu/harpoon-lualine",
 	},
 	config = function()
 		local harpoon = require("harpoon")

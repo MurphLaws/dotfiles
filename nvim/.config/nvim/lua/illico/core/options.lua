@@ -19,6 +19,27 @@ vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undofile = true
 
+-- Auto-reload files changed outside nvim (e.g. Godot editor writing to .gd files).
+-- Without this, saving triggers "WARNING: The file has been changed since reading it!!!"
+vim.opt.autoread = true
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+	pattern = "*",
+	callback = function()
+		if vim.fn.mode() ~= "c" and vim.fn.getcmdwintype() == "" then
+			vim.cmd("checktime")
+		end
+	end,
+})
+
+-- When checktime detects an external change, reload silently instead of prompting.
+-- This is what actually suppresses the W11/W12 "do you want to save?" dialog.
+vim.api.nvim_create_autocmd("FileChangedShell", {
+	pattern = "*",
+	callback = function()
+		vim.v.fcs_choice = "reload"
+	end,
+})
+
 vim.opt.updatetime = 200
 vim.opt.timeoutlen = 300
 

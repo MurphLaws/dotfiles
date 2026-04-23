@@ -81,7 +81,19 @@ return {
 				lualine_y = {},
 				lualine_z = {},
 			},
-			tabline = {},
+			tabline = {
+				lualine_a = {
+					{
+						"harpoon2",
+						icon = "󱡅",
+						indicators = { " 1", " 2", " 3", " 4" },
+						active_indicators = { "[1]", "[2]", "[3]", "[4]" },
+						color_active = { fg = "#fb5e5b", gui = "bold" },
+						_separator = " ",
+						no_harpoon = "No harpoon marks",
+					},
+				},
+			},
 			winbar = {},
 			inactive_winbar = {},
 			extensions = { "nvim-tree", "lazy", "quickfix", "fugitive", "mason" },

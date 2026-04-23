@@ -4,24 +4,29 @@ return {
 	opts = {
 		keywords = {
 			TODO = {
-				icon = " ", -- clipboard/plan
+				icon = " ", -- clipboard/plan
 				color = "info",
 				alt = { "todo" },
 			},
 			DONE = {
-				icon = " ", -- checkmark
+				icon = " ", -- checkmark
 				color = "hint",
 				alt = { "done", "completed" },
 			},
 			FIXIT = {
-				icon = " ", -- wrench
+				icon = " ", -- wrench
 				color = "warning",
 				alt = { "fix", "fixme" },
 			},
 			BUGGED = {
-				icon = " ", -- bug
+				icon = " ", -- bug
 				color = "error",
 				alt = { "bug", "issue" },
+			},
+			OPTIM = {
+				icon = " ", -- lightning / speed
+				color = "optim",
+				alt = { "optimize", "optimizable", "perf", "performance" },
 			},
 		},
 		colors = {
@@ -30,6 +35,7 @@ return {
 			info = { "DiagnosticInfo", "#2563EB" }, -- blue
 			hint = { "DiagnosticHint", "#10B981" }, -- green
 			default = { "Identifier", "#7C3AED" }, -- purple
+			optim = { "#F97316" }, -- orange
 		},
 		highlight = {
 			before = "", -- "fg" or "bg" or empty

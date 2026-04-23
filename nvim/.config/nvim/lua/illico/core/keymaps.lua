@@ -10,6 +10,12 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "move up in buffer with cursor 
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
+-- Fast vertical movement (10 lines at a time, centered)
+vim.keymap.set("n", "<C-j>", "10jzz", { desc = "Jump 10 lines down" })
+vim.keymap.set("n", "<C-k>", "10kzz", { desc = "Jump 10 lines up" })
+vim.keymap.set("v", "<C-j>", "10jzz", { desc = "Jump 10 lines down (visual)" })
+vim.keymap.set("v", "<C-k>", "10kzz", { desc = "Jump 10 lines up (visual)" })
+
 -- Move selected lines up and down
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "moves lines down in visual selection" })
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = "moves lines up in visual selection" })
