@@ -78,7 +78,7 @@ return {
 					},
 				},
 				window = {
-					width = 34,
+					width = 24,
 					mappings = {
 						["<esc>"] = "close_window",
 					},

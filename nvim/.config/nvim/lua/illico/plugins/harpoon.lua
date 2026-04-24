@@ -63,11 +63,14 @@ return {
 
 		-- Toggle previous & next buffers stored within Harpoon list
 		vim.keymap.set("n", "<C-S-P>", function()
-			harpoon:list():prev()
+			harpoon:list():prev({ ui_nav_wrap = true })
 		end)
 		vim.keymap.set("n", "<C-S-N>", function()
-			harpoon:list():next()
+			harpoon:list():next({ ui_nav_wrap = true })
 		end)
+		vim.keymap.set("n", "<C-a>n", function()
+			harpoon:list():next({ ui_nav_wrap = true })
+		end, { desc = "Harpoon cycle next" })
 
 		-- Telescope inside Harpoon Window
 		vim.keymap.set("n", "<C-f>", function()
