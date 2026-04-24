@@ -10,6 +10,7 @@ return {
 		config = function()
 			local harpoon = require("harpoon")
 			local conf = require("telescope.config").values
+			local strategies = require("telescope.pickers.layout_strategies")
 
 			harpoon:setup({
 				global_settings = {
@@ -17,6 +18,16 @@ return {
 					save_on_change = true,
 				},
 			})
+
+			-- Custom layout: same as horizontal, but the prompt is parked
+			-- off-screen so the picker shows only Results + Preview.
+			strategies.harpoon_no_prompt = function(picker, max_columns, max_lines, layout_config)
+				local layout = strategies.horizontal(picker, max_columns, max_lines, layout_config)
+				if layout.prompt then
+					layout.prompt.line = max_lines + 100
+				end
+				return layout
+			end
 
 			local function toggle_telescope(harpoon_files)
 				local file_paths = {}
@@ -27,6 +38,7 @@ return {
 					.new({}, {
 						prompt_title = "Harpoon",
 						initial_mode = "normal",
+						layout_strategy = "harpoon_no_prompt",
 						finder = require("telescope.finders").new_table({
 							results = file_paths,
 						}),
