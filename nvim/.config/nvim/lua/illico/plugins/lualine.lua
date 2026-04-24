@@ -1,7 +1,11 @@
 return {
 	"nvim-lualine/lualine.nvim",
-	dependencies = { "nvim-tree/nvim-web-devicons" },
+	dependencies = {
+		"nvim-tree/nvim-web-devicons",
+		"kiennt63/harpoon-files.nvim",
+	},
 	config = function()
+		local harpoon_files = require("harpoon_files")
 		require("lualine").setup({
 			options = {
 				theme = "auto", -- 'auto' detectará que usas catppuccin y usará los colores correctos por modo
@@ -83,15 +87,7 @@ return {
 			},
 			tabline = {
 				lualine_a = {
-					{
-						"harpoon2",
-						icon = "󱡅",
-						indicators = { " 1", " 2", " 3", " 4" },
-						active_indicators = { "[1]", "[2]", "[3]", "[4]" },
-						color_active = { fg = "#fb5e5b", gui = "bold" },
-						_separator = " ",
-						no_harpoon = "No harpoon marks",
-					},
+					{ harpoon_files.lualine_component },
 				},
 			},
 			winbar = {},
