@@ -5,12 +5,9 @@ return {
 		branch = "harpoon2",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
-			"nvim-telescope/telescope.nvim",
 		},
 		config = function()
 			local harpoon = require("harpoon")
-			local conf = require("telescope.config").values
-			local strategies = require("telescope.pickers.layout_strategies")
 
 			harpoon:setup({
 				global_settings = {
@@ -19,34 +16,13 @@ return {
 				},
 			})
 
-			-- Custom layout: same as horizontal, but the prompt is parked
-			-- off-screen so the picker shows only Results + Preview.
-			strategies.harpoon_no_prompt = function(picker, max_columns, max_lines, layout_config)
-				local layout = strategies.horizontal(picker, max_columns, max_lines, layout_config)
-				if layout.prompt then
-					layout.prompt.line = max_lines + 100
-				end
-				return layout
-			end
-
-			local function toggle_telescope(harpoon_files)
-				local file_paths = {}
-				for _, item in ipairs(harpoon_files.items) do
-					table.insert(file_paths, item.value)
-				end
-				require("telescope.pickers")
-					.new({}, {
-						prompt_title = "Harpoon",
-						initial_mode = "normal",
-						layout_strategy = "harpoon_no_prompt",
-						finder = require("telescope.finders").new_table({
-							results = file_paths,
-						}),
-						previewer = conf.file_previewer({}),
-						sorter = conf.generic_sorter({}),
-					})
-					:find()
-			end
+			harpoon:extend({
+				UI_CREATE = function(cx)
+					vim.keymap.set("n", "q", function()
+						harpoon.ui:toggle_quick_menu(harpoon:list())
+					end, { buffer = cx.bufnr, desc = "Close harpoon menu" })
+				end,
+			})
 
 			-- Harpoon Nav Interface
 			vim.keymap.set("n", "<leader>a", function()
@@ -54,8 +30,8 @@ return {
 			end, { desc = "Harpoon add file" })
 
 			vim.keymap.set("n", "<C-e>", function()
-				toggle_telescope(harpoon:list())
-			end, { desc = "Harpoon telescope menu" })
+				harpoon.ui:toggle_quick_menu(harpoon:list())
+			end, { desc = "Harpoon quick menu" })
 
 			-- Harpoon marked files
 			vim.keymap.set("n", "<C-y>", function()
@@ -82,10 +58,15 @@ return {
 				harpoon:list():next({ ui_nav_wrap = true })
 			end, { desc = "Harpoon cycle next" })
 
-			-- Telescope inside Harpoon Window
+			for i = 1, 9 do
+				vim.keymap.set("n", "<C-a>" .. i, function()
+					harpoon:list():select(i)
+				end, { desc = "Harpoon select " .. i })
+			end
+
 			vim.keymap.set("n", "<C-f>", function()
-				toggle_telescope(harpoon:list())
-			end)
+				harpoon.ui:toggle_quick_menu(harpoon:list())
+			end, { desc = "Harpoon quick menu" })
 		end,
 	},
 	{

@@ -5,7 +5,46 @@ return {
 		"kiennt63/harpoon-files.nvim",
 	},
 	config = function()
-		local harpoon_files = require("harpoon_files")
+		local function set_harpoon_hl()
+			vim.api.nvim_set_hl(0, "HarpoonCurrent", { fg = "#ff6188", bold = true })
+			vim.api.nvim_set_hl(0, "HarpoonPin", { fg = "#5fafff" })
+		end
+		set_harpoon_hl()
+		vim.api.nvim_create_autocmd("ColorScheme", {
+			group = vim.api.nvim_create_augroup("HarpoonFilesColors", { clear = true }),
+			callback = set_harpoon_hl,
+		})
+
+		local PIN = "\u{f435}"
+		local MAX_LEN = 15
+		local function harpoon_colored()
+			local ok, harpoon = pcall(require, "harpoon")
+			if not ok then
+				return ""
+			end
+			local items = harpoon:list().items or {}
+			if #items == 0 then
+				return ""
+			end
+			local current_file = vim.fn.expand("%:p")
+			local parts = {}
+			for id, item in ipairs(items) do
+				local file_path = vim.fn.fnamemodify(item.value, ":p")
+				local fname = vim.fn.fnamemodify(file_path, ":t"):sub(1, MAX_LEN)
+				local is_current = file_path == current_file
+				local pin = "%#HarpoonPin#" .. PIN .. "%*"
+				if is_current then
+					table.insert(
+						parts,
+						" %#HarpoonCurrent#[" .. pin .. "%#HarpoonCurrent# " .. id .. " " .. fname .. "]%* "
+					)
+				else
+					table.insert(parts, "  " .. pin .. " " .. id .. " " .. fname .. " ")
+				end
+			end
+			return table.concat(parts, "")
+		end
+
 		require("lualine").setup({
 			options = {
 				theme = "auto", -- 'auto' detectará que usas catppuccin y usará los colores correctos por modo
@@ -87,7 +126,7 @@ return {
 			},
 			tabline = {
 				lualine_a = {
-					{ harpoon_files.lualine_component },
+					{ harpoon_colored },
 				},
 			},
 			winbar = {},
