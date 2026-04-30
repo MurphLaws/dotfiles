@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 
-ICON = "  \U0001f517"  # two-space padding + link emoji
+ICON = "  "  # two-space padding + nf-fa-link (Nerd Font)
 ANSI_RE = re.compile(r"\033\[[0-9;]*m")
 
 
