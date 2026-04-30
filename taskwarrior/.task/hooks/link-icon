@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Post-process `task` report output to append a link icon (🔗) at the right
+side of rows whose task has the `link` UDA set.
+
+Reads a tabular taskwarrior report on stdin, identifies the body rows by their
+ID column, calls `task export` for those IDs, and appends the icon to rows
+whose task has a non-empty `link` value. On any error, emits stdin verbatim
+so reports are never lost.
+"""
+import json
+import re
+import subprocess
+import sys
+
+ICON = "  \U0001f517"  # two-space padding + link emoji
+ANSI_RE = re.compile(r"\033\[[0-9;]*m")
+
+
+def column_spans(separator_line):
+    spans = []
+    i = 0
+    n = len(separator_line)
+    while i < n:
+        if separator_line[i] == "-":
+            start = i
+            while i < n and separator_line[i] == "-":
+                i += 1
+            spans.append((start, i))
+        else:
+            i += 1
+    return spans
+
+
+def render(raw):
+    lines = raw.split("\n")
+
+    sep_idx = None
+    for i, line in enumerate(lines):
+        if "---" in line and re.fullmatch(r"[- ]+", line or ""):
+            sep_idx = i
+            break
+    if sep_idx is None or sep_idx == 0:
+        return raw
+
+    header = lines[sep_idx - 1]
+    sep = lines[sep_idx]
+    spans = column_spans(sep)
+    if not spans:
+        return raw
+
+    col_names = [header[s:e].strip() for (s, e) in spans]
+    if "ID" not in col_names:
+        return raw
+    id_col = col_names.index("ID")
+    id_start, id_end = spans[id_col]
+
+    body_start = sep_idx + 1
+    body_end = body_start
+    while body_end < len(lines) and lines[body_end].strip():
+        body_end += 1
+
+    ids = []
+    for row in lines[body_start:body_end]:
+        if len(row) < id_end:
+            continue
+        id_str = ANSI_RE.sub("", row[id_start:id_end]).strip()
+        if id_str.isdigit():
+            ids.append(id_str)
+
+    if not ids:
+        return raw
+
+    export = subprocess.run(
+        ["task", "rc.verbose=nothing"] + ids + ["export"],
+        capture_output=True, text=True,
+    )
+    if export.returncode != 0:
+        return raw
+    try:
+        tasks = json.loads(export.stdout)
+    except json.JSONDecodeError:
+        return raw
+
+    has_link = {}
+    for t in tasks:
+        tid = str(t.get("id", ""))
+        link = t.get("link", "")
+        if tid:
+            has_link[tid] = bool(link)
+
+    new_lines = list(lines)
+    for i in range(body_start, body_end):
+        row = new_lines[i]
+        if len(row) < id_end:
+            continue
+        id_str = ANSI_RE.sub("", row[id_start:id_end]).strip()
+        if id_str.isdigit() and has_link.get(id_str):
+            new_lines[i] = row.rstrip() + ICON
+
+    return "\n".join(new_lines)
+
+
+def main():
+    raw = sys.stdin.read()
+    if not raw.strip():
+        sys.stdout.write(raw)
+        return
+    try:
+        sys.stdout.write(render(raw))
+    except Exception as e:
+        sys.stderr.write(f"link-icon: {e}\n")
+        sys.stdout.write(raw)
+
+
+if __name__ == "__main__":
+    main()

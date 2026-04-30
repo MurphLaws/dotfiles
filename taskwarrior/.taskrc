@@ -68,6 +68,13 @@ report.notes.filter=status:pending
 uda.note.type=date
 uda.note.label=Note
 
+# UDA for link (URL or file path)
+# Set via -url <url> or -file <path> in the task() shell wrapper.
+# Rows with a link get a 🔗 icon appended via the link-icon post-processor.
+# Open via `task <id> open`.
+uda.link.type=string
+uda.link.label=Link
+
 # UDA for effort tracking
 # effort: any positive float 0.1-20 (higher = harder)
 # Low effort = higher urgency (quick wins first)
