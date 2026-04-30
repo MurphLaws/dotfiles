@@ -85,6 +85,19 @@ return {
 				name = "godot",
 				cmd = vim.lsp.rpc.connect("127.0.0.1", 6005),
 			},
+			-- Python (notebook code cells via molten/quarto)
+			pyright = {
+				settings = {
+					python = {
+						analysis = {
+							typeCheckingMode = "basic",
+							diagnosticSeverityOverrides = {
+								reportUnusedExpression = "none",
+							},
+						},
+					},
+				},
+			},
 		}
 
 		-- 4. Keymaps (Autocmd al adjuntar LSP)

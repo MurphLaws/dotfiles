@@ -45,6 +45,7 @@ return {
 				"emmet_language_server",
 				-- "eslint",
 				"marksman",
+				"pyright", -- Python LSP for notebook code cells
 				-- NOTE: gdscript LSP is not installed via Mason, it's built into Godot
 			},
 		})
