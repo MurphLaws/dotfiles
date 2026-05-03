@@ -1,6 +1,6 @@
 -- illico/core/options.lua
 
--- 🟢 FIX: Disable netrw at the very start to prevent flickering when opening Neo-tree
+-- Disable netrw (we use oil.nvim for file exploration)
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
