@@ -38,8 +38,6 @@ vim.keymap.set("n", "<leader>fp", function()
 	print("File path copied to clipboard: " .. filePath)
 end, { desc = "Copy file path to clipboard" })
 
-vim.keymap.set("n", "<BS>", "<C-o>", { desc = "Jump back in jumplist" })
-
 --split management
 vim.keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" })
 -- split window vertically

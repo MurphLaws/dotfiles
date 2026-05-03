@@ -10,18 +10,6 @@ return {
 		},
 		keys = {
 			{
-				"<leader>e",
-				function()
-					require("neo-tree.command").execute({
-						toggle = true,
-						source = "filesystem",
-						position = "left",
-						reveal = true,
-					})
-				end,
-				desc = "Neo-tree: Filesystem",
-			},
-			{
 				"<leader>b",
 				function()
 					require("neo-tree.command").execute({
