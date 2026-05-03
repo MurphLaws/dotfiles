@@ -18,18 +18,3 @@ map("n", "<localleader>ra", runner.run_above,                  "run cell and abo
 map("n", "<localleader>rA", runner.run_all,                    "run all cells")
 map("n", "<localleader>rl", runner.run_line,                   "run line")
 map("v", "<localleader>r",  runner.run_range,                  "run visual range")
-
--- Molten direct commands
-map("n", "<localleader>e",  ":MoltenEvaluateOperator<CR>",     "molten evaluate operator")
-map("n", "<localleader>rr", ":MoltenReevaluateCell<CR>",       "molten re-eval cell")
-map("n", "<localleader>os", ":noautocmd MoltenEnterOutput<CR>","molten enter output")
-map("n", "<localleader>oh", ":MoltenHideOutput<CR>",           "molten hide output")
-map("n", "<localleader>md", ":MoltenDelete<CR>",               "molten delete cell")
-map("n", "<localleader>mi", ":MoltenInit<CR>",                 "molten init kernel")
-
--- Recovery: clear stuck images and force terminal redraw
-map("n", "<localleader>oc", function()
-  vim.cmd("MoltenHideOutput")
-  pcall(function() require("image").clear() end)
-  vim.cmd("redraw!")
-end, "clear images + redraw")
