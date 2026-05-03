@@ -150,7 +150,15 @@ return {
 			{
 				"<leader>tz",
 				function()
-					require("snacks").zen()
+					require("snacks").zen({
+						win = {
+							wo = {
+								number = false,
+								relativenumber = false,
+								signcolumn = "no",
+							},
+						},
+					})
 				end,
 				desc = "Toggle Zen Mode",
 			},
