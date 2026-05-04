@@ -4,15 +4,14 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Keep cursor centered while jumping
-vim.keymap.set("n", "J", "mzJ`z")
 vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "move down in buffer with cursor centered" })
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "move up in buffer with cursor centered" })
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
 -- Fast vertical movement (10 lines at a time, centered)
-vim.keymap.set("n", "<C-j>", "10jzz", { desc = "Jump 10 lines down" })
-vim.keymap.set("n", "<C-k>", "10kzz", { desc = "Jump 10 lines up" })
+vim.keymap.set("n", "J", "10jzz", { desc = "Jump 10 lines down" })
+vim.keymap.set("n", "K", "10kzz", { desc = "Jump 10 lines up" })
 vim.keymap.set("v", "<C-j>", "10jzz", { desc = "Jump 10 lines down (visual)" })
 vim.keymap.set("v", "<C-k>", "10kzz", { desc = "Jump 10 lines up (visual)" })
 
