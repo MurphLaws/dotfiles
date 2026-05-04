@@ -1,7 +1,6 @@
 return {
   dir = vim.fn.stdpath("config") .. "/local-plugins/taskwarrior-notes",
   name = "taskwarrior-notes",
-  dependencies = { "nvim-telescope/telescope.nvim" },
   cmd = { "TaskNotes" },
   keys = {
     { "<leader>tw", "<cmd>TaskNotes<cr>", desc = "Taskwarrior task notes" },

@@ -6,13 +6,8 @@ return {
       pattern = { "markdown", "md" },
       callback = function(args)
         vim.keymap.set("n", "<leader>tt", function()
-          local line = vim.api.nvim_get_current_line()
-          if line:match("%(%s*[xX]%s*%)") then
-            require("markdown-todo").make_todo("undone")
-          else
-            require("markdown-todo").make_todo("done")
-          end
-        end, { buffer = args.buf, desc = "Toggle markdown todo done/undone" })
+          require("illico.markdown_todo_hierarchy").cycle()
+        end, { buffer = args.buf, desc = "Toggle markdown todo (with hierarchy)" })
       end,
     })
   end,

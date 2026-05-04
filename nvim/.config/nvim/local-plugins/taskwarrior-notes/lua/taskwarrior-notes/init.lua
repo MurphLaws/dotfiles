@@ -1,4 +1,4 @@
--- taskwarrior-notes: Telescope picker for Taskwarrior tasks/projects with note editing.
+-- taskwarrior-notes: harpoon-style floating window for Taskwarrior tasks.
 -- Notes layout matches ~/.task/hooks/note and ~/.task/hooks/project-note:
 --   tasks:    ~/.task/notes/<uuid>.md
 --   projects: ~/.task/notes/projects/<project>.md
@@ -12,32 +12,8 @@ local function ensure_dirs()
   vim.fn.mkdir(PROJECT_NOTE_DIR, "p")
 end
 
-local function trim(s)
-  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
-local function get_context_filter()
-  local ctx = trim(vim.fn.system({ "task", "_get", "rc.context" }))
-  if ctx == "" then return {} end
-  local filter = trim(vim.fn.system({ "task", "_get", "rc.context." .. ctx .. ".read" }))
-  if filter == "" then
-    filter = trim(vim.fn.system({ "task", "_get", "rc.context." .. ctx }))
-  end
-  local tokens = {}
-  for tok in filter:gmatch("%S+") do
-    table.insert(tokens, tok)
-  end
-  return tokens
-end
-
 local function task_export()
-  local args = { "task" }
-  for _, t in ipairs(get_context_filter()) do
-    table.insert(args, t)
-  end
-  table.insert(args, "status:pending")
-  table.insert(args, "export")
-  local out = vim.fn.system(args)
+  local out = vim.fn.system({ "task", "status:pending", "export" })
   if vim.v.shell_error ~= 0 or out == "" then
     return {}
   end
@@ -52,7 +28,6 @@ local function open_task_note(task)
   ensure_dirs()
   local path = NOTE_DIR .. "/" .. task.uuid .. ".md"
   vim.cmd("edit " .. vim.fn.fnameescape(path))
-  -- Record note timestamp on the task (matches ~/.task/hooks/note behavior).
   vim.fn.system(string.format(
     "task %s mod note:%s 2>/dev/null",
     task.uuid,
@@ -67,17 +42,9 @@ local function open_project_note(project)
 end
 
 function M.tasks()
-  local pickers = require("telescope.pickers")
-  local finders = require("telescope.finders")
-  local conf = require("telescope.config").values
-  local actions = require("telescope.actions")
-  local action_state = require("telescope.actions.state")
-  local entry_display = require("telescope.pickers.entry_display")
-  local previewers = require("telescope.previewers")
-
   local tasks = task_export()
   if #tasks == 0 then
-    vim.notify("No pending tasks (in current context)", vim.log.levels.INFO)
+    vim.notify("No pending tasks", vim.log.levels.INFO)
     return
   end
 
@@ -85,87 +52,90 @@ function M.tasks()
     return (a.urgency or 0) > (b.urgency or 0)
   end)
 
-  local max_project = 8
+  local max_id, max_project = 1, 1
   for _, t in ipairs(tasks) do
-    if t.project and #t.project > max_project then
-      max_project = math.min(#t.project, 30)
+    max_id = math.max(max_id, #tostring(t.id or ""))
+    max_project = math.max(max_project, #(t.project or ""))
+  end
+  max_project = math.min(max_project, 30)
+
+  local lines = {}
+  for _, t in ipairs(tasks) do
+    local project = t.project or ""
+    if #project > max_project then
+      project = project:sub(1, max_project)
+    end
+    table.insert(lines, string.format(
+      "%" .. max_id .. "s  %-" .. max_project .. "s  %s  (%.2f)",
+      tostring(t.id or ""),
+      project,
+      t.description or "",
+      t.urgency or 0
+    ))
+  end
+
+  local width = 0
+  for _, line in ipairs(lines) do
+    width = math.max(width, vim.fn.strdisplaywidth(line))
+  end
+  width = math.min(width + 4, math.floor(vim.o.columns * 0.9))
+  local height = math.min(#lines, math.floor(vim.o.lines * 0.6))
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].filetype = "taskwarrior-notes"
+
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    col = math.floor((vim.o.columns - width) / 2),
+    row = math.floor((vim.o.lines - height) / 2),
+    style = "minimal",
+    border = "rounded",
+    title = " Taskwarrior — pending tasks ",
+    title_pos = "center",
+    footer = " <CR> task note · <C-p> project note · q/<Esc> close ",
+    footer_pos = "center",
+  })
+
+  vim.wo[win].cursorline = true
+  vim.wo[win].number = false
+  vim.wo[win].relativenumber = false
+  vim.wo[win].signcolumn = "no"
+  vim.wo[win].wrap = false
+
+  local close = function()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
     end
   end
 
-  local displayer = entry_display.create({
-    separator = "  ",
-    items = {
-      { width = 4 },
-      { width = max_project },
-      { remaining = true },
-      { width = 6 },
-    },
-  })
-
-  local make_display = function(entry)
-    local t = entry.value
-    return displayer({
-      { tostring(t.id or ""),               "TelescopeResultsNumber" },
-      { t.project or "",                    "TelescopeResultsIdentifier" },
-      t.description or "",
-      { string.format("%.2f", t.urgency or 0), "TelescopeResultsComment" },
-    })
+  local map = function(key, fn)
+    vim.keymap.set("n", key, fn, { buffer = buf, nowait = true, silent = true })
   end
 
-  pickers.new({}, {
-    prompt_title = "Taskwarrior — pending tasks  (<CR> task note · <C-p> project note)",
-    finder = finders.new_table({
-      results = tasks,
-      entry_maker = function(t)
-        return {
-          value = t,
-          display = make_display,
-          ordinal = string.format("%s %s %s", t.id or "", t.project or "", t.description or ""),
-        }
-      end,
-    }),
-    sorter = conf.generic_sorter({}),
-    previewer = previewers.new_buffer_previewer({
-      title = "Note preview",
-      define_preview = function(self, entry)
-        local t = entry.value
-        local path = NOTE_DIR .. "/" .. t.uuid .. ".md"
-        if vim.fn.filereadable(path) == 1 then
-          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.fn.readfile(path))
-        else
-          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, {
-            "(no note yet — press <CR> to create)",
-            "",
-            "Description: " .. (t.description or ""),
-            "Project:     " .. (t.project or ""),
-            "Urgency:     " .. string.format("%.2f", t.urgency or 0),
-            "UUID:        " .. (t.uuid or ""),
-          })
-        end
-        vim.bo[self.state.bufnr].filetype = "markdown"
-      end,
-    }),
-    attach_mappings = function(prompt_bufnr, map)
-      actions.select_default:replace(function()
-        local entry = action_state.get_selected_entry()
-        actions.close(prompt_bufnr)
-        if entry then
-          open_task_note(entry.value)
-        end
-      end)
-      map({ "i", "n" }, "<C-p>", function()
-        local entry = action_state.get_selected_entry()
-        if not entry then return end
-        if not entry.value.project or entry.value.project == "" then
-          vim.notify("Task has no project", vim.log.levels.WARN)
-          return
-        end
-        actions.close(prompt_bufnr)
-        open_project_note(entry.value.project)
-      end)
-      return true
-    end,
-  }):find()
+  map("q", close)
+  map("<Esc>", close)
+  map("<CR>", function()
+    local row = vim.api.nvim_win_get_cursor(win)[1]
+    local task = tasks[row]
+    close()
+    if task then open_task_note(task) end
+  end)
+  map("<C-p>", function()
+    local row = vim.api.nvim_win_get_cursor(win)[1]
+    local task = tasks[row]
+    if not task or not task.project or task.project == "" then
+      vim.notify("Task has no project", vim.log.levels.WARN)
+      return
+    end
+    close()
+    open_project_note(task.project)
+  end)
 end
 
 function M.setup()
