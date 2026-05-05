@@ -2,7 +2,6 @@ return {
 	"nvim-lualine/lualine.nvim",
 	dependencies = {
 		"nvim-tree/nvim-web-devicons",
-		"kiennt63/harpoon-files.nvim",
 	},
 	config = function()
 		local function set_harpoon_hl()
