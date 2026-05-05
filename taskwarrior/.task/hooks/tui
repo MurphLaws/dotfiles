@@ -74,6 +74,7 @@ HEADER_HINTS = (
     f"  {B}/{R} search   {B}j/k{R} nav   {B}⏎{R} note   "
     f"{B}p{R} proj-note   {B}o{R}/{B}l{R} task link   "
     f"{B}O{R}/{B}L{R} project link   "
+    f"{B}⌥n{R}/{B}⌥N{R} del note   {B}⌥l{R}/{B}⌥L{R} del link   "
     f"{B}⇥{R} pending/all   {B}q{R} close"
 )
 
@@ -346,6 +347,100 @@ def set_plink_of(uuid: str) -> int:
     return 0
 
 
+def _confirm(prompt: str) -> bool:
+    try:
+        ans = input(f"{prompt} [y/N] ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        return False
+    return ans.startswith("y")
+
+
+def delete_note_of(uuid: str) -> int:
+    """Invoked by Alt-n. Removes ~/.task/notes/<uuid>.norg and clears `note:` UDA."""
+    if not uuid:
+        return 1
+    note = NOTE_DIR / f"{uuid}.norg"
+    if not note.is_file():
+        print("Task has no note to delete", file=sys.stderr)
+        return 1
+    desc = subprocess.run(["task", "_get", f"{uuid}.description"],
+                          capture_output=True, text=True).stdout.strip() or uuid
+    if not _confirm(f"Delete task note for '{desc}'?"):
+        print("aborted")
+        return 0
+    try:
+        note.unlink()
+    except OSError as e:
+        print(f"failed: {e}", file=sys.stderr)
+        return 1
+    subprocess.run(
+        ["task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", "note:"],
+        capture_output=True,
+    )
+    print("task note deleted")
+    return 0
+
+
+def delete_pnote_of(uuid: str) -> int:
+    """Invoked by Alt-Shift-n. Removes ~/.task/notes/projects/<project>.norg."""
+    if not uuid:
+        return 1
+    project = _project_of(uuid)
+    if not project:
+        print("Task has no project", file=sys.stderr)
+        return 1
+    pnote = PROJ_DIR / f"{project}.norg"
+    if not pnote.is_file():
+        print(f"Project '{project}' has no note to delete", file=sys.stderr)
+        return 1
+    if not _confirm(f"Delete project note for '{project}'?"):
+        print("aborted")
+        return 0
+    try:
+        pnote.unlink()
+    except OSError as e:
+        print(f"failed: {e}", file=sys.stderr)
+        return 1
+    print(f"project '{project}' note deleted")
+    return 0
+
+
+def delete_link_of(uuid: str) -> int:
+    """Invoked by Alt-l. Clears the task's `link` UDA."""
+    if not uuid:
+        return 1
+    res = subprocess.run(
+        ["task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", "link:"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        print(res.stderr.strip() or "task modify failed", file=sys.stderr)
+        return res.returncode
+    print("task link cleared")
+    return 0
+
+
+def delete_plink_of(uuid: str) -> int:
+    """Invoked by Alt-Shift-l. Removes ~/.task/notes/projects/<project>.link."""
+    if not uuid:
+        return 1
+    project = _project_of(uuid)
+    if not project:
+        print("Task has no project", file=sys.stderr)
+        return 1
+    plink = project_link_file(project)
+    if not plink.is_file():
+        print(f"Project '{project}' has no link to delete", file=sys.stderr)
+        return 1
+    try:
+        plink.unlink()
+    except OSError as e:
+        print(f"failed: {e}", file=sys.stderr)
+        return 1
+    print(f"project '{project}' link deleted")
+    return 0
+
+
 def main() -> int:
     if len(sys.argv) >= 3 and sys.argv[1] == "--project-of":
         return open_project_of(sys.argv[2])
@@ -357,6 +452,14 @@ def main() -> int:
         return open_plink_of(sys.argv[2])
     if len(sys.argv) >= 3 and sys.argv[1] == "--set-plink":
         return set_plink_of(sys.argv[2])
+    if len(sys.argv) >= 3 and sys.argv[1] == "--delete-note":
+        return delete_note_of(sys.argv[2])
+    if len(sys.argv) >= 3 and sys.argv[1] == "--delete-pnote":
+        return delete_pnote_of(sys.argv[2])
+    if len(sys.argv) >= 3 and sys.argv[1] == "--delete-link":
+        return delete_link_of(sys.argv[2])
+    if len(sys.argv) >= 3 and sys.argv[1] == "--delete-plink":
+        return delete_plink_of(sys.argv[2])
 
     if "--list-rows" in sys.argv:
         if "--toggle" in sys.argv:
@@ -397,6 +500,15 @@ def main() -> int:
         ("O",   f"execute(python3 {self_path} --open-plink  {{2}})+abort"),
         ("L",   f"execute(python3 {self_path} --set-plink   {{2}})"
                 f"+reload(python3 {self_path} --list-rows)"),
+        # Deletes — Alt+key (Alt-Shift = project version).
+        ("alt-n",       f"execute(python3 {self_path} --delete-note  {{2}})"
+                        f"+reload(python3 {self_path} --list-rows)"),
+        ("alt-shift-n", f"execute(python3 {self_path} --delete-pnote {{2}})"
+                        f"+reload(python3 {self_path} --list-rows)"),
+        ("alt-l",       f"execute(python3 {self_path} --delete-link  {{2}})"
+                        f"+reload(python3 {self_path} --list-rows)"),
+        ("alt-shift-l", f"execute(python3 {self_path} --delete-plink {{2}})"
+                        f"+reload(python3 {self_path} --list-rows)"),
         ("q",   "abort"),
         ("tab", f"reload(python3 {self_path} --list-rows --toggle)"),
         # Mode switches:
@@ -416,7 +528,7 @@ def main() -> int:
             "--header-lines=1",
             "--header", HEADER_HINTS,
             "--prompt", "  ",
-            "--pointer", "▶",
+            "--pointer", " ",
             "--height", "80%",
             "--margin", "2,10%",
             "--padding", "1,2",
@@ -425,8 +537,8 @@ def main() -> int:
             "--border-label-pos", "top",
             "--info", "inline-right",
             "--color", "border:white,label:cyan,prompt:bright-magenta,"
-                       "header:bright-blue,pointer:red,info:bright-black,"
-                       "gutter:-1",
+                       "header:bright-blue,info:bright-black,gutter:-1,"
+                       "fg+:-1,bg+:#FFFFFF,hl+:-1",
             "--delimiter", "\t",
             "--with-nth", "1",
             *bind_args,

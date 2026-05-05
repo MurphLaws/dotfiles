@@ -117,6 +117,51 @@ local function set_task_link(uuid, value)
   })
 end
 
+local function delete_task_link(uuid)
+  vim.fn.system({
+    "task", "rc.confirmation=no", "rc.verbose=nothing",
+    uuid, "modify", "link:",
+  })
+end
+
+local function delete_project_link(project)
+  if project_has_link(project) then
+    vim.fn.delete(project_link_file(project))
+  end
+end
+
+local function task_note_path(uuid)
+  return NOTE_DIR .. "/" .. uuid .. ".norg"
+end
+
+local function delete_task_note(uuid)
+  local p = task_note_path(uuid)
+  if vim.fn.filereadable(p) == 1 then
+    vim.fn.delete(p)
+  end
+  vim.fn.system({ "task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", "note:" })
+end
+
+local function delete_project_note(project)
+  local p = PROJECT_NOTE_DIR .. "/" .. project .. ".norg"
+  if vim.fn.filereadable(p) == 1 then
+    vim.fn.delete(p)
+  end
+end
+
+local function confirm(prompt)
+  local ans = vim.fn.input(prompt .. " [y/N] ")
+  return ans:lower():sub(1, 1) == "y"
+end
+
+local function ensure_highlights()
+  -- Match the TUI's truecolor palette for link icons.
+  vim.api.nvim_set_hl(0, "TaskwarriorLink",  { fg = "#FFCA58", default = true })
+  vim.api.nvim_set_hl(0, "TaskwarriorPlink", { fg = "#BCDF59", default = true })
+  -- White cursorline on the current selection (mirrors the TUI's bg+).
+  vim.api.nvim_set_hl(0, "SnacksPickerListCursorLine", { bg = "#FFFFFF", fg = "NONE" })
+end
+
 -- Convert a Taskwarrior ISO basic timestamp ("20260412T235345Z", UTC) to local epoch.
 -- os.time() interprets the table as local time, so we add the local UTC offset to compensate.
 local function iso_utc_to_epoch(iso)
@@ -156,8 +201,14 @@ function M.tasks()
     return (a.urgency or 0) > (b.urgency or 0)
   end)
 
+  ensure_highlights()
+
   local Snacks = require("snacks")
   local align = Snacks.picker.util.align
+
+  -- Keybind hint line shown above the column header (mirrors the TUI's --header).
+  local HINTS = "  ⏎ note  ·  p proj-note  ·  o/l task link  ·  O/L project link"
+                .. "  ·  ⌥n/⌥N delete note  ·  ⌥l/⌥L delete link  ·  q close"
 
   -- Build raw cell values for each row, then derive column widths.
   local rows = {}
@@ -217,6 +268,9 @@ function M.tasks()
   }
 
   local function format(item)
+    if item.is_help then
+      return { { HINTS, "Comment" } }
+    end
     local r = item.is_header and HDR or item.row
     local hl = item.is_header and "Title" or nil
     local out = {}
@@ -227,8 +281,8 @@ function M.tasks()
     push(r.id,          "Number",         { width = W.id,          align = "right" })
     push(r.icon_note,   "DiagnosticInfo", { width = W.icon_note,   align = "center" })
     push(r.icon_proj,   "Constant",       { width = W.icon_proj,   align = "center" })
-    push(r.icon_link,   "WarningMsg",     { width = W.icon_link,   align = "center" })
-    push(r.icon_plink,  "String",         { width = W.icon_plink,  align = "center" })
+    push(r.icon_link,   "TaskwarriorLink",  { width = W.icon_link,   align = "center" })
+    push(r.icon_plink,  "TaskwarriorPlink", { width = W.icon_plink,  align = "center" })
     push(r.project,     "Identifier",     { width = W.project,     truncate = true })
     push(r.description, "Normal",         { width = W.description, truncate = true })
     push(r.tags,        "Type",           { width = W.tags,        truncate = true })
@@ -237,8 +291,10 @@ function M.tasks()
     return out
   end
 
-  -- Items: header row first, then one per task. text drives fuzzy match (header excluded by score).
+  -- Items: keybind hints, column header, then one per task. The hints/header
+  -- are pinned at the top via score = math.huge and skipped by selection logic.
   local items = {
+    { is_help   = true, text = "", score = math.huge + 1 },
     { is_header = true, text = "", score = math.huge },
   }
   for _, r in ipairs(rows) do
@@ -276,21 +332,25 @@ function M.tasks()
       },
     },
     on_show = function(picker)
-      -- Skip the header row on open.
+      -- Skip the keybind-hints + column-header rows on open.
       vim.schedule(function()
         if picker.list and picker.list.move then
-          picker.list:move(2, true)
+          picker.list:move(3, true)
         end
       end)
     end,
     win = {
       list = {
         keys = {
-          ["p"] = "open_project_note",
-          ["o"] = "open_task_link",
-          ["l"] = "set_task_link",
-          ["O"] = "open_project_link",
-          ["L"] = "set_project_link",
+          ["p"]     = "open_project_note",
+          ["o"]     = "open_task_link",
+          ["l"]     = "set_task_link",
+          ["O"]     = "open_project_link",
+          ["L"]     = "set_project_link",
+          ["<A-n>"] = "delete_task_note",
+          ["<A-N>"] = "delete_project_note",
+          ["<A-l>"] = "delete_task_link",
+          ["<A-L>"] = "delete_project_link",
         },
       },
       input = {
@@ -305,7 +365,7 @@ function M.tasks()
     actions = {
       open_project_note = function(picker)
         local item = picker:current()
-        if not item or item.is_header or not item.row then return end
+        if not item or item.is_help or item.is_header or not item.row then return end
         local task = item.row.task
         if not task.project or task.project == "" then
           vim.notify("Task has no project", vim.log.levels.WARN)
@@ -316,7 +376,7 @@ function M.tasks()
       end,
       open_task_link = function(picker)
         local item = picker:current()
-        if not item or item.is_header or not item.row then return end
+        if not item or item.is_help or item.is_header or not item.row then return end
         local task = item.row.task
         if not task_has_link(task) then
           vim.notify("Task has no link (press l to set one from clipboard)", vim.log.levels.WARN)
@@ -327,7 +387,7 @@ function M.tasks()
       end,
       set_task_link = function(picker)
         local item = picker:current()
-        if not item or item.is_header or not item.row then return end
+        if not item or item.is_help or item.is_header or not item.row then return end
         local value = clipboard()
         if value == "" then
           vim.notify("Clipboard is empty — nothing to set", vim.log.levels.WARN)
@@ -341,7 +401,7 @@ function M.tasks()
       end,
       open_project_link = function(picker)
         local item = picker:current()
-        if not item or item.is_header or not item.row then return end
+        if not item or item.is_help or item.is_header or not item.row then return end
         local proj = item.row.task.project or ""
         if proj == "" then
           vim.notify("Task has no project", vim.log.levels.WARN)
@@ -360,7 +420,7 @@ function M.tasks()
       end,
       set_project_link = function(picker)
         local item = picker:current()
-        if not item or item.is_header or not item.row then return end
+        if not item or item.is_help or item.is_header or not item.row then return end
         local proj = item.row.task.project or ""
         if proj == "" then
           vim.notify("Task has no project — cannot set project link", vim.log.levels.WARN)
@@ -377,9 +437,67 @@ function M.tasks()
         picker:close()
         vim.schedule(function() M.tasks() end) -- reopen so the new icon shows
       end,
+      delete_task_note = function(picker)
+        local item = picker:current()
+        if not item or item.is_help or item.is_header or not item.row then return end
+        local task = item.row.task
+        if not task_has_note(task) then
+          vim.notify("Task has no note to delete", vim.log.levels.WARN)
+          return
+        end
+        if not confirm("Delete task note for '" .. (task.description or task.uuid) .. "'?") then
+          return
+        end
+        delete_task_note(task.uuid)
+        vim.notify("Task note deleted", vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end)
+      end,
+      delete_project_note = function(picker)
+        local item = picker:current()
+        if not item or item.is_help or item.is_header or not item.row then return end
+        local proj = item.row.task.project or ""
+        if proj == "" or not project_has_note(proj) then
+          vim.notify("No project note to delete", vim.log.levels.WARN)
+          return
+        end
+        if not confirm("Delete project note for '" .. proj .. "'?") then
+          return
+        end
+        delete_project_note(proj)
+        vim.notify("Project note deleted", vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end)
+      end,
+      delete_task_link = function(picker)
+        local item = picker:current()
+        if not item or item.is_help or item.is_header or not item.row then return end
+        local task = item.row.task
+        if not task_has_link(task) then
+          vim.notify("Task has no link to delete", vim.log.levels.WARN)
+          return
+        end
+        delete_task_link(task.uuid)
+        vim.notify("Task link cleared", vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end)
+      end,
+      delete_project_link = function(picker)
+        local item = picker:current()
+        if not item or item.is_help or item.is_header or not item.row then return end
+        local proj = item.row.task.project or ""
+        if proj == "" or not project_has_link(proj) then
+          vim.notify("No project link to delete", vim.log.levels.WARN)
+          return
+        end
+        delete_project_link(proj)
+        vim.notify(("Project '%s' link deleted"):format(proj), vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end)
+      end,
     },
     confirm = function(picker, item)
-      if not item or item.is_header or not item.row then
+      if not item or item.is_help or item.is_header or not item.row then
         return
       end
       picker:close()
