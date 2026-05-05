@@ -49,3 +49,34 @@ vim.keymap.set("n", "<leader>sx", "<cmd>close<CR>", { desc = "Close current spli
 vim.keymap.set("n", "<leader>ni", function()
 	vim.cmd("edit ~/notes/index.norg")
 end, { desc = "Go to Neorg index" })
+
+-- ===== `q` quits empty buffers =====
+-- Pressing `q` in normal mode on a fresh empty file buffer closes the window
+-- (no more `:q!`). Otherwise `q` keeps its default behavior (start macro
+-- recording). The mapping is toggled buffer-locally via autocmd so it only
+-- exists while the buffer is actually empty and unmodified.
+local quit_empty_group = vim.api.nvim_create_augroup("IllicoQuitEmptyBuffer", { clear = true })
+
+local function update_q_for_empty_buffer()
+	-- Only regular file buffers — leave terminal/quickfix/help/picker buffers
+	-- with their own `q` semantics intact.
+	if vim.bo.buftype ~= "" then
+		return
+	end
+	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+	local is_empty = (#lines == 0) or (#lines == 1 and lines[1] == "")
+	if is_empty and not vim.bo.modified then
+		vim.keymap.set("n", "q", "<cmd>q!<cr>", {
+			buffer = 0,
+			silent = true,
+			desc = "Quit empty buffer",
+		})
+	else
+		pcall(vim.keymap.del, "n", "q", { buffer = 0 })
+	end
+end
+
+vim.api.nvim_create_autocmd(
+	{ "BufEnter", "TextChanged", "TextChangedI", "BufModifiedSet" },
+	{ group = quit_empty_group, callback = update_q_for_empty_buffer }
+)
