@@ -1,4 +1,4 @@
--- taskwarrior-notes: harpoon-style floating window for Taskwarrior tasks.
+-- taskwarrior-notes: telescope picker for Taskwarrior tasks.
 -- Notes layout (Neorg .norg):
 --   tasks:    ~/.task/notes/<uuid>.norg
 --   projects: ~/.task/notes/projects/<project>.norg
@@ -41,6 +41,32 @@ local function open_project_note(project)
   vim.cmd("edit " .. vim.fn.fnameescape(path))
 end
 
+local function task_has_note(task)
+  return vim.fn.filereadable(NOTE_DIR .. "/" .. (task.uuid or "") .. ".norg") == 1
+end
+
+local function project_has_note(project)
+  if not project or project == "" then return false end
+  return vim.fn.filereadable(PROJECT_NOTE_DIR .. "/" .. project .. ".norg") == 1
+end
+
+local function age(iso)
+  if not iso then return "" end
+  local y, mo, d, h, mi, s = iso:match("(%d%d%d%d)(%d%d)(%d%d)T(%d%d)(%d%d)(%d%d)Z")
+  if not y then return "" end
+  local t = os.time({
+    year = tonumber(y), month = tonumber(mo), day = tonumber(d),
+    hour = tonumber(h), min = tonumber(mi), sec = tonumber(s),
+  })
+  local diff = os.time() - t
+  if diff < 60        then return diff .. "s"                     end
+  if diff < 3600      then return math.floor(diff / 60)    .. "m" end
+  if diff < 86400     then return math.floor(diff / 3600)  .. "h" end
+  if diff < 86400 * 30 then return math.floor(diff / 86400) .. "d" end
+  if diff < 86400 * 365 then return math.floor(diff / 86400 / 30) .. "mo" end
+  return math.floor(diff / 86400 / 365) .. "y"
+end
+
 function M.tasks()
   local tasks = task_export()
   if #tasks == 0 then
@@ -52,90 +78,94 @@ function M.tasks()
     return (a.urgency or 0) > (b.urgency or 0)
   end)
 
-  local max_id, max_project = 1, 1
+  local pickers       = require("telescope.pickers")
+  local finders       = require("telescope.finders")
+  local conf          = require("telescope.config").values
+  local actions       = require("telescope.actions")
+  local action_state  = require("telescope.actions.state")
+  local themes        = require("telescope.themes")
+  local entry_display = require("telescope.pickers.entry_display")
+
+  local max_id, max_proj, max_tags = 1, 1, 0
   for _, t in ipairs(tasks) do
-    max_id = math.max(max_id, #tostring(t.id or ""))
-    max_project = math.max(max_project, #(t.project or ""))
+    max_id   = math.max(max_id,   #tostring(t.id or ""))
+    max_proj = math.max(max_proj, #(t.project or ""))
+    max_tags = math.max(max_tags, #table.concat(t.tags or {}, ","))
   end
-  max_project = math.min(max_project, 30)
+  max_proj = math.min(max_proj, 28)
+  max_tags = math.min(max_tags, 16)
 
-  local lines = {}
-  for _, t in ipairs(tasks) do
-    local project = t.project or ""
-    if #project > max_project then
-      project = project:sub(1, max_project)
+  local items = {
+    { width = max_id },
+    { width = 1 },
+    { width = 1 },
+    { width = max_proj },
+    { remaining = true },
+  }
+  if max_tags > 0 then
+    table.insert(items, { width = max_tags })
+  end
+  table.insert(items, { width = 4 })
+  table.insert(items, { width = 7 })
+
+  local displayer = entry_display.create({ separator = "  ", items = items })
+
+  local function make_display(entry)
+    local t = entry.value
+    local cols = {
+      { tostring(t.id or ""),                       "TelescopeResultsNumber" },
+      { task_has_note(t)            and "●" or " ", "DiagnosticInfo" },
+      { project_has_note(t.project) and "◆" or " ", "DiagnosticHint" },
+      { (t.project or ""):sub(1, max_proj),         "Identifier" },
+      { t.description or "",                        "TelescopeResultsNormal" },
+    }
+    if max_tags > 0 then
+      table.insert(cols, { table.concat(t.tags or {}, ","):sub(1, max_tags), "Type" })
     end
-    table.insert(lines, string.format(
-      "%" .. max_id .. "s  %-" .. max_project .. "s  %s  (%.2f)",
-      tostring(t.id or ""),
-      project,
-      t.description or "",
-      t.urgency or 0
-    ))
+    table.insert(cols, { age(t.entry),                            "Comment" })
+    table.insert(cols, { string.format("(%.2f)", t.urgency or 0), "Number" })
+    return displayer(cols)
   end
 
-  local width = 0
-  for _, line in ipairs(lines) do
-    width = math.max(width, vim.fn.strdisplaywidth(line))
-  end
-  width = math.min(width + 4, math.floor(vim.o.columns * 0.9))
-  local height = math.min(#lines, math.floor(vim.o.lines * 0.6))
-
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.bo[buf].modifiable = false
-  vim.bo[buf].buftype = "nofile"
-  vim.bo[buf].bufhidden = "wipe"
-  vim.bo[buf].filetype = "taskwarrior-notes"
-
-  local win = vim.api.nvim_open_win(buf, true, {
-    relative = "editor",
-    width = width,
-    height = height,
-    col = math.floor((vim.o.columns - width) / 2),
-    row = math.floor((vim.o.lines - height) / 2),
-    style = "minimal",
-    border = "rounded",
-    title = " Taskwarrior — pending tasks ",
-    title_pos = "center",
-    footer = " <CR> task note · <C-p> project note · q/<Esc> close ",
-    footer_pos = "center",
-  })
-
-  vim.wo[win].cursorline = true
-  vim.wo[win].number = false
-  vim.wo[win].relativenumber = false
-  vim.wo[win].signcolumn = "no"
-  vim.wo[win].wrap = false
-
-  local close = function()
-    if vim.api.nvim_win_is_valid(win) then
-      vim.api.nvim_win_close(win, true)
-    end
-  end
-
-  local map = function(key, fn)
-    vim.keymap.set("n", key, fn, { buffer = buf, nowait = true, silent = true })
-  end
-
-  map("q", close)
-  map("<Esc>", close)
-  map("<CR>", function()
-    local row = vim.api.nvim_win_get_cursor(win)[1]
-    local task = tasks[row]
-    close()
-    if task then open_task_note(task) end
-  end)
-  map("<C-p>", function()
-    local row = vim.api.nvim_win_get_cursor(win)[1]
-    local task = tasks[row]
-    if not task or not task.project or task.project == "" then
-      vim.notify("Task has no project", vim.log.levels.WARN)
-      return
-    end
-    close()
-    open_project_note(task.project)
-  end)
+  pickers.new(themes.get_cursor({
+    previewer = false,
+    initial_mode = "normal",
+    layout_config = { width = 100, height = math.min(#tasks + 4, 20) },
+  }), {
+    prompt_title = "Taskwarrior — pending tasks",
+    finder = finders.new_table({
+      results = tasks,
+      entry_maker = function(task)
+        local ordinal = table.concat({
+          tostring(task.id or ""),
+          task.project or "",
+          task.description or "",
+          table.concat(task.tags or {}, " "),
+        }, " ")
+        return { value = task, ordinal = ordinal, display = make_display }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    attach_mappings = function(prompt_bufnr, map)
+      actions.select_default:replace(function()
+        local sel = action_state.get_selected_entry()
+        actions.close(prompt_bufnr)
+        if sel then open_task_note(sel.value) end
+      end)
+      map({ "i", "n" }, "<C-p>", function()
+        local sel = action_state.get_selected_entry()
+        if not sel then return end
+        local task = sel.value
+        if not task.project or task.project == "" then
+          vim.notify("Task has no project", vim.log.levels.WARN)
+          return
+        end
+        actions.close(prompt_bufnr)
+        open_project_note(task.project)
+      end)
+      return true
+    end,
+  }):find()
 end
 
 function M.setup()
