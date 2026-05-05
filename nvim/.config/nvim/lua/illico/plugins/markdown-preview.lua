@@ -14,13 +14,6 @@ return {
 	end,
 	keys = {
 		{
-			"<leader>nb",
-			"<cmd>MarkdownPreview<cr>",
-			mode = "n",
-			ft = "norg", -- Solo habilitar esta tecla en archivos norg
-			desc = "Neorg: Vista previa en vivo (Browser)",
-		},
-		{
 			"<leader>mp",
 			"<cmd>MarkdownPreview<cr>",
 			mode = "n",

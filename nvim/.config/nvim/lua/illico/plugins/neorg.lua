@@ -78,6 +78,31 @@ return {
 				ft = "norg",
 				desc = "[neorg] insert week date",
 			},
+
+			-- note pickers (consistentes bajo <leader>n*)
+			{
+				"<leader>nf",
+				function()
+					_G.Neorg_find_note()
+				end,
+				desc = "[neorg] Find note (anywhere)",
+			},
+			{
+				"<leader>nl",
+				function()
+					_G.Neorg_insert_note_link()
+				end,
+				ft = "norg",
+				desc = "[neorg] Insert link to note",
+			},
+
+			-- backspace = jump back (norg only)
+			{
+				"<BS>",
+				"<C-o>",
+				ft = "norg",
+				desc = "[neorg] Jump back",
+			},
 		},
 
 		config = function()
@@ -85,7 +110,37 @@ return {
 				load = {
 					["core.defaults"] = {},
 					["core.qol.todo_items"] = {},
-					["core.concealer"] = {},
+					["core.esupports.indent"] = {
+						config = {
+							format_on_enter = true,
+						},
+					},
+					["core.concealer"] = {
+						config = {
+							icons = {
+								list = {
+									highlights = {
+										"@neorg.headings.1.title",
+										"@neorg.headings.2.title",
+										"@neorg.headings.3.title",
+										"@neorg.headings.4.title",
+										"@neorg.headings.5.title",
+										"@neorg.headings.6.title",
+									},
+								},
+								ordered = {
+									highlights = {
+										"@neorg.headings.1.title",
+										"@neorg.headings.2.title",
+										"@neorg.headings.3.title",
+										"@neorg.headings.4.title",
+										"@neorg.headings.5.title",
+										"@neorg.headings.6.title",
+									},
+								},
+							},
+						},
+					},
 					["core.dirman"] = {
 						config = {
 							workspaces = { notes = "~/notes" },
@@ -348,6 +403,61 @@ return {
 						pcall(vim.cmd, "write")
 					end)
 				end)
+			end
+
+			-- =========================
+			-- note pickers
+			-- =========================
+
+			local function picker_path(item)
+				if not item then
+					return nil
+				end
+				local ok, snacks = pcall(require, "snacks")
+				if ok and snacks.picker and snacks.picker.util and snacks.picker.util.path then
+					return snacks.picker.util.path(item)
+				end
+				return item.file or item.path
+			end
+
+			_G.Neorg_insert_note_link = function()
+				local ok, snacks = pcall(require, "snacks")
+				if not ok then
+					vim.notify("snacks.nvim required", vim.log.levels.ERROR)
+					return
+				end
+
+				local notes_root = vim.fn.expand("~/notes")
+
+				snacks.picker.files({
+					cwd = notes_root,
+					ft = "norg",
+					title = "Insert link → note",
+					confirm = function(picker, item)
+						picker:close()
+						local abspath = picker_path(item)
+						if not abspath then
+							return
+						end
+						local rel = abspath:gsub("^" .. vim.pesc(notes_root) .. "/", "")
+						rel = rel:gsub("%.norg$", "")
+						vim.api.nvim_put({ "{:" .. rel .. ":}" }, "c", true, true)
+					end,
+				})
+			end
+
+			_G.Neorg_find_note = function()
+				local ok, snacks = pcall(require, "snacks")
+				if not ok then
+					vim.notify("snacks.nvim required", vim.log.levels.ERROR)
+					return
+				end
+
+				snacks.picker.files({
+					cwd = vim.env.HOME,
+					ft = "norg",
+					title = "Find neorg note",
+				})
 			end
 		end,
 	},
