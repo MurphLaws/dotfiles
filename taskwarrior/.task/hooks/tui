@@ -10,6 +10,7 @@ Usage:
     .../tui --set-link    <uuid>      # internal — fired by `l`
     .../tui --open-plink  <uuid>      # internal — fired by `O`
     .../tui --set-plink   <uuid>      # internal — fired by `L`
+    .../tui --delete-menu <uuid>      # internal — fired by `D`
     .../tui --list-rows [--toggle]    # internal — fired by Tab reload
 
 Modes:
@@ -74,8 +75,7 @@ HEADER_HINTS = (
     f"  {B}/{R} search   {B}j/k{R} nav   {B}⏎{R} note   "
     f"{B}p{R} proj-note   {B}o{R}/{B}l{R} task link   "
     f"{B}O{R}/{B}L{R} project link   "
-    f"{B}⌥n{R}/{B}⌥N{R} del note   {B}⌥l{R}/{B}⌥L{R} del link   "
-    f"{B}⇥{R} pending/all   {B}q{R} close"
+    f"{B}D{R} delete…   {B}⇥{R} pending/all   {B}q{R} close"
 )
 
 
@@ -421,7 +421,7 @@ def delete_link_of(uuid: str) -> int:
 
 
 def delete_plink_of(uuid: str) -> int:
-    """Invoked by Alt-Shift-l. Removes ~/.task/notes/projects/<project>.link."""
+    """Removes ~/.task/notes/projects/<project>.link."""
     if not uuid:
         return 1
     project = _project_of(uuid)
@@ -439,6 +439,65 @@ def delete_plink_of(uuid: str) -> int:
         return 1
     print(f"project '{project}' link deleted")
     return 0
+
+
+def delete_menu_of(uuid: str) -> int:
+    """Invoked by `D`. Opens a small fzf sub-picker listing what's deletable
+    on the current task; the user picks one and the corresponding delete runs."""
+    if not uuid:
+        return 1
+
+    project  = _project_of(uuid) or ""
+    has_note  = (NOTE_DIR / f"{uuid}.norg").is_file()
+    has_pnote = bool(project) and (PROJ_DIR / f"{project}.norg").is_file()
+    link      = subprocess.run(
+        ["task", "_get", f"{uuid}.link"], capture_output=True, text=True
+    ).stdout.strip()
+    has_link  = bool(link)
+    has_plink = bool(project) and project_has_link(project)
+
+    options: list[tuple[str, str]] = []
+    if has_note:
+        options.append(("note",  "Task note"))
+    if has_pnote:
+        options.append(("pnote", f"Project note   ({project})"))
+    if has_link:
+        options.append(("link",  f"Task link      ({link[:60]})"))
+    if has_plink:
+        plink_val = read_project_link(project) or ""
+        options.append(("plink", f"Project link   ({project} → {plink_val[:50]})"))
+
+    if not options:
+        print("Nothing to delete on this task", file=sys.stderr)
+        return 0
+
+    fzf_input = "\n".join(f"{key}\t{label}" for key, label in options)
+    res = subprocess.run(
+        [
+            "fzf",
+            "--ansi", "--layout=reverse", "--no-sort",
+            "--prompt", "delete what? ",
+            "--pointer", " ",
+            "--height", "40%", "--margin", "5,15%", "--padding", "1,2",
+            "--border", "rounded", "--border-label", " Delete ",
+            "--border-label-pos", "top",
+            "--info", "hidden",
+            "--color", "border:white,label:red,prompt:bright-red,"
+                       "fg+:-1,bg+:#FFFFFF,hl+:-1,gutter:-1",
+            "--delimiter", "\t", "--with-nth", "2",
+        ],
+        input=fzf_input, capture_output=True, text=True,
+    )
+    if res.returncode != 0 or not res.stdout.strip():
+        return 0
+    choice = res.stdout.rstrip("\n").split("\t", 1)[0]
+
+    return {
+        "note":  delete_note_of,
+        "pnote": delete_pnote_of,
+        "link":  delete_link_of,
+        "plink": delete_plink_of,
+    }[choice](uuid)
 
 
 def main() -> int:
@@ -460,6 +519,8 @@ def main() -> int:
         return delete_link_of(sys.argv[2])
     if len(sys.argv) >= 3 and sys.argv[1] == "--delete-plink":
         return delete_plink_of(sys.argv[2])
+    if len(sys.argv) >= 3 and sys.argv[1] == "--delete-menu":
+        return delete_menu_of(sys.argv[2])
 
     if "--list-rows" in sys.argv:
         if "--toggle" in sys.argv:
@@ -486,7 +547,7 @@ def main() -> int:
 
     # Keys that act as commands in NAV mode and as typed letters in SEARCH mode.
     # `/` is the entry to SEARCH; rebound when SEARCH exits via <Esc>.
-    NAV_KEYS = ["j", "k", "p", "o", "l", "O", "L", "q", "/"]
+    NAV_KEYS = ["j", "k", "p", "o", "l", "O", "L", "D", "q", "/"]
     unbind = "unbind(" + ",".join(NAV_KEYS) + ")"
     rebind = "rebind(" + ",".join(NAV_KEYS) + ")"
 
@@ -500,15 +561,9 @@ def main() -> int:
         ("O",   f"execute(python3 {self_path} --open-plink  {{2}})+abort"),
         ("L",   f"execute(python3 {self_path} --set-plink   {{2}})"
                 f"+reload(python3 {self_path} --list-rows)"),
-        # Deletes — Alt+key (Alt-Shift = project version).
-        ("alt-n",       f"execute(python3 {self_path} --delete-note  {{2}})"
-                        f"+reload(python3 {self_path} --list-rows)"),
-        ("alt-shift-n", f"execute(python3 {self_path} --delete-pnote {{2}})"
-                        f"+reload(python3 {self_path} --list-rows)"),
-        ("alt-l",       f"execute(python3 {self_path} --delete-link  {{2}})"
-                        f"+reload(python3 {self_path} --list-rows)"),
-        ("alt-shift-l", f"execute(python3 {self_path} --delete-plink {{2}})"
-                        f"+reload(python3 {self_path} --list-rows)"),
+        # Single delete key opens a sub-picker listing what's deletable.
+        ("D",   f"execute(python3 {self_path} --delete-menu {{2}})"
+                f"+reload(python3 {self_path} --list-rows)"),
         ("q",   "abort"),
         ("tab", f"reload(python3 {self_path} --list-rows --toggle)"),
         # Mode switches:
