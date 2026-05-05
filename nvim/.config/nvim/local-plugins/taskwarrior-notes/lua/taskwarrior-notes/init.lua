@@ -1,12 +1,21 @@
 -- taskwarrior-notes: snacks.picker table view of pending Taskwarrior tasks.
--- Notes layout (Neorg .norg):
---   tasks:    ~/.task/notes/<uuid>.norg
---   projects: ~/.task/notes/projects/<project>.norg
+-- Storage layout:
+--   task notes:    ~/.task/notes/<uuid>.norg
+--   project notes: ~/.task/notes/projects/<project>.norg
+--   project links: ~/.task/notes/projects/<project>.link  (single-line text)
+--   task links:    `link` UDA on the task
 
 local M = {}
 
 local NOTE_DIR = vim.fn.expand("~/.task/notes")
 local PROJECT_NOTE_DIR = NOTE_DIR .. "/projects"
+
+-- Nerd Font icons (PUA codepoints) — written as byte escapes so the source
+-- stays ASCII even through editors that strip PUA glyphs.
+local ICON_NOTE    = "\xEF\x85\x9B"  -- U+F15B nf-fa-file
+local ICON_PROJECT = "\xEF\x84\x94"  -- U+F114 nf-fa-folder
+local ICON_LINK    = "\xEF\x83\x81"  -- U+F0C1 nf-fa-link  (task link, yellow)
+local ICON_PLINK   = "\xEF\x83\x81"  -- U+F0C1 nf-fa-link  (project link, green)
 
 local function ensure_dirs()
   vim.fn.mkdir(PROJECT_NOTE_DIR, "p")
@@ -48,6 +57,64 @@ end
 local function project_has_note(project)
   if not project or project == "" then return false end
   return vim.fn.filereadable(PROJECT_NOTE_DIR .. "/" .. project .. ".norg") == 1
+end
+
+local function project_link_file(project)
+  return PROJECT_NOTE_DIR .. "/" .. project .. ".link"
+end
+
+local function project_has_link(project)
+  if not project or project == "" then return false end
+  return vim.fn.filereadable(project_link_file(project)) == 1
+end
+
+local function read_project_link(project)
+  if not project_has_link(project) then return nil end
+  local lines = vim.fn.readfile(project_link_file(project))
+  if not lines or #lines == 0 then return nil end
+  local v = vim.trim(lines[1])
+  return v ~= "" and v or nil
+end
+
+local function write_project_link(project, value)
+  ensure_dirs()
+  vim.fn.writefile({ value }, project_link_file(project))
+end
+
+local function task_has_link(task)
+  return type(task.link) == "string" and vim.trim(task.link) ~= ""
+end
+
+local function clipboard()
+  local v = vim.fn.getreg("+")
+  if not v or v == "" then v = vim.fn.getreg("*") end
+  return vim.trim(v or "")
+end
+
+local function resolve_link_value(value)
+  if value:match("^%a+://") or value:sub(1, 1) == "/" then
+    return value
+  end
+  local expanded = vim.fn.expand(value)
+  if vim.fn.filereadable(expanded) == 1 or vim.fn.isdirectory(expanded) == 1 then
+    return vim.fn.fnamemodify(expanded, ":p")
+  end
+  return value
+end
+
+local function open_url_or_path(value)
+  if vim.ui and type(vim.ui.open) == "function" then
+    vim.ui.open(value)
+  else
+    vim.fn.jobstart({ "open", value }, { detach = true })
+  end
+end
+
+local function set_task_link(uuid, value)
+  vim.fn.system({
+    "task", "rc.confirmation=no", "rc.verbose=nothing",
+    uuid, "modify", "link:" .. value,
+  })
 end
 
 -- Convert a Taskwarrior ISO basic timestamp ("20260412T235345Z", UTC) to local epoch.
@@ -95,12 +162,15 @@ function M.tasks()
   -- Build raw cell values for each row, then derive column widths.
   local rows = {}
   for _, t in ipairs(tasks) do
+    local proj = t.project or ""
     rows[#rows + 1] = {
       task        = t,
       id          = tostring(t.id or ""),
-      task_dot    = task_has_note(t)            and "●" or " ",
-      proj_dot    = project_has_note(t.project) and "●" or " ",
-      project     = t.project or "",
+      icon_note   = task_has_note(t)        and ICON_NOTE    or " ",
+      icon_proj   = project_has_note(proj)  and ICON_PROJECT or " ",
+      icon_link   = task_has_link(t)        and ICON_LINK    or " ",
+      icon_plink  = project_has_link(proj)  and ICON_PLINK   or " ",
+      project     = proj,
       description = t.description or "",
       tags        = table.concat(t.tags or {}, ","),
       age         = age(t.entry),
@@ -110,8 +180,10 @@ function M.tasks()
 
   local W = {
     id          = #"ID",
-    task_dot    = #"T",
-    proj_dot    = #"P",
+    icon_note   = 1,
+    icon_proj   = 1,
+    icon_link   = 1,
+    icon_plink  = 1,
     project     = #"PROJECT",
     description = #"DESCRIPTION",
     tags        = #"TAGS",
@@ -126,15 +198,17 @@ function M.tasks()
   W.project     = math.min(W.project, 28)
   W.description = math.min(W.description, 50)
   W.tags        = math.min(W.tags, 16)
-  W.urgency     = math.max(W.urgency, 5) -- "URG" or "12.34"
+  W.urgency     = math.max(W.urgency, 5)
 
   local SEP = "  "
 
-  -- Header row label per column. T = task-note marker, P = project-note marker.
+  -- Header row labels — icon columns intentionally have no label.
   local HDR = {
     id          = "ID",
-    task_dot    = "T",
-    proj_dot    = "P",
+    icon_note   = "",
+    icon_proj   = "",
+    icon_link   = "",
+    icon_plink  = "",
     project     = "PROJECT",
     description = "DESCRIPTION",
     tags        = "TAGS",
@@ -150,13 +224,15 @@ function M.tasks()
       out[#out + 1] = { align(text or "", opts.width, opts), hl or group }
       out[#out + 1] = { SEP }
     end
-    push(r.id,          "Number",         { width = W.id, align = "right" })
-    push(r.task_dot,    "DiagnosticInfo", { width = W.task_dot, align = "center" })
-    push(r.proj_dot,    "Constant",       { width = W.proj_dot, align = "center" })
-    push(r.project,     "Identifier",     { width = W.project, truncate = true })
+    push(r.id,          "Number",         { width = W.id,          align = "right" })
+    push(r.icon_note,   "DiagnosticInfo", { width = W.icon_note,   align = "center" })
+    push(r.icon_proj,   "Constant",       { width = W.icon_proj,   align = "center" })
+    push(r.icon_link,   "WarningMsg",     { width = W.icon_link,   align = "center" })
+    push(r.icon_plink,  "String",         { width = W.icon_plink,  align = "center" })
+    push(r.project,     "Identifier",     { width = W.project,     truncate = true })
     push(r.description, "Normal",         { width = W.description, truncate = true })
-    push(r.tags,        "Type",           { width = W.tags, truncate = true })
-    push(r.age,         "Comment",        { width = W.age, align = "right" })
+    push(r.tags,        "Type",           { width = W.tags,        truncate = true })
+    push(r.age,         "Comment",        { width = W.age,         align = "right" })
     out[#out + 1] = { align(r.urgency, W.urgency, { align = "right" }), hl or "Number" }
     return out
   end
@@ -173,9 +249,9 @@ function M.tasks()
   end
 
   local total_width =
-      W.id + W.task_dot + W.proj_dot + W.project + W.description
-      + W.tags + W.age + W.urgency
-      + #SEP * 7
+      W.id + W.icon_note + W.icon_proj + W.icon_link + W.icon_plink
+      + W.project + W.description + W.tags + W.age + W.urgency
+      + #SEP * 9
 
   Snacks.picker.pick({
     source = "taskwarrior",
@@ -211,11 +287,18 @@ function M.tasks()
       list = {
         keys = {
           ["p"] = "open_project_note",
+          ["o"] = "open_task_link",
+          ["l"] = "set_task_link",
+          ["O"] = "open_project_link",
+          ["L"] = "set_project_link",
         },
       },
       input = {
         keys = {
-          ["<c-y>"] = { "open_project_note", mode = { "i", "n" } },
+          -- Insert-mode equivalents (the literal letters would just be typed).
+          ["<c-y>"] = { "open_project_note",  mode = { "i", "n" } },
+          ["<c-o>"] = { "open_task_link",     mode = { "i", "n" } },
+          ["<c-l>"] = { "set_task_link",      mode = { "i", "n" } },
         },
       },
     },
@@ -230,6 +313,69 @@ function M.tasks()
         end
         picker:close()
         open_project_note(task.project)
+      end,
+      open_task_link = function(picker)
+        local item = picker:current()
+        if not item or item.is_header or not item.row then return end
+        local task = item.row.task
+        if not task_has_link(task) then
+          vim.notify("Task has no link (press l to set one from clipboard)", vim.log.levels.WARN)
+          return
+        end
+        picker:close()
+        open_url_or_path(vim.trim(task.link))
+      end,
+      set_task_link = function(picker)
+        local item = picker:current()
+        if not item or item.is_header or not item.row then return end
+        local value = clipboard()
+        if value == "" then
+          vim.notify("Clipboard is empty — nothing to set", vim.log.levels.WARN)
+          return
+        end
+        value = resolve_link_value(value)
+        set_task_link(item.row.task.uuid, value)
+        vim.notify("Task link set: " .. value, vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end) -- reopen so the new icon shows
+      end,
+      open_project_link = function(picker)
+        local item = picker:current()
+        if not item or item.is_header or not item.row then return end
+        local proj = item.row.task.project or ""
+        if proj == "" then
+          vim.notify("Task has no project", vim.log.levels.WARN)
+          return
+        end
+        local link = read_project_link(proj)
+        if not link then
+          vim.notify(
+            ("Project '%s' has no link (press L to set one from clipboard)"):format(proj),
+            vim.log.levels.WARN
+          )
+          return
+        end
+        picker:close()
+        open_url_or_path(link)
+      end,
+      set_project_link = function(picker)
+        local item = picker:current()
+        if not item or item.is_header or not item.row then return end
+        local proj = item.row.task.project or ""
+        if proj == "" then
+          vim.notify("Task has no project — cannot set project link", vim.log.levels.WARN)
+          return
+        end
+        local value = clipboard()
+        if value == "" then
+          vim.notify("Clipboard is empty — nothing to set", vim.log.levels.WARN)
+          return
+        end
+        value = resolve_link_value(value)
+        write_project_link(proj, value)
+        vim.notify(("Project '%s' link set: %s"):format(proj, value), vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end) -- reopen so the new icon shows
       end,
     },
     confirm = function(picker, item)
