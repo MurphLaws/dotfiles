@@ -118,9 +118,7 @@ function M.tasks()
     age         = #"AGE",
     urgency     = #"URG",
   }
-  local has_tags = false
   for _, r in ipairs(rows) do
-    if #r.tags > 0 then has_tags = true end
     for k, v in pairs(W) do
       W[k] = math.max(v, vim.fn.strdisplaywidth(r[k] or ""))
     end
@@ -157,9 +155,7 @@ function M.tasks()
     push(r.proj_dot,    "DiagnosticHint", { width = W.proj_dot, align = "center" })
     push(r.project,     "Identifier",     { width = W.project, truncate = true })
     push(r.description, "Normal",         { width = W.description, truncate = true })
-    if has_tags then
-      push(r.tags,      "Type",           { width = W.tags, truncate = true })
-    end
+    push(r.tags,        "Type",           { width = W.tags, truncate = true })
     push(r.age,         "Comment",        { width = W.age, align = "right" })
     out[#out + 1] = { align(r.urgency, W.urgency, { align = "right" }), hl or "Number" }
     return out
@@ -178,8 +174,8 @@ function M.tasks()
 
   local total_width =
       W.id + W.task_dot + W.proj_dot + W.project + W.description
-      + (has_tags and W.tags or 0) + W.age + W.urgency
-      + #SEP * (has_tags and 7 or 6)
+      + W.tags + W.age + W.urgency
+      + #SEP * 7
 
   Snacks.picker.pick({
     source = "taskwarrior",
@@ -189,17 +185,18 @@ function M.tasks()
     focus  = "list",
     layout = {
       preview = false,
-      hidden  = { "input", "preview" },
+      hidden  = { "preview" },
       layout  = {
         backdrop  = false,
         width     = math.min(total_width + 4, math.floor(vim.o.columns * 0.95)),
-        height    = math.min(#items + 2, math.floor(vim.o.lines * 0.6)),
+        height    = math.min(#items + 3, math.floor(vim.o.lines * 0.6)),
         min_width = 60,
         box       = "vertical",
         border    = "rounded",
-        title     = "{title}",
+        title     = "{title} {live} {flags}",
         title_pos = "center",
-        { win = "list", border = "none" },
+        { win = "input", height = 1, border = "bottom" },
+        { win = "list",  border = "none" },
       },
     },
     on_show = function(picker)
@@ -213,7 +210,12 @@ function M.tasks()
     win = {
       list = {
         keys = {
-          ["<C-p>"] = "open_project_note",
+          ["p"] = "open_project_note",
+        },
+      },
+      input = {
+        keys = {
+          ["<c-y>"] = { "open_project_note", mode = { "i", "n" } },
         },
       },
     },
