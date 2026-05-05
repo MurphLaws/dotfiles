@@ -99,7 +99,7 @@ function M.tasks()
       task        = t,
       id          = tostring(t.id or ""),
       task_dot    = task_has_note(t)            and "●" or " ",
-      proj_dot    = project_has_note(t.project) and "◆" or " ",
+      proj_dot    = project_has_note(t.project) and "●" or " ",
       project     = t.project or "",
       description = t.description or "",
       tags        = table.concat(t.tags or {}, ","),
@@ -152,7 +152,7 @@ function M.tasks()
     end
     push(r.id,          "Number",         { width = W.id, align = "right" })
     push(r.task_dot,    "DiagnosticInfo", { width = W.task_dot, align = "center" })
-    push(r.proj_dot,    "DiagnosticHint", { width = W.proj_dot, align = "center" })
+    push(r.proj_dot,    "Constant",       { width = W.proj_dot, align = "center" })
     push(r.project,     "Identifier",     { width = W.project, truncate = true })
     push(r.description, "Normal",         { width = W.description, truncate = true })
     push(r.tags,        "Type",           { width = W.tags, truncate = true })

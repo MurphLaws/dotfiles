@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+"""
+Taskwarrior pending-tasks TUI — fzf-based picker that mirrors the nvim
+taskwarrior-notes plugin (same columns, same colors, same actions).
+
+Usage:
+    task tui                       # interactive picker
+    .../tui --project-of <uuid>    # internal, invoked by Ctrl-P binding
+
+Bindings inside the picker:
+    Enter   open task note (~/.task/notes/<uuid>.norg) and stamp `note:` UDA
+    Ctrl-P  open project note (~/.task/notes/projects/<project>.norg)
+    Esc/q   close
+    j/k     down/up (fzf default)
+    type    fuzzy filter
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+NOTE_DIR = Path.home() / ".task" / "notes"
+PROJ_DIR = NOTE_DIR / "projects"
+
+# 0x96f truecolor palette (matches the nvim picker)
+P = "\033[38;2;174;163;230m"   # purple_light: id, urgency, project-note dot
+CY = "\033[38;2;174;232;244m"  # cyan: task-note dot
+FG = "\033[38;2;252;252;252m"  # fg: description
+DM = "\033[38;2;107;107;107m"  # comment: age
+GR = "\033[38;2;188;223;89m"   # green_light: tags
+OR = "\033[38;2;252;157;111m"  # orange: project name
+B = "\033[1m"
+R = "\033[0m"
+
+EDITOR = os.environ.get("EDITOR") or "nvim"
+
+
+def age(iso: str) -> str:
+    """Relative age from a Taskwarrior basic-ISO UTC string ('20260412T235345Z')."""
+    if not iso:
+        return ""
+    try:
+        dt = datetime.strptime(iso, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return ""
+    diff = max(0, int((datetime.now(timezone.utc) - dt).total_seconds()))
+    if diff < 60:           return f"{diff}s"
+    if diff < 3600:         return f"{diff // 60}m"
+    if diff < 86400:        return f"{diff // 3600}h"
+    if diff < 86400 * 30:   return f"{diff // 86400}d"
+    if diff < 86400 * 365:  return f"{diff // 86400 // 30}mo"
+    return f"{diff // 86400 // 365}y"
+
+
+def task_export() -> list[dict]:
+    out = subprocess.run(
+        ["task", "rc.verbose=nothing", "rc.confirmation=no", "status:pending", "export"],
+        capture_output=True, text=True,
+    )
+    if out.returncode != 0 or not out.stdout.strip():
+        return []
+    try:
+        return json.loads(out.stdout)
+    except json.JSONDecodeError:
+        return []
+
+
+def trunc(s: str, w: int) -> str:
+    if w <= 0:
+        return ""
+    return s if len(s) <= w else s[: max(0, w - 1)] + "…"
+
+
+def open_project_of(uuid: str) -> int:
+    """Invoked by the fzf Ctrl-P binding in a child shell."""
+    if not uuid:
+        return 1
+    out = subprocess.run(
+        ["task", "_get", f"{uuid}.project"],
+        capture_output=True, text=True,
+    )
+    project = out.stdout.strip()
+    if not project:
+        print("Task has no project", file=sys.stderr)
+        return 1
+    PROJ_DIR.mkdir(parents=True, exist_ok=True)
+    path = PROJ_DIR / f"{project}.norg"
+    os.execvp(EDITOR, [EDITOR, str(path)])
+    return 0  # unreachable
+
+
+def main() -> int:
+    if len(sys.argv) >= 3 and sys.argv[1] == "--project-of":
+        return open_project_of(sys.argv[2])
+
+    if not shutil.which("fzf"):
+        print("fzf not found in PATH", file=sys.stderr)
+        return 1
+
+    NOTE_DIR.mkdir(parents=True, exist_ok=True)
+    PROJ_DIR.mkdir(parents=True, exist_ok=True)
+
+    tasks = task_export()
+    if not tasks:
+        print("No pending tasks", file=sys.stderr)
+        return 0
+    tasks.sort(key=lambda t: -t.get("urgency", 0))
+
+    cells: list[dict] = []
+    for t in tasks:
+        uuid = t.get("uuid", "")
+        project = t.get("project", "") or ""
+        cells.append({
+            "uuid":        uuid,
+            "id":          str(t.get("id", "")),
+            "task_dot":    "●" if (NOTE_DIR / f"{uuid}.norg").is_file() else " ",
+            "proj_dot":    "●" if project and (PROJ_DIR / f"{project}.norg").is_file() else " ",
+            "project":     project,
+            "description": t.get("description", "") or "",
+            "tags":        ",".join(t.get("tags", []) or []),
+            "age":         age(t.get("entry", "")),
+            "urgency":     f"{t.get('urgency', 0):.2f}",
+        })
+
+    cols    = ["id", "task_dot", "proj_dot", "project", "description", "tags", "age", "urgency"]
+    headers = {"id": "ID", "task_dot": "T", "proj_dot": "P",
+               "project": "PROJECT", "description": "DESCRIPTION",
+               "tags": "TAGS", "age": "AGE", "urgency": "URG"}
+    caps    = {"id": 4, "task_dot": 1, "proj_dot": 1,
+               "project": 28, "description": 50, "tags": 16, "age": 6, "urgency": 6}
+    aligns  = {"id": ">", "task_dot": "^", "proj_dot": "^",
+               "project": "<", "description": "<", "tags": "<",
+               "age": ">", "urgency": ">"}
+    color   = {"id": P, "task_dot": CY, "proj_dot": P,
+               "project": OR, "description": FG, "tags": GR,
+               "age": DM, "urgency": P}
+
+    widths = {k: len(headers[k]) for k in cols}
+    for c in cells:
+        for k in cols:
+            widths[k] = max(widths[k], len(c[k]))
+    for k in cols:
+        widths[k] = min(widths[k], caps[k])
+
+    SEP = "  "
+
+    def render_row(get) -> str:
+        return SEP.join(
+            f"{trunc(get(k), widths[k]):{aligns[k]}{widths[k]}}"
+            for k in cols
+        )
+
+    header_line = B + render_row(lambda k: headers[k]) + R
+
+    body_lines: list[str] = []
+    for c in cells:
+        parts = [
+            f"{color[k]}{trunc(c[k], widths[k]):{aligns[k]}{widths[k]}}{R}"
+            for k in cols
+        ]
+        body_lines.append(SEP.join(parts) + f"\t{c['uuid']}")
+
+    self_path = os.path.realpath(__file__)
+    fzf_input = "\n".join([header_line] + body_lines)
+
+    fzf = subprocess.run(
+        [
+            "fzf",
+            "--ansi",
+            "--layout=reverse",
+            "--no-sort",
+            "--header-lines=1",
+            "--prompt", " ",
+            "--pointer", "▶",
+            "--height=80%",
+            "--border=rounded",
+            "--border-label", " Taskwarrior — pending tasks ",
+            "--border-label-pos=top",
+            "--info=inline-right",
+            "--delimiter", "\t",
+            "--with-nth", "1",
+            "--bind", f"ctrl-p:execute(python3 {self_path} --project-of {{2}})+abort",
+            "--bind", "esc:abort",
+        ],
+        input=fzf_input, capture_output=True, text=True,
+    )
+
+    if fzf.returncode != 0 or not fzf.stdout.strip():
+        return 0
+
+    fields = fzf.stdout.rstrip("\n").split("\t")
+    if len(fields) < 2:
+        return 0
+    uuid = fields[1].strip()
+    if not uuid:
+        return 0
+
+    note = NOTE_DIR / f"{uuid}.norg"
+    subprocess.run([EDITOR, str(note)])
+    ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    subprocess.run(
+        ["task", uuid, "mod", f"note:{ts}"],
+        capture_output=True,
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

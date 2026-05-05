@@ -6,6 +6,12 @@ task() {
     local tree="$HOME/.task/hooks/tree-render"
     local linkicon="$HOME/.task/hooks/link-icon"
 
+    # Bare `task` (no args) → fzf TUI picker (mirrors the nvim taskwarrior-notes plugin)
+    if (( $# == 0 )); then
+        "$HOME/.task/hooks/tui"
+        return
+    fi
+
     # Intercept _projects anywhere in args (zsh completion passes rc.hooks=0 _projects)
     if [[ "$*" == *_projects* ]]; then
         { command task _projects; command task status:completed _unique project } 2>/dev/null | sort -u
