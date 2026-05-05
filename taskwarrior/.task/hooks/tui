@@ -483,8 +483,13 @@ def delete_menu_of(uuid: str) -> int:
             "--border-label-pos", "top",
             "--info", "hidden",
             "--color", "border:white,label:red,prompt:bright-red,"
-                       "fg+:-1,bg+:#FFFFFF,hl+:-1,gutter:-1",
+                       "fg+:-1,bg+:#4A454A,hl+:-1,gutter:-1",
             "--delimiter", "\t", "--with-nth", "2",
+            # Lock the sub-picker to j/k navigation — typing is inert.
+            "--disabled",
+            "--bind", "j:down",
+            "--bind", "k:up",
+            "--bind", "change:clear-query",
         ],
         input=fzf_input, capture_output=True, text=True,
     )
@@ -593,7 +598,7 @@ def main() -> int:
             "--info", "inline-right",
             "--color", "border:white,label:cyan,prompt:bright-magenta,"
                        "header:bright-blue,info:bright-black,gutter:-1,"
-                       "fg+:-1,bg+:#FFFFFF,hl+:-1",
+                       "fg+:-1,bg+:#4A454A,hl+:-1",
             "--delimiter", "\t",
             "--with-nth", "1",
             *bind_args,

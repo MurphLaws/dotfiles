@@ -158,8 +158,8 @@ local function ensure_highlights()
   -- Match the TUI's truecolor palette for link icons.
   vim.api.nvim_set_hl(0, "TaskwarriorLink",  { fg = "#FFCA58", default = true })
   vim.api.nvim_set_hl(0, "TaskwarriorPlink", { fg = "#BCDF59", default = true })
-  -- White cursorline on the current selection (mirrors the TUI's bg+).
-  vim.api.nvim_set_hl(0, "SnacksPickerListCursorLine", { bg = "#FFFFFF", fg = "NONE" })
+  -- Cursorline matches 0x96f's `selection` color so colored cells stay readable.
+  vim.api.nvim_set_hl(0, "SnacksPickerListCursorLine", { bg = "#4A454A", fg = "NONE" })
 end
 
 -- Convert a Taskwarrior ISO basic timestamp ("20260412T235345Z", UTC) to local epoch.
@@ -462,11 +462,7 @@ function M.tasks()
           return
         end
 
-        vim.ui.select(choices, {
-          prompt = "Delete what?",
-          format_item = function(c) return c.label end,
-        }, function(choice)
-          if not choice then return end
+        local function run(choice)
           local needs_confirm = choice.id == "note" or choice.id == "pnote"
           if needs_confirm and not confirm("Delete " .. choice.label .. "?") then
             return
@@ -477,8 +473,42 @@ function M.tasks()
           elseif choice.id == "plink" then delete_project_link(proj)
           end
           vim.notify("Deleted: " .. choice.label, vim.log.levels.INFO)
-          picker:close()
           vim.schedule(function() M.tasks() end)
+        end
+
+        -- Sub-picker locked to j/k nav: input window hidden so typing has no
+        -- target, focus starts on the list.
+        local sub_items = {}
+        for _, c in ipairs(choices) do
+          sub_items[#sub_items + 1] = { choice = c, text = c.label }
+        end
+        picker:close()
+        vim.schedule(function()
+          Snacks.picker.pick({
+            source = "taskwarrior_delete",
+            title  = " Delete ",
+            items  = sub_items,
+            format = function(it) return { { it.choice.label, "Normal" } } end,
+            focus  = "list",
+            layout = {
+              preview = false,
+              hidden  = { "input", "preview" },
+              layout  = {
+                backdrop  = false,
+                width     = 60,
+                height    = math.min(#sub_items + 2, 12),
+                box       = "vertical",
+                border    = "rounded",
+                title     = "{title}",
+                title_pos = "center",
+                { win = "list", border = "none" },
+              },
+            },
+            confirm = function(p, it)
+              p:close()
+              if it and it.choice then run(it.choice) end
+            end,
+          })
         end)
       end,
     },
