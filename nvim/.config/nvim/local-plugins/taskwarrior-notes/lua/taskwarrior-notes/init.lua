@@ -575,43 +575,44 @@ function M.tasks()
           elseif choice.id == "plink" then delete_project_link(proj)
           end
           vim.notify("Deleted: " .. choice.label, vim.log.levels.INFO)
+          picker:close()
           vim.schedule(function() M.tasks() end)
         end
 
-        -- Sub-picker locked to j/k nav: input window hidden so typing has no
-        -- target, focus starts on the list.
+        -- Open the sub-picker as an overlay on the main picker. Closing the
+        -- main picker first (close+schedule+open) left snacks in a state
+        -- where backing out of the sub with `q` broke leader (`<Space>`):
+        -- cancel routed focus restoration through an already-torn-down
+        -- picker. Stacking the sub on top dodges that chain.
         local sub_items = {}
         for _, c in ipairs(choices) do
           sub_items[#sub_items + 1] = { choice = c, text = c.label }
         end
-        picker:close()
-        vim.schedule(function()
-          Snacks.picker.pick({
-            source = "taskwarrior_delete",
-            title  = " Delete ",
-            items  = sub_items,
-            format = function(it) return { { it.choice.label, "Normal" } } end,
-            focus  = "list",
-            layout = {
-              preview = false,
-              hidden  = { "input", "preview" },
-              layout  = {
-                backdrop  = false,
-                width     = 60,
-                height    = math.min(#sub_items + 2, 12),
-                box       = "vertical",
-                border    = "rounded",
-                title     = "{title}",
-                title_pos = "center",
-                { win = "list", border = "none" },
-              },
+        Snacks.picker.pick({
+          source = "taskwarrior_delete",
+          title  = " Delete ",
+          items  = sub_items,
+          format = function(it) return { { it.choice.label, "Normal" } } end,
+          focus  = "list",
+          layout = {
+            preview = false,
+            hidden  = { "input", "preview" },
+            layout  = {
+              backdrop  = false,
+              width     = 60,
+              height    = math.min(#sub_items + 2, 12),
+              box       = "vertical",
+              border    = "rounded",
+              title     = "{title}",
+              title_pos = "center",
+              { win = "list", border = "none" },
             },
-            confirm = function(p, it)
-              p:close()
-              if it and it.choice then run(it.choice) end
-            end,
-          })
-        end)
+          },
+          confirm = function(p, it)
+            p:close()
+            if it and it.choice then run(it.choice) end
+          end,
+        })
       end,
     },
     confirm = function(picker, item)
