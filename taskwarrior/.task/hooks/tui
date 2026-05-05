@@ -10,7 +10,8 @@ Usage:
     .../tui --set-link    <uuid>      # internal — fired by `l`
     .../tui --open-plink  <uuid>      # internal — fired by `O`
     .../tui --set-plink   <uuid>      # internal — fired by `L`
-    .../tui --delete-menu <uuid>      # internal — fired by `D`
+    .../tui --delete-menu <uuid>      # internal — fired by `d`
+    .../tui --undo                    # internal — fired by `u`
     .../tui --list-rows [--toggle]    # internal — fired by Tab reload
 
 Modes:
@@ -27,6 +28,8 @@ Bindings (shown as --header in the picker itself):
     p            open project note (~/.task/notes/projects/<project>.norg)
     o / l        open task link    /  set task link from clipboard
     O / L        open project link /  set project link from clipboard
+    d            open a sub-picker listing what's deletable on the current task
+    u            undo the most recent delete (file restore or UDA reset)
     Tab          toggle pending ↔ pending + completed + deleted
     j / k        down / up
     q / Ctrl-C   close
@@ -46,8 +49,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-NOTE_DIR = Path.home() / ".task" / "notes"
-PROJ_DIR = NOTE_DIR / "projects"
+NOTE_DIR   = Path.home() / ".task" / "notes"
+PROJ_DIR   = NOTE_DIR / "projects"
+TRASH_DIR  = NOTE_DIR / ".trash"           # deleted notes / links land here so they can be undone
+UNDO_LOG   = NOTE_DIR / ".tui-undo.log"    # one operation per line; LIFO via tail/truncate
 STATE_FILE = Path("/tmp/.taskwarrior-tui-show-all")
 
 # 0x96f truecolor palette
@@ -75,7 +80,8 @@ HEADER_HINTS = (
     f"  {B}/{R} search   {B}j/k{R} nav   {B}⏎{R} note   "
     f"{B}p{R} proj-note   {B}o{R}/{B}l{R} task link   "
     f"{B}O{R}/{B}L{R} project link   "
-    f"{B}D{R} delete…   {B}⇥{R} pending/all   {B}q{R} close"
+    f"{B}d{R} delete…   {B}u{R} undo   "
+    f"{B}⇥{R} pending/all   {B}q{R} close"
 )
 
 
@@ -101,6 +107,35 @@ def read_project_link(project: str) -> str | None:
 def write_project_link(project: str, value: str) -> None:
     PROJ_DIR.mkdir(parents=True, exist_ok=True)
     project_link_file(project).write_text(value + "\n", encoding="utf-8")
+
+
+# ── Trash + undo log (shared with the nvim picker via the same paths) ──────
+
+def _trash_move(src: Path) -> Path:
+    """Move `src` into TRASH_DIR with a millisecond suffix; return new path."""
+    import time
+    TRASH_DIR.mkdir(parents=True, exist_ok=True)
+    dst = TRASH_DIR / f"{src.name}.{int(time.time() * 1000)}"
+    src.rename(dst)
+    return dst
+
+
+def _undo_push(*fields: str) -> None:
+    UNDO_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with UNDO_LOG.open("a", encoding="utf-8") as f:
+        f.write("\t".join(fields) + "\n")
+
+
+def _undo_pop() -> list[str] | None:
+    if not UNDO_LOG.is_file():
+        return None
+    lines = UNDO_LOG.read_text(encoding="utf-8").splitlines()
+    if not lines:
+        return None
+    last = lines[-1]
+    UNDO_LOG.write_text("\n".join(lines[:-1]) + ("\n" if lines[:-1] else ""),
+                        encoding="utf-8")
+    return last.split("\t")
 
 
 def age(iso: str) -> str:
@@ -356,7 +391,7 @@ def _confirm(prompt: str) -> bool:
 
 
 def delete_note_of(uuid: str) -> int:
-    """Invoked by Alt-n. Removes ~/.task/notes/<uuid>.norg and clears `note:` UDA."""
+    """Trash ~/.task/notes/<uuid>.norg and clear the `note:` UDA. Undoable via `u`."""
     if not uuid:
         return 1
     note = NOTE_DIR / f"{uuid}.norg"
@@ -368,21 +403,18 @@ def delete_note_of(uuid: str) -> int:
     if not _confirm(f"Delete task note for '{desc}'?"):
         print("aborted")
         return 0
-    try:
-        note.unlink()
-    except OSError as e:
-        print(f"failed: {e}", file=sys.stderr)
-        return 1
+    trash = _trash_move(note)
     subprocess.run(
         ["task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", "note:"],
         capture_output=True,
     )
-    print("task note deleted")
+    _undo_push("note", uuid, str(trash))
+    print("task note deleted (press u to undo)")
     return 0
 
 
 def delete_pnote_of(uuid: str) -> int:
-    """Invoked by Alt-Shift-n. Removes ~/.task/notes/projects/<project>.norg."""
+    """Trash ~/.task/notes/projects/<project>.norg. Undoable via `u`."""
     if not uuid:
         return 1
     project = _project_of(uuid)
@@ -396,18 +428,21 @@ def delete_pnote_of(uuid: str) -> int:
     if not _confirm(f"Delete project note for '{project}'?"):
         print("aborted")
         return 0
-    try:
-        pnote.unlink()
-    except OSError as e:
-        print(f"failed: {e}", file=sys.stderr)
-        return 1
-    print(f"project '{project}' note deleted")
+    trash = _trash_move(pnote)
+    _undo_push("pnote", project, str(trash))
+    print(f"project '{project}' note deleted (press u to undo)")
     return 0
 
 
 def delete_link_of(uuid: str) -> int:
-    """Invoked by Alt-l. Clears the task's `link` UDA."""
+    """Clear the task's `link` UDA. Undoable via `u`."""
     if not uuid:
+        return 1
+    cur = subprocess.run(
+        ["task", "_get", f"{uuid}.link"], capture_output=True, text=True,
+    ).stdout.strip()
+    if not cur:
+        print("Task has no link to delete", file=sys.stderr)
         return 1
     res = subprocess.run(
         ["task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", "link:"],
@@ -416,12 +451,13 @@ def delete_link_of(uuid: str) -> int:
     if res.returncode != 0:
         print(res.stderr.strip() or "task modify failed", file=sys.stderr)
         return res.returncode
-    print("task link cleared")
+    _undo_push("link", uuid, cur)
+    print("task link cleared (press u to undo)")
     return 0
 
 
 def delete_plink_of(uuid: str) -> int:
-    """Removes ~/.task/notes/projects/<project>.link."""
+    """Trash ~/.task/notes/projects/<project>.link. Undoable via `u`."""
     if not uuid:
         return 1
     project = _project_of(uuid)
@@ -432,12 +468,43 @@ def delete_plink_of(uuid: str) -> int:
     if not plink.is_file():
         print(f"Project '{project}' has no link to delete", file=sys.stderr)
         return 1
-    try:
-        plink.unlink()
-    except OSError as e:
-        print(f"failed: {e}", file=sys.stderr)
-        return 1
-    print(f"project '{project}' link deleted")
+    trash = _trash_move(plink)
+    _undo_push("plink", project, str(trash))
+    print(f"project '{project}' link deleted (press u to undo)")
+    return 0
+
+
+def undo_last() -> int:
+    """Pop the last entry from the shared undo log and reverse it."""
+    entry = _undo_pop()
+    if not entry:
+        print("Nothing to undo", file=sys.stderr)
+        return 0
+    op = entry[0]
+    if op == "note" and len(entry) >= 3:
+        uuid, trash = entry[1], Path(entry[2])
+        if trash.is_file():
+            trash.rename(NOTE_DIR / f"{uuid}.norg")
+        print(f"restored task note ({uuid})")
+    elif op == "pnote" and len(entry) >= 3:
+        project, trash = entry[1], Path(entry[2])
+        if trash.is_file():
+            trash.rename(PROJ_DIR / f"{project}.norg")
+        print(f"restored project note ({project})")
+    elif op == "link" and len(entry) >= 3:
+        uuid, value = entry[1], entry[2]
+        subprocess.run(
+            ["task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", f"link:{value}"],
+            capture_output=True,
+        )
+        print(f"restored task link ({uuid} → {value})")
+    elif op == "plink" and len(entry) >= 3:
+        project, trash = entry[1], Path(entry[2])
+        if trash.is_file():
+            trash.rename(project_link_file(project))
+        print(f"restored project link ({project})")
+    else:
+        print(f"unknown undo entry: {entry}", file=sys.stderr)
     return 0
 
 
@@ -526,6 +593,8 @@ def main() -> int:
         return delete_plink_of(sys.argv[2])
     if len(sys.argv) >= 3 and sys.argv[1] == "--delete-menu":
         return delete_menu_of(sys.argv[2])
+    if len(sys.argv) >= 2 and sys.argv[1] == "--undo":
+        return undo_last()
 
     if "--list-rows" in sys.argv:
         if "--toggle" in sys.argv:
@@ -552,7 +621,7 @@ def main() -> int:
 
     # Keys that act as commands in NAV mode and as typed letters in SEARCH mode.
     # `/` is the entry to SEARCH; rebound when SEARCH exits via <Esc>.
-    NAV_KEYS = ["j", "k", "p", "o", "l", "O", "L", "D", "q", "/"]
+    NAV_KEYS = ["j", "k", "p", "o", "l", "O", "L", "d", "u", "q", "/"]
     unbind = "unbind(" + ",".join(NAV_KEYS) + ")"
     rebind = "rebind(" + ",".join(NAV_KEYS) + ")"
 
@@ -567,7 +636,10 @@ def main() -> int:
         ("L",   f"execute(python3 {self_path} --set-plink   {{2}})"
                 f"+reload(python3 {self_path} --list-rows)"),
         # Single delete key opens a sub-picker listing what's deletable.
-        ("D",   f"execute(python3 {self_path} --delete-menu {{2}})"
+        ("d",   f"execute(python3 {self_path} --delete-menu {{2}})"
+                f"+reload(python3 {self_path} --list-rows)"),
+        # Undo the most recent delete (file restore or UDA reset).
+        ("u",   f"execute(python3 {self_path} --undo)"
                 f"+reload(python3 {self_path} --list-rows)"),
         ("q",   "abort"),
         ("tab", f"reload(python3 {self_path} --list-rows --toggle)"),

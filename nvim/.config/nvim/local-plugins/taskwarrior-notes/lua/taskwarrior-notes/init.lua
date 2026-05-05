@@ -9,6 +9,8 @@ local M = {}
 
 local NOTE_DIR = vim.fn.expand("~/.task/notes")
 local PROJECT_NOTE_DIR = NOTE_DIR .. "/projects"
+local TRASH_DIR        = NOTE_DIR .. "/.trash"      -- shared with the CLI TUI
+local UNDO_LOG         = NOTE_DIR .. "/.tui-undo.log"
 
 -- Nerd Font icons (PUA codepoints) — written as byte escapes so the source
 -- stays ASCII even through editors that strip PUA glyphs.
@@ -117,36 +119,107 @@ local function set_task_link(uuid, value)
   })
 end
 
-local function delete_task_link(uuid)
-  vim.fn.system({
-    "task", "rc.confirmation=no", "rc.verbose=nothing",
-    uuid, "modify", "link:",
-  })
-end
-
-local function delete_project_link(project)
-  if project_has_link(project) then
-    vim.fn.delete(project_link_file(project))
-  end
-end
-
 local function task_note_path(uuid)
   return NOTE_DIR .. "/" .. uuid .. ".norg"
 end
 
+-- ── Trash + undo log (shared with the CLI TUI via the same paths) ─────────
+
+local function trash_move(src)
+  vim.fn.mkdir(TRASH_DIR, "p")
+  local ms = math.floor((vim.uv or vim.loop).hrtime() / 1e6)
+  local name = vim.fn.fnamemodify(src, ":t")
+  local dst = TRASH_DIR .. "/" .. name .. "." .. tostring(ms)
+  os.rename(src, dst)
+  return dst
+end
+
+local function undo_push(...)
+  vim.fn.mkdir(NOTE_DIR, "p")
+  local fields = { ... }
+  local f = io.open(UNDO_LOG, "a")
+  if not f then return end
+  f:write(table.concat(fields, "\t") .. "\n")
+  f:close()
+end
+
+local function undo_pop()
+  if vim.fn.filereadable(UNDO_LOG) == 0 then return nil end
+  local lines = vim.fn.readfile(UNDO_LOG)
+  if #lines == 0 then return nil end
+  local last = lines[#lines]
+  table.remove(lines, #lines)
+  vim.fn.writefile(lines, UNDO_LOG)
+  return vim.split(last, "\t", { plain = true })
+end
+
+local function delete_task_link(uuid)
+  local cur = vim.trim(vim.fn.system({ "task", "_get", uuid .. ".link" }) or "")
+  if cur == "" then return false end
+  vim.fn.system({
+    "task", "rc.confirmation=no", "rc.verbose=nothing",
+    uuid, "modify", "link:",
+  })
+  undo_push("link", uuid, cur)
+  return true
+end
+
+local function delete_project_link(project)
+  if not project_has_link(project) then return false end
+  local trash = trash_move(project_link_file(project))
+  undo_push("plink", project, trash)
+  return true
+end
+
 local function delete_task_note(uuid)
   local p = task_note_path(uuid)
-  if vim.fn.filereadable(p) == 1 then
-    vim.fn.delete(p)
-  end
+  if vim.fn.filereadable(p) == 0 then return false end
+  local trash = trash_move(p)
   vim.fn.system({ "task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "modify", "note:" })
+  undo_push("note", uuid, trash)
+  return true
 end
 
 local function delete_project_note(project)
   local p = PROJECT_NOTE_DIR .. "/" .. project .. ".norg"
-  if vim.fn.filereadable(p) == 1 then
-    vim.fn.delete(p)
+  if vim.fn.filereadable(p) == 0 then return false end
+  local trash = trash_move(p)
+  undo_push("pnote", project, trash)
+  return true
+end
+
+local function undo_last()
+  local entry = undo_pop()
+  if not entry then
+    vim.notify("Nothing to undo", vim.log.levels.INFO)
+    return false
   end
+  local op = entry[1]
+  if op == "note" and entry[2] and entry[3] then
+    if vim.fn.filereadable(entry[3]) == 1 then
+      os.rename(entry[3], task_note_path(entry[2]))
+    end
+    vim.notify("Restored task note (" .. entry[2] .. ")", vim.log.levels.INFO)
+  elseif op == "pnote" and entry[2] and entry[3] then
+    if vim.fn.filereadable(entry[3]) == 1 then
+      os.rename(entry[3], PROJECT_NOTE_DIR .. "/" .. entry[2] .. ".norg")
+    end
+    vim.notify("Restored project note (" .. entry[2] .. ")", vim.log.levels.INFO)
+  elseif op == "link" and entry[2] and entry[3] then
+    vim.fn.system({
+      "task", "rc.confirmation=no", "rc.verbose=nothing",
+      entry[2], "modify", "link:" .. entry[3],
+    })
+    vim.notify(("Restored task link (%s → %s)"):format(entry[2], entry[3]), vim.log.levels.INFO)
+  elseif op == "plink" and entry[2] and entry[3] then
+    if vim.fn.filereadable(entry[3]) == 1 then
+      os.rename(entry[3], project_link_file(entry[2]))
+    end
+    vim.notify("Restored project link (" .. entry[2] .. ")", vim.log.levels.INFO)
+  else
+    vim.notify("Unknown undo entry", vim.log.levels.WARN)
+  end
+  return true
 end
 
 local function confirm(prompt)
@@ -208,7 +281,7 @@ function M.tasks()
 
   -- Keybind hint line shown above the column header (mirrors the TUI's --header).
   local HINTS = "  ⏎ note  ·  p proj-note  ·  o/l task link  ·  O/L project link"
-                .. "  ·  D delete…  ·  q close"
+                .. "  ·  d delete…  ·  u undo  ·  q close"
 
   -- Build raw cell values for each row, then derive column widths.
   local rows = {}
@@ -347,7 +420,8 @@ function M.tasks()
           ["l"] = "set_task_link",
           ["O"] = "open_project_link",
           ["L"] = "set_project_link",
-          ["D"] = "delete_menu",
+          ["d"] = "delete_menu",
+          ["u"] = "undo_last",
         },
       },
       input = {
@@ -433,6 +507,12 @@ function M.tasks()
         vim.notify(("Project '%s' link set: %s"):format(proj, value), vim.log.levels.INFO)
         picker:close()
         vim.schedule(function() M.tasks() end) -- reopen so the new icon shows
+      end,
+      undo_last = function(picker)
+        if undo_last() then
+          picker:close()
+          vim.schedule(function() M.tasks() end)
+        end
       end,
       delete_menu = function(picker)
         local item = picker:current()
