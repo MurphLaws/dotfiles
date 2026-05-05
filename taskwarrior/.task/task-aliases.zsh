@@ -1,16 +1,16 @@
 # Taskwarrior aliases — source from .zshrc
 # Add: source ~/.task/task-aliases.zsh
 
+# Standalone TUI launcher — mirrors the nvim taskwarrior-notes plugin.
+# `task` is left untouched; invoke this explicitly to get the fzf picker.
+task-tui() {
+    "$HOME/.task/hooks/tui" "$@"
+}
+
 task() {
     local colorize="$HOME/.task/hooks/colorize-top"
     local tree="$HOME/.task/hooks/tree-render"
     local linkicon="$HOME/.task/hooks/link-icon"
-
-    # Bare `task` (no args) → fzf TUI picker (mirrors the nvim taskwarrior-notes plugin)
-    if (( $# == 0 )); then
-        "$HOME/.task/hooks/tui"
-        return
-    fi
 
     # Intercept _projects anywhere in args (zsh completion passes rc.hooks=0 _projects)
     if [[ "$*" == *_projects* ]]; then

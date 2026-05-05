@@ -4,12 +4,13 @@ Taskwarrior pending-tasks TUI — fzf-based picker that mirrors the nvim
 taskwarrior-notes plugin (same columns, same icons, same actions).
 
 Usage:
-    task                              # interactive picker (bare `task` alias)
+    task-tui                          # interactive picker
     .../tui --project-of  <uuid>      # internal — fired by `p`
     .../tui --open-link   <uuid>      # internal — fired by `o`
     .../tui --set-link    <uuid>      # internal — fired by `l`
     .../tui --open-plink  <uuid>      # internal — fired by `O`
     .../tui --set-plink   <uuid>      # internal — fired by `L`
+    .../tui --mark-done   <uuid>      # internal — fired by `x`
     .../tui --delete-menu <uuid>      # internal — fired by `d`
     .../tui --undo                    # internal — fired by `u`
     .../tui --list-rows [--toggle]    # internal — fired by Tab reload
@@ -28,6 +29,7 @@ Bindings (shown as --header in the picker itself):
     p            open project note (~/.task/notes/projects/<project>.norg)
     o / l        open task link    /  set task link from clipboard
     O / L        open project link /  set project link from clipboard
+    x            mark current task done
     d            open a sub-picker listing what's deletable on the current task
     u            undo the most recent delete (file restore or UDA reset)
     Tab          toggle pending ↔ pending + completed + deleted
@@ -77,11 +79,11 @@ ICON_PLINK   = ""  # same glyph, different color (green) for project link
 EDITOR = os.environ.get("EDITOR") or "nvim"
 
 HEADER_HINTS = (
-    f"  {B}/{R} search   {B}j/k{R} nav   {B}⏎{R} note   "
-    f"{B}p{R} proj-note   {B}o{R}/{B}l{R} task link   "
-    f"{B}O{R}/{B}L{R} project link   "
-    f"{B}d{R} delete…   {B}u{R} undo   "
-    f"{B}⇥{R} pending/all   {B}q{R} close"
+    f"  {B}⏎{R} note   {B}p{R} proj-note   "
+    f"{B}o{R} task-link   {B}O{R} proj-link   "
+    f"{B}l{R} set task-link   {B}L{R} set proj-link\n"
+    f"  {B}x{R} done   {B}d{R} delete…   {B}u{R} undo   "
+    f"{B}/{R} search   {B}⇥{R} pending/all   {B}q{R} close"
 )
 
 
@@ -382,6 +384,24 @@ def set_plink_of(uuid: str) -> int:
     return 0
 
 
+def mark_done_of(uuid: str) -> int:
+    """Invoked by the fzf `x` binding. Marks the current task done."""
+    if not uuid:
+        return 1
+    res = subprocess.run(
+        ["task", "rc.confirmation=no", "rc.verbose=nothing", uuid, "done"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        print(res.stderr.strip() or "task done failed", file=sys.stderr)
+        return res.returncode
+    desc = subprocess.run(
+        ["task", "_get", f"{uuid}.description"], capture_output=True, text=True,
+    ).stdout.strip() or uuid
+    print(f"completed: {desc}")
+    return 0
+
+
 def _confirm(prompt: str) -> bool:
     try:
         ans = input(f"{prompt} [y/N] ").strip().lower()
@@ -583,6 +603,8 @@ def main() -> int:
         return open_plink_of(sys.argv[2])
     if len(sys.argv) >= 3 and sys.argv[1] == "--set-plink":
         return set_plink_of(sys.argv[2])
+    if len(sys.argv) >= 3 and sys.argv[1] == "--mark-done":
+        return mark_done_of(sys.argv[2])
     if len(sys.argv) >= 3 and sys.argv[1] == "--delete-note":
         return delete_note_of(sys.argv[2])
     if len(sys.argv) >= 3 and sys.argv[1] == "--delete-pnote":
@@ -621,7 +643,7 @@ def main() -> int:
 
     # Keys that act as commands in NAV mode and as typed letters in SEARCH mode.
     # `/` is the entry to SEARCH; rebound when SEARCH exits via <Esc>.
-    NAV_KEYS = ["j", "k", "p", "o", "l", "O", "L", "d", "u", "q", "/"]
+    NAV_KEYS = ["j", "k", "p", "o", "l", "O", "L", "x", "d", "u", "q", "/"]
     unbind = "unbind(" + ",".join(NAV_KEYS) + ")"
     rebind = "rebind(" + ",".join(NAV_KEYS) + ")"
 
@@ -634,6 +656,9 @@ def main() -> int:
                 f"+reload(python3 {self_path} --list-rows)"),
         ("O",   f"execute(python3 {self_path} --open-plink  {{2}})+abort"),
         ("L",   f"execute(python3 {self_path} --set-plink   {{2}})"
+                f"+reload(python3 {self_path} --list-rows)"),
+        # Mark task done.
+        ("x",   f"execute(python3 {self_path} --mark-done   {{2}})"
                 f"+reload(python3 {self_path} --list-rows)"),
         # Single delete key opens a sub-picker listing what's deletable.
         ("d",   f"execute(python3 {self_path} --delete-menu {{2}})"
@@ -661,8 +686,7 @@ def main() -> int:
             "--header", HEADER_HINTS,
             "--prompt", "  ",
             "--pointer", " ",
-            "--height", "80%",
-            "--margin", "2,10%",
+            "--margin", "10%,10%",
             "--padding", "1,2",
             "--border", "rounded",
             "--border-label", " Taskwarrior — pending tasks ",

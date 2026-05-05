@@ -279,9 +279,11 @@ function M.tasks()
   local Snacks = require("snacks")
   local align = Snacks.picker.util.align
 
-  -- Keybind hint line shown above the column header (mirrors the TUI's --header).
-  local HINTS = "  ⏎ note  ·  p proj-note  ·  o/l task link  ·  O/L project link"
-                .. "  ·  d delete…  ·  u undo  ·  q close"
+  -- Keybind hint lines shown above the column header (mirrors the TUI's --header).
+  -- Two lines, grouped: open/read actions on top, mutating actions + close below.
+  local HINTS_LINE1 = "  ⏎ note  ·  p proj-note  ·  o task-link  ·  O proj-link"
+                      .. "  ·  l set task-link  ·  L set proj-link"
+  local HINTS_LINE2 = "  x done  ·  d delete…  ·  u undo  ·  q close"
 
   -- Build raw cell values for each row, then derive column widths.
   local rows = {}
@@ -342,7 +344,7 @@ function M.tasks()
 
   local function format(item)
     if item.is_help then
-      return { { HINTS, "Comment" } }
+      return { { item.hint_text or "", "Comment" } }
     end
     local r = item.is_header and HDR or item.row
     local hl = item.is_header and "Title" or nil
@@ -364,10 +366,12 @@ function M.tasks()
     return out
   end
 
-  -- Items: keybind hints, column header, then one per task. The hints/header
-  -- are pinned at the top via score = math.huge and skipped by selection logic.
+  -- Items: keybind hints (2 lines), column header, then one per task. The
+  -- hints/header are pinned at the top via score = math.huge and skipped by
+  -- selection logic.
   local items = {
-    { is_help   = true, text = "", score = math.huge + 1 },
+    { is_help   = true, hint_text = HINTS_LINE1, text = "", score = math.huge + 2 },
+    { is_help   = true, hint_text = HINTS_LINE2, text = "", score = math.huge + 1 },
     { is_header = true, text = "", score = math.huge },
   }
   for _, r in ipairs(rows) do
@@ -405,10 +409,11 @@ function M.tasks()
       },
     },
     on_show = function(picker)
-      -- Skip the keybind-hints + column-header rows on open.
+      -- Skip the 2 keybind-hint rows + 1 column-header row on open (positions 1-3),
+      -- landing the cursor on the first real task at position 4.
       vim.schedule(function()
         if picker.list and picker.list.move then
-          picker.list:move(3, true)
+          picker.list:move(4, true)
         end
       end)
     end,
@@ -420,6 +425,7 @@ function M.tasks()
           ["l"] = "set_task_link",
           ["O"] = "open_project_link",
           ["L"] = "set_project_link",
+          ["x"] = "mark_done",
           ["d"] = "delete_menu",
           ["u"] = "undo_last",
         },
@@ -513,6 +519,22 @@ function M.tasks()
           picker:close()
           vim.schedule(function() M.tasks() end)
         end
+      end,
+      mark_done = function(picker)
+        local item = picker:current()
+        if not item or item.is_help or item.is_header or not item.row then return end
+        local task = item.row.task
+        local res = vim.fn.system({
+          "task", "rc.confirmation=no", "rc.verbose=nothing",
+          task.uuid, "done",
+        })
+        if vim.v.shell_error ~= 0 then
+          vim.notify(vim.trim(res ~= "" and res or "task done failed"), vim.log.levels.ERROR)
+          return
+        end
+        vim.notify("Completed: " .. (task.description or task.uuid), vim.log.levels.INFO)
+        picker:close()
+        vim.schedule(function() M.tasks() end)
       end,
       delete_menu = function(picker)
         local item = picker:current()
