@@ -1,7 +1,7 @@
 -- taskwarrior-notes: harpoon-style floating window for Taskwarrior tasks.
--- Notes layout matches ~/.task/hooks/note and ~/.task/hooks/project-note:
---   tasks:    ~/.task/notes/<uuid>.md
---   projects: ~/.task/notes/projects/<project>.md
+-- Notes layout (Neorg .norg):
+--   tasks:    ~/.task/notes/<uuid>.norg
+--   projects: ~/.task/notes/projects/<project>.norg
 
 local M = {}
 
@@ -26,7 +26,7 @@ end
 
 local function open_task_note(task)
   ensure_dirs()
-  local path = NOTE_DIR .. "/" .. task.uuid .. ".md"
+  local path = NOTE_DIR .. "/" .. task.uuid .. ".norg"
   vim.cmd("edit " .. vim.fn.fnameescape(path))
   vim.fn.system(string.format(
     "task %s mod note:%s 2>/dev/null",
@@ -37,7 +37,7 @@ end
 
 local function open_project_note(project)
   ensure_dirs()
-  local path = PROJECT_NOTE_DIR .. "/" .. project .. ".md"
+  local path = PROJECT_NOTE_DIR .. "/" .. project .. ".norg"
   vim.cmd("edit " .. vim.fn.fnameescape(path))
 end
 
