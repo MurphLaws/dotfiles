@@ -85,6 +85,12 @@ return {
 				name = "godot",
 				cmd = vim.lsp.rpc.connect("127.0.0.1", 6005),
 			},
+			-- Godot shaders (external LSP, requires `gdshader-language-server` on $PATH)
+			gdshader_lsp = {
+				cmd = { "gdshader-language-server" },
+				filetypes = { "gdshader", "gdshaderinc" },
+				root_markers = { "project.godot", ".git" },
+			},
 			-- Python (notebook code cells via quarto)
 			pyright = {
 				settings = {
