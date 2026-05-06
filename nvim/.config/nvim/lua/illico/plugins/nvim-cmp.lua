@@ -319,8 +319,31 @@ return {
 		})
 
 		-- ✅ Cmdline completion (adds completion back to Noice cmdline)
+		-- Tab/S-Tab cycle entries with SelectBehavior.Insert so the highlighted
+		-- candidate is written into the cmdline live (auto-preview).
+		local cmdline_tab = {
+			["<Tab>"] = {
+				c = function()
+					if cmp.visible() then
+						cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
+					else
+						cmp.complete()
+					end
+				end,
+			},
+			["<S-Tab>"] = {
+				c = function()
+					if cmp.visible() then
+						cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+					else
+						cmp.complete()
+					end
+				end,
+			},
+		}
+
 		cmp.setup.cmdline(":", {
-			mapping = cmp.mapping.preset.cmdline(),
+			mapping = cmp.mapping.preset.cmdline(cmdline_tab),
 			sources = cmp.config.sources({
 				{ name = "path" },
 				{ name = "cmdline" },
@@ -329,7 +352,7 @@ return {
 		})
 
 		cmp.setup.cmdline({ "/", "?" }, {
-			mapping = cmp.mapping.preset.cmdline(),
+			mapping = cmp.mapping.preset.cmdline(cmdline_tab),
 			sources = {
 				{ name = "buffer" },
 			},
