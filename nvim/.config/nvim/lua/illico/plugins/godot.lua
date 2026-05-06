@@ -12,6 +12,20 @@ return {
 	ft = { "gdscript", "gdshader", "gdresource" },
 	cmd = { "GodotRun", "GodotRunLast", "GodotRunCurrent", "GodotRunFZF", "GodotDocs", "GodotDocsClearCache" },
 	init = function()
+		-- Filetype detection must run at startup, NOT after vim-godot loads
+		-- (this plugin is ft-lazy, so its ftdetect rules can't bootstrap themselves).
+		-- Without this, .gdshader files fall through to neovim's `gsl` default and
+		-- the gdshader treesitter parser + LSP never attach.
+		vim.filetype.add({
+			extension = {
+				gd = "gdscript",
+				gdshader = "gdshader",
+				gdshaderinc = "gdshader",
+				tscn = "gdresource",
+				tres = "gdresource",
+			},
+		})
+
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "gdscript", "gdshader", "gdresource" },
 			group = vim.api.nvim_create_augroup("IllicoGodot", { clear = true }),
