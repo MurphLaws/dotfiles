@@ -85,11 +85,16 @@ return {
 				name = "godot",
 				cmd = vim.lsp.rpc.connect("127.0.0.1", 6005),
 			},
-			-- Godot shaders (external LSP, requires `gdshader-language-server` on $PATH)
+			-- Godot shaders (external LSP, requires `gdshader-language-server` on $PATH).
+			-- Semantic tokens are disabled because this server tokenizes very little
+			-- and would otherwise override treesitter's gdshader highlights.
 			gdshader_lsp = {
 				cmd = { "gdshader-language-server" },
 				filetypes = { "gdshader", "gdshaderinc" },
 				root_markers = { "project.godot", ".git" },
+				on_init = function(client)
+					client.server_capabilities.semanticTokensProvider = nil
+				end,
 			},
 			-- Python (notebook code cells via quarto)
 			pyright = {
