@@ -123,8 +123,6 @@ return {
 				vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 				opts.desc = "Show LSP definitions"
 				vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
-				opts.desc = "Show documentation"
-				vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
 				opts.desc = "Smart rename"
 				vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 				opts.desc = "Code Action"

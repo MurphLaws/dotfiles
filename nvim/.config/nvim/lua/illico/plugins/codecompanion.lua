@@ -292,9 +292,9 @@ return {
 						if panel_alive() then
 							panel_scroll("up")
 						else
-							vim.lsp.buf.hover()
+							vim.cmd("normal! 10kzz")
 						end
-					end, { buffer = args.buf, desc = "Gemini scroll up / LSP hover fallback" })
+					end, { buffer = args.buf, desc = "Gemini scroll up / 10kzz fallback" })
 					vim.keymap.set("n", "J", function()
 						if panel_alive() then
 							panel_scroll("down")
