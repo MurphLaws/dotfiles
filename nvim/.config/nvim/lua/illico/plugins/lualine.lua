@@ -4,42 +4,84 @@ return {
 		"nvim-tree/nvim-web-devicons",
 	},
 	config = function()
-		local function set_harpoon_hl()
-			vim.api.nvim_set_hl(0, "HarpoonCurrent", { fg = "#ff6188", bold = true })
-			vim.api.nvim_set_hl(0, "HarpoonPin", { fg = "#5fafff" })
+		local function set_buftab_hl()
+			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = "#ff6188", bold = true })
+			vim.api.nvim_set_hl(0, "BufTabModified", { fg = "#fc9867" })
 		end
-		set_harpoon_hl()
+		set_buftab_hl()
 		vim.api.nvim_create_autocmd("ColorScheme", {
-			group = vim.api.nvim_create_augroup("HarpoonFilesColors", { clear = true }),
-			callback = set_harpoon_hl,
+			group = vim.api.nvim_create_augroup("BufTabColors", { clear = true }),
+			callback = set_buftab_hl,
 		})
 
-		local PIN = "\u{f435}"
-		local MAX_LEN = 15
-		local function harpoon_colored()
-			local ok, harpoon = pcall(require, "harpoon")
-			if not ok then
-				return ""
+		_G.IllicoSwitchBuf = function(bufnr)
+			pcall(vim.api.nvim_set_current_buf, tonumber(bufnr))
+		end
+
+		local MAX_LEN = 20
+
+		local function is_empty_noname(buf)
+			if vim.api.nvim_buf_get_name(buf) ~= "" then
+				return false
 			end
-			local items = harpoon:list().items or {}
-			if #items == 0 then
-				return ""
+			if vim.bo[buf].modified then
+				return false
 			end
-			local current_file = vim.fn.expand("%:p")
-			local parts = {}
-			for id, item in ipairs(items) do
-				local file_path = vim.fn.fnamemodify(item.value, ":p")
-				local fname = vim.fn.fnamemodify(file_path, ":t"):sub(1, MAX_LEN)
-				local is_current = file_path == current_file
-				local pin = "%#HarpoonPin#" .. PIN .. "%*"
-				if is_current then
-					table.insert(
-						parts,
-						" %#HarpoonCurrent#[" .. pin .. "%#HarpoonCurrent# " .. id .. " " .. fname .. "]%* "
-					)
-				else
-					table.insert(parts, "  " .. pin .. " " .. id .. " " .. fname .. " ")
+			if vim.api.nvim_buf_line_count(buf) > 1 then
+				return false
+			end
+			local first = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ""
+			return first == ""
+		end
+
+		local function listed_bufs()
+			local out = {}
+			for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+				if vim.fn.buflisted(buf) == 1 and not is_empty_noname(buf) then
+					table.insert(out, buf)
 				end
+			end
+			return out
+		end
+
+		_G.IllicoSwitchByIndex = function(idx)
+			local bufs = listed_bufs()
+			local target = bufs[idx + 1]
+			if target then
+				pcall(vim.api.nvim_set_current_buf, target)
+			end
+		end
+
+		for i = 0, 9 do
+			vim.keymap.set("n", "<leader>" .. i, function()
+				_G.IllicoSwitchByIndex(i)
+			end, { desc = "tabline: jump to buffer #" .. i, silent = true })
+		end
+
+		local function buffers_tabline()
+			local current_buf = vim.api.nvim_get_current_buf()
+			local parts = {}
+			for _, buf in ipairs(listed_bufs()) do
+				local name = vim.api.nvim_buf_get_name(buf)
+				local fname = (name == "" and "[No Name]")
+					or vim.fn.fnamemodify(name, ":t"):sub(1, MAX_LEN)
+				local is_current = buf == current_buf
+				local is_modified = vim.bo[buf].modified
+
+				local mod = is_modified and " %#BufTabModified#●%*" or ""
+
+				local segment
+				if is_current then
+					segment = " %#BufTabCurrent#["
+						.. fname
+						.. "%*"
+						.. mod
+						.. "%#BufTabCurrent#]%* "
+				else
+					segment = "  " .. fname .. mod .. " "
+				end
+
+				table.insert(parts, "%" .. buf .. "@v:lua.IllicoSwitchBuf@" .. segment .. "%T")
 			end
 			return table.concat(parts, "")
 		end
@@ -59,7 +101,7 @@ return {
 				globalstatus = true,
 				refresh = {
 					statusline = 1000,
-					tabline = 1000,
+					tabline = 200,
 					winbar = 1000,
 				},
 			},
@@ -125,7 +167,7 @@ return {
 			},
 			tabline = {
 				lualine_a = {
-					{ harpoon_colored },
+					{ buffers_tabline },
 				},
 			},
 			winbar = {},

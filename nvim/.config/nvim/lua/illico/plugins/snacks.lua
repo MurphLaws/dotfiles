@@ -159,12 +159,6 @@ return {
 							},
 						},
 					})
-					vim.schedule(function()
-						local ok, miniharp = pcall(require, "miniharp")
-						if ok then
-							miniharp.show_list()
-						end
-					end)
 				end,
 				desc = "Toggle Zen Mode",
 			},
