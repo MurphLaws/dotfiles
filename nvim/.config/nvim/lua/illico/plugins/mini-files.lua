@@ -3,7 +3,7 @@ return {
 	version = false,
 	keys = {
 		{
-			"<leader>m",
+			"<leader>e",
 			function()
 				local mf = require("mini.files")
 				if not mf.close() then

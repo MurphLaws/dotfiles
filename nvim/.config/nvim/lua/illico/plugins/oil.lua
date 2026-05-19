@@ -5,7 +5,7 @@ return {
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		keys = {
 			{
-				"<leader>e",
+				"<leader>o",
 				function()
 					for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 						local buf = vim.api.nvim_win_get_buf(win)
