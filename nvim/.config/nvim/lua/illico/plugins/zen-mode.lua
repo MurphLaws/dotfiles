@@ -11,7 +11,7 @@ return {
 	},
 	opts = {
 		window = {
-			backdrop = 0.5,
+			backdrop = 0.95,
 			width = 0.7,
 			height = 1,
 			options = {
