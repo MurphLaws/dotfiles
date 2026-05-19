@@ -42,5 +42,16 @@ return {
 				})
 			end,
 		})
+
+		-- <CR> on a file: open it AND close the picker. On a directory:
+		-- navigate in (mini.files default behavior).
+		vim.api.nvim_create_autocmd("User", {
+			pattern = "MiniFilesBufferCreate",
+			callback = function(args)
+				vim.keymap.set("n", "<CR>", function()
+					require("mini.files").go_in({ close_on_file = true })
+				end, { buffer = args.data.buf_id, desc = "Mini.files: open & close on file" })
+			end,
+		})
 	end,
 }
