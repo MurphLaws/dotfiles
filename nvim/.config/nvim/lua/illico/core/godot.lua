@@ -32,6 +32,77 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
+-- Godot's gdscript LSP returns resource path completions wrapped in literal
+-- quotes (`"res://..."`). Inserted as-is inside an existing `""` they leave a
+-- trailing extra `"`. Strip the wrapping quotes from completion items so
+-- accepting one inside a quoted string yields a clean insertion.
+vim.api.nvim_create_autocmd("LspAttach", {
+	group = group,
+	callback = function(args)
+		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		if not client or client.name ~= "gdscript" then
+			return
+		end
+		if client._gdscript_quote_patch then
+			return
+		end
+		client._gdscript_quote_patch = true
+
+		local function unquote(s)
+			if type(s) ~= "string" then
+				return s
+			end
+			if s:sub(1, 1) == '"' then
+				s = s:sub(2)
+			end
+			if s:sub(-1) == '"' then
+				s = s:sub(1, -2)
+			end
+			return s
+		end
+
+		local function fix_items(items)
+			if type(items) ~= "table" then
+				return
+			end
+			for _, item in ipairs(items) do
+				if type(item) == "table" then
+					if item.insertText then
+						item.insertText = unquote(item.insertText)
+					end
+					if item.textEdit and item.textEdit.newText then
+						item.textEdit.newText = unquote(item.textEdit.newText)
+					end
+					if item.filterText then
+						item.filterText = unquote(item.filterText)
+					end
+					if type(item.label) == "string" and item.label:sub(1, 1) == '"' then
+						item.label = unquote(item.label)
+					end
+				end
+			end
+		end
+
+		local orig_request = client.request
+		client.request = function(self, method, params, handler, bufnr)
+			if method == "textDocument/completion" and handler then
+				local orig_handler = handler
+				handler = function(err, result, ctx, config)
+					if type(result) == "table" then
+						if result.items then
+							fix_items(result.items)
+						else
+							fix_items(result)
+						end
+					end
+					return orig_handler(err, result, ctx, config)
+				end
+			end
+			return orig_request(self, method, params, handler, bufnr)
+		end
+	end,
+})
+
 -- Avoids Godot's "Used spaces for indentation instead of tabs as configured"
 -- warning by collapsing every 4 leading spaces into a tab on save.
 vim.api.nvim_create_autocmd("BufWritePre", {
