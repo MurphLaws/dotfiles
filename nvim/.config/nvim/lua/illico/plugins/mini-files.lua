@@ -27,6 +27,11 @@ return {
 		options = {
 			use_as_default_explorer = false,
 		},
+		content = {
+			filter = function(entry)
+				return not entry.name:match("%.uid$")
+			end,
+		},
 	},
 	config = function(_, opts)
 		require("mini.files").setup(opts)
