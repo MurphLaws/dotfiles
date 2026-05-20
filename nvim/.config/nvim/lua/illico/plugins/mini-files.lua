@@ -7,15 +7,10 @@ return {
 			function()
 				local mf = require("mini.files")
 				if not mf.close() then
-					local path = vim.api.nvim_buf_get_name(0)
-					if path == "" or vim.fn.filereadable(path) == 0 then
-						mf.open()
-					else
-						mf.open(path)
-					end
+					mf.open(vim.fn.getcwd())
 				end
 			end,
-			desc = "Mini.files: Toggle floating explorer",
+			desc = "Mini.files: Toggle floating explorer (cwd)",
 		},
 	},
 	opts = {
