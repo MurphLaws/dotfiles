@@ -115,32 +115,7 @@ return {
 							format_on_enter = true,
 						},
 					},
-					["core.concealer"] = {
-						config = {
-							icons = {
-								list = {
-									highlights = {
-										"@neorg.headings.1.title",
-										"@neorg.headings.2.title",
-										"@neorg.headings.3.title",
-										"@neorg.headings.4.title",
-										"@neorg.headings.5.title",
-										"@neorg.headings.6.title",
-									},
-								},
-								ordered = {
-									highlights = {
-										"@neorg.headings.1.title",
-										"@neorg.headings.2.title",
-										"@neorg.headings.3.title",
-										"@neorg.headings.4.title",
-										"@neorg.headings.5.title",
-										"@neorg.headings.6.title",
-									},
-								},
-							},
-						},
-					},
+					["core.concealer"] = {},
 					["core.dirman"] = {
 						config = {
 							workspaces = { notes = "~/notes" },
@@ -202,31 +177,14 @@ return {
 			})
 
 			-- =========================
-			-- view persistence
+			-- no auto-folding: folds are user-driven only
 			-- =========================
-			vim.opt.viewdir = vim.fn.stdpath("state") .. "/view"
-			vim.fn.mkdir(vim.opt.viewdir:get(), "p")
-			vim.opt.viewoptions = { "cursor", "folds" }
-
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = "norg",
 				callback = function()
 					vim.wo.conceallevel = 2
-					vim.wo.foldenable = true
-				end,
-			})
-
-			vim.api.nvim_create_autocmd("BufWinEnter", {
-				pattern = "*.norg",
-				callback = function()
-					pcall(vim.cmd, "silent! loadview")
-				end,
-			})
-
-			vim.api.nvim_create_autocmd({ "BufWinLeave", "BufWritePost" }, {
-				pattern = "*.norg",
-				callback = function()
-					pcall(vim.cmd, "silent! mkview")
+					vim.wo.foldenable = false
+					vim.wo.foldmethod = "manual"
 				end,
 			})
 

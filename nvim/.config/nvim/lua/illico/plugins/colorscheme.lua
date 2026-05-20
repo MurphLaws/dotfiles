@@ -74,9 +74,6 @@ return {
 			for i, color in ipairs(heading_palette) do
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".title", { fg = color, bold = true })
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".prefix", { fg = color, bold = true })
-				-- Lists comparten color con su heading equivalente
-				vim.api.nvim_set_hl(0, "@neorg.lists.unordered." .. i .. ".content", { fg = color })
-				vim.api.nvim_set_hl(0, "@neorg.lists.ordered." .. i .. ".content", { fg = color })
 			end
 		end,
 	},
