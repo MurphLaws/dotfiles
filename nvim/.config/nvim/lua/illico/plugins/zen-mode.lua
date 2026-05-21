@@ -31,9 +31,9 @@ return {
 			tmux = { enabled = false },
 		},
 		on_open = function()
-			-- Force the backdrop to solid black. Terminal transparency still
-			-- applies on top, but this maxes out what nvim itself can do.
-			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#000000", fg = "#000000" })
+			-- Paint the sidebars with tokyonight storm's deep bg so they stay opaque
+			-- during focus (no terminal wallpaper bleeding through).
+			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#1f2335", fg = "#1f2335" })
 			-- focus.nvim auto-resizes the active window and eats zen-mode's
 			-- centering padding. Pause it while zen is on.
 			vim.g._illico_zen_focus_was_enabled = vim.g.focus_disable ~= true
