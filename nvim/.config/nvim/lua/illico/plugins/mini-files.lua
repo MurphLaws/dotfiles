@@ -7,7 +7,7 @@ return {
 			function()
 				local mf = require("mini.files")
 				if not mf.close() then
-					mf.open(vim.fn.getcwd())
+					mf.open(vim.fn.getcwd(), false)
 				end
 			end,
 			desc = "Mini.files: Toggle floating explorer (cwd)",
