@@ -1,6 +1,6 @@
 -- illico/core/options.lua
 
--- Disable netrw (we use oil.nvim for file exploration)
+-- Disable netrw (we use mini.files for file exploration)
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
