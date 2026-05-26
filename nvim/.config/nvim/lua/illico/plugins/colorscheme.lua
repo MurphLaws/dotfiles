@@ -1,28 +1,18 @@
 return {
 	{
-		"folke/tokyonight.nvim",
+		-- Superset palette — local colorscheme at colors/superset.lua
+		name = "superset",
+		dir = vim.fn.stdpath("config"),
 		lazy = false,
 		priority = 1000,
 		config = function()
-			require("tokyonight").setup({
-				style = "storm",
-				transparent = true,
-				terminal_colors = true,
-				styles = {
-					comments = { italic = true },
-					keywords = { bold = true },
-					sidebars = "transparent",
-					floats = "transparent",
-				},
-			})
-			vim.cmd.colorscheme("tokyonight-storm")
+			vim.cmd.colorscheme("superset")
 
-			-- 🔹 CHANGE SIDE INDICATORS (End of Buffer)
+			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
-			vim.api.nvim_set_hl(0, "EndOfBuffer", { fg = "#3b4261", bg = "NONE" })
 
-			--  FORCE TRANSPARENCY & FIX BORDERS
-			local highlights = {
+			-- Force transparency on common float/sidebar groups
+			local transparent_groups = {
 				"Normal",
 				"NormalFloat",
 				"NormalNC",
@@ -47,61 +37,70 @@ return {
 				"SnacksPickerInput",
 				"SnacksPickerList",
 			}
-
-			for _, group in ipairs(highlights) do
+			for _, group in ipairs(transparent_groups) do
 				vim.api.nvim_set_hl(0, group, { bg = "NONE" })
 			end
 
-			-- 🌊 Tokyonight Storm palette accents
-			local pink = "#ff7eb6"
-			local pink_glow = "#ff9ec7"
-			local cyan = "#7dcfff"
-			local cyan_glow = "#b4f9f8"
-			local purple = "#9d7cd8"
-			local magenta = "#bb9af7"
-			local green = "#9ece6a"
-			local lime = "#73daca"
-			local yellow = "#e0af68"
-			local orange = "#ff9e64"
-			local red = "#f7768e"
-			local blue = "#7aa2f7"
-			local muted = "#565f89"
+			-- Superset palette accents
+			local p = _G.superset_palette or {}
+			local coral = p.coral or "#ff8c5a"
+			local peach = p.peach or "#ffa775"
+			local green = p.green or "#7ec77e"
+			local amber = p.amber or "#f0c674"
+			local gold = p.gold or "#d4a849"
+			local sky = p.sky or "#8ec9d6"
+			local mauve = p.mauve or "#b89cd9"
+			local purple = p.purple or "#9a7fc2"
+			local red = p.red or "#e07070"
+			local fg_dim = p.fg_dim or "#6e6863"
 
-			-- 🟢 ORGMODE COLORS
-			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = red, bg = "NONE", bold = true })
+			-- Orgmode
+			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = coral, bg = "NONE", bold = true })
 			vim.api.nvim_set_hl(0, "@org.keyword.done", { fg = green, bg = "NONE", bold = true })
 			vim.api.nvim_set_hl(0, "@org.checkbox.checked", { fg = green, bg = "NONE", bold = true })
-			vim.api.nvim_set_hl(0, "@org.checkbox.half_checked", { fg = green, bg = "NONE", bold = true })
+			vim.api.nvim_set_hl(0, "@org.checkbox.half_checked", { fg = amber, bg = "NONE", bold = true })
 
-			-- 🟣 Neorg markup aligned with tokyonight storm palette
-			vim.api.nvim_set_hl(0, "@neorg.markup.bold", { fg = yellow, bold = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.italic", { fg = purple, italic = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.underline", { fg = cyan, underline = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.strikethrough", { fg = muted, strikethrough = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.verbatim", { fg = lime })
+			-- Neorg markup
+			vim.api.nvim_set_hl(0, "@neorg.markup.bold", { fg = amber, bold = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.italic", { fg = mauve, italic = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.underline", { fg = sky, underline = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.strikethrough", { fg = fg_dim, strikethrough = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.verbatim", { fg = green })
 
-			-- Headings: cycle through the tokyonight storm accents
-			local heading_palette = { blue, cyan, purple, pink, lime, orange }
+			local heading_palette = { coral, amber, green, sky, mauve, peach }
 			for i, color in ipairs(heading_palette) do
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".title", { fg = color, bold = true })
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".prefix", { fg = color, bold = true })
 			end
 
-			-- Keep accents available to callers that want them
-			_G.tokyonight_accents = {
-				pink = pink,
-				pink_glow = pink_glow,
-				cyan = cyan,
-				cyan_glow = cyan_glow,
-				purple = purple,
-				magenta = magenta,
+			-- Expose accents to other plugins (lualine, incline, etc)
+			_G.superset_accents = {
+				coral = coral,
+				peach = peach,
 				green = green,
-				lime = lime,
-				yellow = yellow,
-				orange = orange,
+				amber = amber,
+				gold = gold,
+				sky = sky,
+				mauve = mauve,
+				purple = purple,
 				red = red,
-				blue = blue,
-				muted = muted,
+				fg_dim = fg_dim,
+			}
+			-- Back-compat shim so code that still references tokyonight_accents keeps working
+			_G.tokyonight_accents = {
+				pink = coral,
+				pink_glow = peach,
+				cyan = sky,
+				cyan_glow = sky,
+				purple = purple,
+				magenta = mauve,
+				green = green,
+				lime = green,
+				yellow = amber,
+				orange = coral,
+				red = red,
+				blue = sky,
+				muted = fg_dim,
 			}
 		end,
 	},

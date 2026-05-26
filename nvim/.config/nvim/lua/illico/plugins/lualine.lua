@@ -4,9 +4,20 @@ return {
 		"nvim-tree/nvim-web-devicons",
 	},
 	config = function()
+		local a = _G.superset_accents or {}
+		local coral = a.coral or "#ff8c5a"
+		local peach = a.peach or "#ffa775"
+		local green = a.green or "#7ec77e"
+		local amber = a.amber or "#f0c674"
+		local sky = a.sky or "#8ec9d6"
+		local mauve = a.mauve or "#b89cd9"
+		local fg_dim = a.fg_dim or "#6e6863"
+		local fg_text = "#e8e3d8"
+		local bg_dark = "#0d0d0d"
+
 		local function set_buftab_hl()
-			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = "#ff6188", bold = true })
-			vim.api.nvim_set_hl(0, "BufTabModified", { fg = "#fc9867" })
+			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = coral, bold = true })
+			vim.api.nvim_set_hl(0, "BufTabModified", { fg = peach })
 		end
 		set_buftab_hl()
 		vim.api.nvim_create_autocmd("ColorScheme", {
@@ -86,9 +97,47 @@ return {
 			return table.concat(parts, "")
 		end
 
+		local superset_theme = {
+			normal = {
+				a = { fg = bg_dark, bg = coral, gui = "bold" },
+				b = { fg = fg_text, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+			insert = {
+				a = { fg = bg_dark, bg = green, gui = "bold" },
+				b = { fg = fg_text, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+			visual = {
+				a = { fg = bg_dark, bg = amber, gui = "bold" },
+				b = { fg = fg_text, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+			replace = {
+				a = { fg = bg_dark, bg = mauve, gui = "bold" },
+				b = { fg = fg_text, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+			command = {
+				a = { fg = bg_dark, bg = sky, gui = "bold" },
+				b = { fg = fg_text, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+			terminal = {
+				a = { fg = bg_dark, bg = peach, gui = "bold" },
+				b = { fg = fg_text, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+			inactive = {
+				a = { fg = fg_dim, bg = "NONE" },
+				b = { fg = fg_dim, bg = "NONE" },
+				c = { fg = fg_dim, bg = "NONE" },
+			},
+		}
+
 		require("lualine").setup({
 			options = {
-				theme = "auto", -- 'auto' detectará que usas catppuccin y usará los colores correctos por modo
+				theme = superset_theme,
 				icons_enabled = true,
 				component_separators = { left = "│", right = "│" },
 				section_separators = { left = "", right = "" },

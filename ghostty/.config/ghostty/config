@@ -5,31 +5,31 @@ font-family = JetBrainsMono NF SemiBold
 font-size = 20
 font-thicken = true
 
-# Theme — Tokyonight Storm
-background = 24283b
-foreground = c0caf5
-cursor-color = 7aa2f7
-cursor-text = 24283b
-selection-background = 2e3c64
-selection-foreground = c0caf5
+# Theme — Superset (coral / sage / amber / sky)
+background = 0d0d0d
+foreground = e8e3d8
+cursor-color = ff8c5a
+cursor-text = 0d0d0d
+selection-background = 2a2a28
+selection-foreground = e8e3d8
 
-# ANSI palette (Tokyonight Storm)
-palette = 0=#1d202f
-palette = 1=#f7768e
-palette = 2=#9ece6a
-palette = 3=#e0af68
-palette = 4=#7aa2f7
-palette = 5=#bb9af7
-palette = 6=#7dcfff
-palette = 7=#a9b1d6
-palette = 8=#414868
-palette = 9=#f7768e
-palette = 10=#9ece6a
-palette = 11=#e0af68
-palette = 12=#7aa2f7
-palette = 13=#bb9af7
-palette = 14=#7dcfff
-palette = 15=#c0caf5
+# ANSI palette (Superset)
+palette = 0=#0d0d0d
+palette = 1=#e07070
+palette = 2=#7ec77e
+palette = 3=#f0c674
+palette = 4=#8ec9d6
+palette = 5=#b89cd9
+palette = 6=#ffa775
+palette = 7=#e8e3d8
+palette = 8=#6e6863
+palette = 9=#ff8c5a
+palette = 10=#7ec77e
+palette = 11=#d4a849
+palette = 12=#6ba8c4
+palette = 13=#9a7fc2
+palette = 14=#ffa775
+palette = 15=#e8e3d8
 
 # Transparency
 background-opacity = 0.95
