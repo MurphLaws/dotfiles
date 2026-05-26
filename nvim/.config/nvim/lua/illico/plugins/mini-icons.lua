@@ -9,12 +9,12 @@ return {
 		priority = 900, -- after colorscheme (1000), before everything else
 		config = function()
 			local a = _G.superset_accents or {}
-			local coral = a.coral or "#ff8c5a"
-			local green = a.green or "#7ec77e"
-			local amber = a.amber or "#f0c674"
-			local sky = a.sky or "#8ec9d6"
-			local mauve = a.mauve or "#b89cd9"
-			local red = a.red or "#e07070"
+			local coral = a.coral or "#d1734a"
+			local green = a.green or "#67a367"
+			local amber = a.amber or "#d1a72a"
+			local sky = a.sky or "#74a5af"
+			local mauve = a.mauve or "#9780b2"
+			local red = a.red or "#b85c5c"
 			local fg_dim = a.fg_dim or "#6e6863"
 
 			require("mini.icons").setup({

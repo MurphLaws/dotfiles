@@ -22,20 +22,20 @@ local p = {
   fg_dim    = "#6e6863",
   fg_ghost  = "#3d3a36",
 
-  -- accents
-  coral     = "#ff8c5a",
-  peach     = "#ffa775",
-  coral_dim = "#cc6e44",
-  green     = "#7ec77e",
-  green_dim = "#5fa05f",
-  amber     = "#f0c674",
-  gold      = "#d4a849",
-  sky       = "#8ec9d6",
-  blue      = "#6ba8c4",
-  mauve     = "#b89cd9",
-  purple    = "#9a7fc2",
-  red       = "#e07070",
-  crimson   = "#c45656",
+  -- accents (dimmed ~0.82× brightness for a softer, less-saturated look)
+  coral     = "#d1734a",
+  peach     = "#d18960",
+  coral_dim = "#a75a38",
+  green     = "#67a367",
+  green_dim = "#4e834e",
+  amber     = "#d1a72a",
+  gold      = "#ae8a3c",
+  sky       = "#74a5af",
+  blue      = "#588aa1",
+  mauve     = "#9780b2",
+  purple    = "#7e689f",
+  red       = "#b85c5c",
+  crimson   = "#a14747",
 
   -- diff
   diff_add    = "#1f2e1f",
@@ -51,12 +51,12 @@ hl("Normal",           { fg = p.fg, bg = "NONE" })
 hl("NormalNC",         { fg = p.fg, bg = "NONE" })
 hl("NormalFloat",      { fg = p.fg, bg = "NONE" })
 hl("FloatBorder",      { fg = p.fg_dim, bg = "NONE" })
-hl("FloatTitle",       { fg = p.coral, bg = "NONE", bold = true })
+hl("FloatTitle",       { fg = p.amber, bg = "NONE", bold = true })
 hl("WinSeparator",     { fg = p.fg_ghost, bg = "NONE" })
 hl("VertSplit",        { fg = p.fg_ghost, bg = "NONE" })
 hl("EndOfBuffer",      { fg = p.fg_ghost, bg = "NONE" })
 hl("LineNr",           { fg = p.fg_dim })
-hl("CursorLineNr",     { fg = p.coral, bold = true })
+hl("CursorLineNr",     { fg = p.amber, bold = true })
 hl("CursorLine",       { bg = p.bg_hl })
 hl("CursorColumn",     { bg = p.bg_hl })
 hl("ColorColumn",      { bg = p.bg_alt })
@@ -65,46 +65,46 @@ hl("Folded",           { fg = p.fg_dim, bg = p.bg_alt, italic = true })
 hl("FoldColumn",       { fg = p.fg_dim, bg = "NONE" })
 
 -- cursor & selection
-hl("Cursor",           { fg = p.bg, bg = p.coral })
-hl("lCursor",          { fg = p.bg, bg = p.coral })
-hl("TermCursor",       { fg = p.bg, bg = p.coral })
+hl("Cursor",           { fg = p.bg, bg = p.amber })
+hl("lCursor",          { fg = p.bg, bg = p.amber })
+hl("TermCursor",       { fg = p.bg, bg = p.amber })
 hl("Visual",           { bg = p.bg_sel })
 hl("VisualNOS",        { bg = p.bg_sel })
-hl("MatchParen",       { fg = p.coral, bold = true, underline = true })
+hl("MatchParen",       { fg = p.amber, bold = true, underline = true })
 
 -- search
 hl("Search",           { fg = p.bg, bg = p.amber, bold = true })
-hl("IncSearch",        { fg = p.bg, bg = p.coral, bold = true })
+hl("IncSearch",        { fg = p.bg, bg = p.amber, bold = true })
 hl("CurSearch",        { fg = p.bg, bg = p.peach, bold = true })
-hl("Substitute",       { fg = p.bg, bg = p.coral })
+hl("Substitute",       { fg = p.bg, bg = p.amber })
 
 -- statusline / tabline
 hl("StatusLine",       { fg = p.fg_muted, bg = "NONE" })
 hl("StatusLineNC",     { fg = p.fg_dim,   bg = "NONE" })
 hl("TabLine",          { fg = p.fg_dim,   bg = "NONE" })
-hl("TabLineSel",       { fg = p.coral,    bg = "NONE", bold = true })
+hl("TabLineSel",       { fg = p.amber,    bg = "NONE", bold = true })
 hl("TabLineFill",      { bg = "NONE" })
 hl("WinBar",           { fg = p.fg_muted, bg = "NONE" })
 hl("WinBarNC",         { fg = p.fg_dim,   bg = "NONE" })
 
 -- pum (completion popup)
 hl("Pmenu",            { fg = p.fg, bg = p.bg_float })
-hl("PmenuSel",         { fg = p.bg, bg = p.coral, bold = true })
+hl("PmenuSel",         { fg = p.bg, bg = p.amber, bold = true })
 hl("PmenuSbar",        { bg = p.bg_alt })
 hl("PmenuThumb",       { bg = p.fg_dim })
 hl("PmenuKind",        { fg = p.mauve, bg = p.bg_float })
-hl("PmenuKindSel",     { fg = p.bg, bg = p.coral, bold = true })
+hl("PmenuKindSel",     { fg = p.bg, bg = p.amber, bold = true })
 hl("PmenuExtra",       { fg = p.fg_dim, bg = p.bg_float })
-hl("PmenuExtraSel",    { fg = p.bg, bg = p.coral })
+hl("PmenuExtraSel",    { fg = p.bg, bg = p.amber })
 
 -- messages
-hl("ModeMsg",          { fg = p.coral, bold = true })
+hl("ModeMsg",          { fg = p.amber, bold = true })
 hl("MoreMsg",          { fg = p.green })
 hl("ErrorMsg",         { fg = p.red, bold = true })
 hl("WarningMsg",       { fg = p.amber })
 hl("Question",         { fg = p.sky })
-hl("Directory",        { fg = p.coral, bold = true })
-hl("Title",            { fg = p.coral, bold = true })
+hl("Directory",        { fg = p.amber, bold = true })
+hl("Title",            { fg = p.amber, bold = true })
 hl("Conceal",          { fg = p.fg_dim })
 hl("NonText",          { fg = p.fg_ghost })
 hl("SpecialKey",       { fg = p.fg_ghost })
@@ -205,9 +205,9 @@ hl("@tag.attribute",       { fg = p.amber })
 hl("@tag.delimiter",       { fg = p.fg_muted })
 
 -- markdown / docs
-hl("@markup.heading",       { fg = p.coral, bold = true })
-hl("@markup.heading.1",     { fg = p.coral, bold = true })
-hl("@markup.heading.2",     { fg = p.amber, bold = true })
+hl("@markup.heading",       { fg = p.amber, bold = true })
+hl("@markup.heading.1",     { fg = p.amber, bold = true })
+hl("@markup.heading.2",     { fg = p.coral, bold = true })
 hl("@markup.heading.3",     { fg = p.green, bold = true })
 hl("@markup.heading.4",     { fg = p.sky,   bold = true })
 hl("@markup.heading.5",     { fg = p.mauve, bold = true })
@@ -246,7 +246,7 @@ hl("DiagnosticUnderlineHint",    { sp = p.mauve, undercurl = true })
 hl("LspReferenceText",      { bg = p.bg_sel })
 hl("LspReferenceRead",      { bg = p.bg_sel })
 hl("LspReferenceWrite",     { bg = p.bg_sel, underline = true })
-hl("LspSignatureActiveParameter", { fg = p.coral, bold = true })
+hl("LspSignatureActiveParameter", { fg = p.amber, bold = true })
 hl("LspInlayHint",          { fg = p.fg_ghost, italic = true })
 
 -- diff
@@ -271,22 +271,22 @@ hl("GitSignsCurrentLineBlame", { fg = p.fg_ghost, italic = true })
 hl("TelescopeNormal",        { fg = p.fg, bg = "NONE" })
 hl("TelescopeBorder",        { fg = p.fg_dim, bg = "NONE" })
 hl("TelescopePromptNormal",  { fg = p.fg, bg = "NONE" })
-hl("TelescopePromptBorder",  { fg = p.coral, bg = "NONE" })
-hl("TelescopePromptTitle",   { fg = p.coral, bg = "NONE", bold = true })
-hl("TelescopePromptPrefix",  { fg = p.coral, bg = "NONE" })
+hl("TelescopePromptBorder",  { fg = p.amber, bg = "NONE" })
+hl("TelescopePromptTitle",   { fg = p.amber, bg = "NONE", bold = true })
+hl("TelescopePromptPrefix",  { fg = p.amber, bg = "NONE" })
 hl("TelescopeResultsNormal", { fg = p.fg, bg = "NONE" })
 hl("TelescopeResultsBorder", { fg = p.fg_dim, bg = "NONE" })
 hl("TelescopeResultsTitle",  { fg = p.sky, bg = "NONE" })
 hl("TelescopePreviewNormal", { fg = p.fg, bg = "NONE" })
 hl("TelescopePreviewBorder", { fg = p.fg_dim, bg = "NONE" })
 hl("TelescopePreviewTitle",  { fg = p.green, bg = "NONE" })
-hl("TelescopeMatching",      { fg = p.coral, bold = true })
-hl("TelescopeSelection",     { fg = p.coral, bg = p.bg_sel, bold = true })
-hl("TelescopeSelectionCaret",{ fg = p.coral, bg = p.bg_sel })
+hl("TelescopeMatching",      { fg = p.amber, bold = true })
+hl("TelescopeSelection",     { fg = p.amber, bg = p.bg_sel, bold = true })
+hl("TelescopeSelectionCaret",{ fg = p.amber, bg = p.bg_sel })
 
 -- which-key
-hl("WhichKey",          { fg = p.coral, bold = true })
-hl("WhichKeyGroup",     { fg = p.amber })
+hl("WhichKey",          { fg = p.amber, bold = true })
+hl("WhichKeyGroup",     { fg = p.coral })
 hl("WhichKeyDesc",      { fg = p.fg })
 hl("WhichKeySeparator", { fg = p.fg_dim })
 hl("WhichKeyFloat",     { bg = "NONE" })
@@ -297,23 +297,23 @@ hl("WhichKeyValue",     { fg = p.fg_muted })
 hl("SnacksPicker",            { bg = "NONE" })
 hl("SnacksPickerNormal",      { fg = p.fg, bg = "NONE" })
 hl("SnacksPickerBorder",      { fg = p.fg_dim, bg = "NONE" })
-hl("SnacksPickerTitle",       { fg = p.coral, bg = "NONE", bold = true })
-hl("SnacksPickerPrompt",      { fg = p.coral, bg = "NONE" })
+hl("SnacksPickerTitle",       { fg = p.amber, bg = "NONE", bold = true })
+hl("SnacksPickerPrompt",      { fg = p.amber, bg = "NONE" })
 hl("SnacksPickerInput",       { fg = p.fg, bg = "NONE" })
-hl("SnacksPickerInputBorder", { fg = p.coral, bg = "NONE" })
+hl("SnacksPickerInputBorder", { fg = p.amber, bg = "NONE" })
 hl("SnacksPickerList",        { fg = p.fg, bg = "NONE" })
 hl("SnacksPickerListCursorLine", { bg = p.bg_sel })
-hl("SnacksDashboardHeader",   { fg = p.coral })
-hl("SnacksDashboardIcon",     { fg = p.amber })
+hl("SnacksDashboardHeader",   { fg = p.amber })
+hl("SnacksDashboardIcon",     { fg = p.coral })
 hl("SnacksDashboardDesc",     { fg = p.fg })
 hl("SnacksDashboardKey",      { fg = p.sky })
-hl("SnacksDashboardTitle",    { fg = p.coral, bold = true })
+hl("SnacksDashboardTitle",    { fg = p.amber, bold = true })
 
 -- noice
 hl("NoiceCmdline",          { fg = p.fg })
 hl("NoiceCmdlinePopup",     { fg = p.fg, bg = "NONE" })
-hl("NoiceCmdlinePopupBorder",         { fg = p.coral, bg = "NONE" })
-hl("NoiceCmdlinePopupBorderCmdline",  { fg = p.coral })
+hl("NoiceCmdlinePopupBorder",         { fg = p.amber, bg = "NONE" })
+hl("NoiceCmdlinePopupBorderCmdline",  { fg = p.amber })
 hl("NoiceCmdlinePopupBorderSearch",   { fg = p.amber })
 hl("NoiceCmdlinePopupBorderFilter",   { fg = p.sky })
 
@@ -321,7 +321,7 @@ hl("NoiceCmdlinePopupBorderFilter",   { fg = p.sky })
 hl("TroubleNormal",        { fg = p.fg, bg = "NONE" })
 hl("TroubleText",          { fg = p.fg })
 hl("TroubleSource",        { fg = p.fg_dim, italic = true })
-hl("TroubleCount",         { fg = p.coral, bg = "NONE", bold = true })
+hl("TroubleCount",         { fg = p.amber, bg = "NONE", bold = true })
 hl("TroubleFile",          { fg = p.sky, bold = true })
 hl("TroubleSignError",     { fg = p.red })
 hl("TroubleSignWarning",   { fg = p.amber })
@@ -347,7 +347,7 @@ hl("TodoBgTEST",  { fg = p.bg, bg = p.green })
 -- indent-blankline
 hl("IblIndent",  { fg = p.fg_ghost })
 hl("IblWhitespace", { fg = p.fg_ghost })
-hl("IblScope",   { fg = p.coral })
+hl("IblScope",   { fg = p.amber })
 
 -- mini.* generic
 hl("MiniIconsAzure",  { fg = p.sky })

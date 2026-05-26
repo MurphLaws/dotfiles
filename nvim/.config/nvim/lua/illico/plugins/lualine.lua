@@ -5,18 +5,18 @@ return {
 	},
 	config = function()
 		local a = _G.superset_accents or {}
-		local coral = a.coral or "#ff8c5a"
-		local peach = a.peach or "#ffa775"
-		local green = a.green or "#7ec77e"
-		local amber = a.amber or "#f0c674"
-		local sky = a.sky or "#8ec9d6"
-		local mauve = a.mauve or "#b89cd9"
+		local coral = a.coral or "#d1734a"
+		local peach = a.peach or "#d18960"
+		local green = a.green or "#67a367"
+		local amber = a.amber or "#d1a72a"
+		local sky = a.sky or "#74a5af"
+		local mauve = a.mauve or "#9780b2"
 		local fg_dim = a.fg_dim or "#6e6863"
 		local fg_text = "#e8e3d8"
 		local bg_dark = "#0d0d0d"
 
 		local function set_buftab_hl()
-			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = coral, bold = true })
+			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = amber, bold = true })
 			vim.api.nvim_set_hl(0, "BufTabModified", { fg = peach })
 		end
 		set_buftab_hl()
@@ -99,7 +99,7 @@ return {
 
 		local superset_theme = {
 			normal = {
-				a = { fg = bg_dark, bg = coral, gui = "bold" },
+				a = { fg = bg_dark, bg = amber, gui = "bold" },
 				b = { fg = fg_text, bg = "NONE" },
 				c = { fg = fg_dim, bg = "NONE" },
 			},
@@ -109,7 +109,7 @@ return {
 				c = { fg = fg_dim, bg = "NONE" },
 			},
 			visual = {
-				a = { fg = bg_dark, bg = amber, gui = "bold" },
+				a = { fg = bg_dark, bg = coral, gui = "bold" },
 				b = { fg = fg_text, bg = "NONE" },
 				c = { fg = fg_dim, bg = "NONE" },
 			},

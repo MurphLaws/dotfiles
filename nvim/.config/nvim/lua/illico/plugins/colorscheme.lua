@@ -43,15 +43,15 @@ return {
 
 			-- Superset palette accents
 			local p = _G.superset_palette or {}
-			local coral = p.coral or "#ff8c5a"
-			local peach = p.peach or "#ffa775"
-			local green = p.green or "#7ec77e"
-			local amber = p.amber or "#f0c674"
-			local gold = p.gold or "#d4a849"
-			local sky = p.sky or "#8ec9d6"
-			local mauve = p.mauve or "#b89cd9"
-			local purple = p.purple or "#9a7fc2"
-			local red = p.red or "#e07070"
+			local coral = p.coral or "#d1734a"
+			local peach = p.peach or "#d18960"
+			local green = p.green or "#67a367"
+			local amber = p.amber or "#d1a72a"
+			local gold = p.gold or "#ae8a3c"
+			local sky = p.sky or "#74a5af"
+			local mauve = p.mauve or "#9780b2"
+			local purple = p.purple or "#7e689f"
+			local red = p.red or "#b85c5c"
 			local fg_dim = p.fg_dim or "#6e6863"
 
 			-- Orgmode

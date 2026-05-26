@@ -8,27 +8,27 @@ font-thicken = true
 # Theme — Superset (coral / sage / amber / sky)
 background = 0d0d0d
 foreground = e8e3d8
-cursor-color = ff8c5a
+cursor-color = d1a72a
 cursor-text = 0d0d0d
 selection-background = 2a2a28
 selection-foreground = e8e3d8
 
-# ANSI palette (Superset)
+# ANSI palette (Superset — dimmed)
 palette = 0=#0d0d0d
-palette = 1=#e07070
-palette = 2=#7ec77e
-palette = 3=#f0c674
-palette = 4=#8ec9d6
-palette = 5=#b89cd9
-palette = 6=#ffa775
+palette = 1=#b85c5c
+palette = 2=#67a367
+palette = 3=#d1a72a
+palette = 4=#74a5af
+palette = 5=#9780b2
+palette = 6=#d18960
 palette = 7=#e8e3d8
 palette = 8=#6e6863
-palette = 9=#ff8c5a
-palette = 10=#7ec77e
-palette = 11=#d4a849
-palette = 12=#6ba8c4
-palette = 13=#9a7fc2
-palette = 14=#ffa775
+palette = 9=#d1734a
+palette = 10=#67a367
+palette = 11=#ae8a3c
+palette = 12=#588aa1
+palette = 13=#7e689f
+palette = 14=#d18960
 palette = 15=#e8e3d8
 
 # Transparency
