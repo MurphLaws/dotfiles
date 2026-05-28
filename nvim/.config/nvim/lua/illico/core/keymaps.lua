@@ -9,8 +9,8 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highl
 -- Keep cursor centered while jumping
 vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "move down in buffer with cursor centered" })
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "move up in buffer with cursor centered" })
-vim.keymap.set("n", "n", "nzzzv")
-vim.keymap.set("n", "N", "Nzzzv")
+vim.keymap.set("n", "n", "<Nop>", { desc = "Disable search-next" })
+vim.keymap.set("n", "N", "<Nop>", { desc = "Disable search-prev" })
 
 -- Fast vertical movement (10 lines at a time, centered)
 vim.keymap.set("n", "J", "10jzz", { desc = "Jump 10 lines down" })
