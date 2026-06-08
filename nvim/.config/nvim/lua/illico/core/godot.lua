@@ -135,6 +135,90 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 	end,
 })
 
+-- ===== GDScript function folding (readability) =====
+-- Manual folds built from treesitter `function_definition` nodes, so ONLY
+-- function bodies fold — nothing else (no if/for/match blocks). Folds are
+-- created on buffer load and left open, so close-all / open-all / individual
+-- toggles all work immediately.
+
+local function build_function_folds()
+	local ok, parser = pcall(vim.treesitter.get_parser, 0, "gdscript")
+	if not ok or not parser then
+		return false
+	end
+	local tree = parser:parse()[1]
+	if not tree then
+		return false
+	end
+
+	local ranges = {}
+	local function walk(node)
+		for child in node:iter_children() do
+			if child:type() == "function_definition" then
+				local srow, _, erow = child:range()
+				if erow > srow then
+					table.insert(ranges, { srow + 1, erow + 1 })
+				end
+			end
+			walk(child)
+		end
+	end
+	walk(tree:root())
+
+	vim.wo.foldmethod = "manual"
+	vim.cmd("normal! zE") -- wipe existing manual folds
+	for _, r in ipairs(ranges) do
+		vim.cmd(string.format("silent! %d,%dfold", r[1], r[2]))
+	end
+	vim.cmd("normal! zR") -- leave every fold open
+	vim.b.gd_folds_built = true
+	return #ranges > 0
+end
+
+-- Build once per buffer if it hasn't happened yet (safety net for the
+-- individual toggles before any fold-all has run).
+local function ensure_folds()
+	if not vim.b.gd_folds_built then
+		build_function_folds()
+	end
+end
+
+local function fold_all_functions()
+	build_function_folds() -- refresh ranges, then collapse them all
+	vim.cmd("normal! zM")
+end
+
+local function unfold_all_functions()
+	build_function_folds() -- refresh ranges; build leaves them open
+end
+
+local function fold_function_here()
+	ensure_folds()
+	vim.cmd("normal! zc")
+end
+
+local function unfold_function_here()
+	ensure_folds()
+	vim.cmd("normal! zo")
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "gdscript",
+	group = group,
+	callback = function(args)
+		build_function_folds()
+
+		local opts = { buffer = args.buf, silent = true }
+		vim.keymap.set("n", "<leader>zm", fold_all_functions, vim.tbl_extend("force", opts, { desc = "Godot: fold all functions" }))
+		vim.keymap.set("n", "<leader>zr", unfold_all_functions, vim.tbl_extend("force", opts, { desc = "Godot: unfold all functions" }))
+		vim.keymap.set("n", "<leader>zc", fold_function_here, vim.tbl_extend("force", opts, { desc = "Godot: fold function under cursor" }))
+		vim.keymap.set("n", "<leader>zo", unfold_function_here, vim.tbl_extend("force", opts, { desc = "Godot: unfold function under cursor" }))
+	end,
+})
+
+vim.api.nvim_create_user_command("GodotFoldFunctions", fold_all_functions, { desc = "Fold all GDScript functions" })
+vim.api.nvim_create_user_command("GodotUnfoldFunctions", unfold_all_functions, { desc = "Unfold all GDScript functions" })
+
 local cache_dir = vim.fn.stdpath("cache") .. "/godot-docs"
 local base_url = "https://docs.godotengine.org/en/stable/classes/"
 
