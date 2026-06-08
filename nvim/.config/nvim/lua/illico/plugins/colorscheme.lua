@@ -1,12 +1,22 @@
 return {
 	{
-		-- Superset palette — local colorscheme at colors/superset.lua
-		name = "superset",
-		dir = vim.fn.stdpath("config"),
+		"folke/tokyonight.nvim",
 		lazy = false,
 		priority = 1000,
-		config = function()
-			vim.cmd.colorscheme("superset")
+		opts = {
+			style = "night", -- darkest variant — matches the near-black, transparent setup
+			transparent = true, -- let ghostty/tmux blur show through
+			terminal_colors = true,
+			styles = {
+				comments = { italic = true },
+				keywords = { italic = false },
+				floats = "transparent",
+				sidebars = "transparent",
+			},
+		},
+		config = function(_, opts)
+			require("tokyonight").setup(opts)
+			vim.cmd.colorscheme("tokyonight-night")
 
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
@@ -41,66 +51,60 @@ return {
 				vim.api.nvim_set_hl(0, group, { bg = "NONE" })
 			end
 
-			-- Superset palette accents
-			local p = _G.superset_palette or {}
-			local coral = p.coral or "#d1734a"
-			local peach = p.peach or "#d18960"
-			local green = p.green or "#67a367"
-			local amber = p.amber or "#d1a72a"
-			local gold = p.gold or "#ae8a3c"
-			local sky = p.sky or "#74a5af"
-			local mauve = p.mauve or "#9780b2"
-			local purple = p.purple or "#7e689f"
-			local red = p.red or "#b85c5c"
-			local fg_dim = p.fg_dim or "#6e6863"
+			-- Tokyo Night (Night) palette, mapped onto the accent keys the rest of
+			-- the config already consumes (lualine, mini.icons, org/neorg overrides).
+			-- Key names are historical handles — the values are pure Tokyo Night.
+			local p = {
+				coral = "#ff9e64", -- orange
+				peach = "#ff9e64", -- orange
+				green = "#9ece6a",
+				amber = "#e0af68", -- yellow
+				gold = "#e0af68", -- yellow
+				sky = "#7dcfff", -- cyan
+				blue = "#7aa2f7",
+				mauve = "#bb9af7", -- magenta
+				purple = "#9d7cd8",
+				red = "#f7768e",
+				fg_dim = "#565f89", -- comment
+			}
 
 			-- Orgmode
-			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = coral, bg = "NONE", bold = true })
-			vim.api.nvim_set_hl(0, "@org.keyword.done", { fg = green, bg = "NONE", bold = true })
-			vim.api.nvim_set_hl(0, "@org.checkbox.checked", { fg = green, bg = "NONE", bold = true })
-			vim.api.nvim_set_hl(0, "@org.checkbox.half_checked", { fg = amber, bg = "NONE", bold = true })
+			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = p.coral, bg = "NONE", bold = true })
+			vim.api.nvim_set_hl(0, "@org.keyword.done", { fg = p.green, bg = "NONE", bold = true })
+			vim.api.nvim_set_hl(0, "@org.checkbox.checked", { fg = p.green, bg = "NONE", bold = true })
+			vim.api.nvim_set_hl(0, "@org.checkbox.half_checked", { fg = p.amber, bg = "NONE", bold = true })
 
 			-- Neorg markup
-			vim.api.nvim_set_hl(0, "@neorg.markup.bold", { fg = amber, bold = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.italic", { fg = mauve, italic = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.underline", { fg = sky, underline = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.strikethrough", { fg = fg_dim, strikethrough = true })
-			vim.api.nvim_set_hl(0, "@neorg.markup.verbatim", { fg = green })
+			vim.api.nvim_set_hl(0, "@neorg.markup.bold", { fg = p.amber, bold = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.italic", { fg = p.mauve, italic = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.underline", { fg = p.sky, underline = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.strikethrough", { fg = p.fg_dim, strikethrough = true })
+			vim.api.nvim_set_hl(0, "@neorg.markup.verbatim", { fg = p.green })
 
-			local heading_palette = { coral, amber, green, sky, mauve, peach }
+			local heading_palette = { p.coral, p.amber, p.green, p.sky, p.mauve, p.peach }
 			for i, color in ipairs(heading_palette) do
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".title", { fg = color, bold = true })
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".prefix", { fg = color, bold = true })
 			end
 
-			-- Expose accents to other plugins (lualine, incline, etc)
-			_G.superset_accents = {
-				coral = coral,
-				peach = peach,
-				green = green,
-				amber = amber,
-				gold = gold,
-				sky = sky,
-				mauve = mauve,
-				purple = purple,
-				red = red,
-				fg_dim = fg_dim,
-			}
-			-- Back-compat shim so code that still references tokyonight_accents keeps working
+			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
+			-- Global names kept for back-compat; values are Tokyo Night.
+			_G.superset_palette = p
+			_G.superset_accents = p
 			_G.tokyonight_accents = {
-				pink = coral,
-				pink_glow = peach,
-				cyan = sky,
-				cyan_glow = sky,
-				purple = purple,
-				magenta = mauve,
-				green = green,
-				lime = green,
-				yellow = amber,
-				orange = coral,
-				red = red,
-				blue = sky,
-				muted = fg_dim,
+				pink = p.coral,
+				pink_glow = p.peach,
+				cyan = p.sky,
+				cyan_glow = p.sky,
+				purple = p.purple,
+				magenta = p.mauve,
+				green = p.green,
+				lime = p.green,
+				yellow = p.amber,
+				orange = p.coral,
+				red = p.red,
+				blue = p.blue,
+				muted = p.fg_dim,
 			}
 		end,
 	},

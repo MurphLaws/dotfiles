@@ -5,31 +5,31 @@ font-family = JetBrainsMono NF SemiBold
 font-size = 20
 font-thicken = true
 
-# Theme — Superset (coral / sage / amber / sky)
-background = 0d0d0d
-foreground = e8e3d8
-cursor-color = d1a72a
-cursor-text = 0d0d0d
-selection-background = 2a2a28
-selection-foreground = e8e3d8
+# Theme — Tokyo Night (Night variant)
+background = 1a1b26
+foreground = c0caf5
+cursor-color = c0caf5
+cursor-text = 1a1b26
+selection-background = 283457
+selection-foreground = c0caf5
 
-# ANSI palette (Superset — dimmed)
-palette = 0=#0d0d0d
-palette = 1=#b85c5c
-palette = 2=#67a367
-palette = 3=#d1a72a
-palette = 4=#74a5af
-palette = 5=#9780b2
-palette = 6=#d18960
-palette = 7=#e8e3d8
-palette = 8=#6e6863
-palette = 9=#d1734a
-palette = 10=#67a367
-palette = 11=#ae8a3c
-palette = 12=#588aa1
-palette = 13=#7e689f
-palette = 14=#d18960
-palette = 15=#e8e3d8
+# ANSI palette (Tokyo Night — Night)
+palette = 0=#15161e
+palette = 1=#f7768e
+palette = 2=#9ece6a
+palette = 3=#e0af68
+palette = 4=#7aa2f7
+palette = 5=#bb9af7
+palette = 6=#7dcfff
+palette = 7=#a9b1d6
+palette = 8=#414868
+palette = 9=#f7768e
+palette = 10=#9ece6a
+palette = 11=#e0af68
+palette = 12=#7aa2f7
+palette = 13=#bb9af7
+palette = 14=#7dcfff
+palette = 15=#c0caf5
 
 # Transparency
 background-opacity = 0.95
