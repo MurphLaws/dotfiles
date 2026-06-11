@@ -1,7 +1,6 @@
 # Font Configuration
-font-family = JetBrainsMono NF SemiBold
+font-family = JetBrainsMono NFM Bold
 
-# Changed from SemiBold to Bold
 font-size = 20
 font-thicken = true
 
@@ -32,7 +31,7 @@ palette = 14=#7dcfff
 palette = 15=#c0caf5
 
 # Transparency
-background-opacity = 0.95
+background-opacity = 0.85
 background-blur-radius = 20
 window-decoration = false
 window-height = 9999
