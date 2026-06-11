@@ -1,22 +1,21 @@
 return {
 	{
-		"folke/tokyonight.nvim",
+		"catppuccin/nvim",
+		name = "catppuccin",
 		lazy = false,
 		priority = 1000,
 		opts = {
-			style = "night", -- darkest variant — matches the near-black, transparent setup
-			transparent = true, -- let ghostty/tmux blur show through
-			terminal_colors = true,
+			flavour = "mocha",
+			transparent_background = true, -- let ghostty/tmux blur show through
+			term_colors = true,
 			styles = {
-				comments = { italic = true },
-				keywords = { italic = false },
-				floats = "transparent",
-				sidebars = "transparent",
+				comments = { "italic" },
+				keywords = {},
 			},
 		},
 		config = function(_, opts)
-			require("tokyonight").setup(opts)
-			vim.cmd.colorscheme("tokyonight-night")
+			require("catppuccin").setup(opts)
+			vim.cmd.colorscheme("catppuccin-mocha")
 
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
@@ -51,21 +50,21 @@ return {
 				vim.api.nvim_set_hl(0, group, { bg = "NONE" })
 			end
 
-			-- Tokyo Night (Night) palette, mapped onto the accent keys the rest of
+			-- Catppuccin Mocha palette, mapped onto the accent keys the rest of
 			-- the config already consumes (lualine, mini.icons, org/neorg overrides).
-			-- Key names are historical handles — the values are pure Tokyo Night.
+			-- Key names are historical handles — the values are pure Catppuccin Mocha.
 			local p = {
-				coral = "#ff9e64", -- orange
-				peach = "#ff9e64", -- orange
-				green = "#9ece6a",
-				amber = "#e0af68", -- yellow
-				gold = "#e0af68", -- yellow
-				sky = "#7dcfff", -- cyan
-				blue = "#7aa2f7",
-				mauve = "#bb9af7", -- magenta
-				purple = "#9d7cd8",
-				red = "#f7768e",
-				fg_dim = "#565f89", -- comment
+				coral = "#fab387", -- peach
+				peach = "#fab387", -- peach
+				green = "#a6e3a1",
+				amber = "#f9e2af", -- yellow
+				gold = "#f9e2af", -- yellow
+				sky = "#89dceb", -- sky
+				blue = "#89b4fa",
+				mauve = "#cba6f7", -- mauve
+				purple = "#b4befe", -- lavender
+				red = "#f38ba8",
+				fg_dim = "#6c7086", -- overlay0 (comment)
 			}
 
 			-- Orgmode
@@ -88,7 +87,7 @@ return {
 			end
 
 			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
-			-- Global names kept for back-compat; values are Tokyo Night.
+			-- Global names kept for back-compat; values are Catppuccin Mocha.
 			_G.superset_palette = p
 			_G.superset_accents = p
 			_G.tokyonight_accents = {

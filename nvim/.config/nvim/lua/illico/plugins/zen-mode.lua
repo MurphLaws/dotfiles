@@ -31,9 +31,9 @@ return {
 			tmux = { enabled = false },
 		},
 		on_open = function()
-			-- Paint the sidebars with tokyonight storm's deep bg so they stay opaque
+			-- Paint the sidebars with catppuccin mocha's mantle so they stay opaque
 			-- during focus (no terminal wallpaper bleeding through).
-			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#1f2335", fg = "#1f2335" })
+			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#181825", fg = "#181825" })
 			-- focus.nvim auto-resizes the active window and eats zen-mode's
 			-- centering padding. Pause it while zen is on.
 			vim.g._illico_zen_focus_was_enabled = vim.g.focus_disable ~= true
