@@ -1,5 +1,7 @@
 # Font Configuration
-font-family = JetBrainsMono NFM Bold
+font-family = JetBrainsMono Nerd Font Mono
+font-style = Bold
+font-style-bold = ExtraBold
 
 font-size = 20
 font-thicken = true
@@ -31,7 +33,7 @@ palette = 14=#7dcfff
 palette = 15=#c0caf5
 
 # Transparency
-background-opacity = 0.85
+background-opacity = 1.0
 background-blur-radius = 20
 window-decoration = false
 window-height = 9999
