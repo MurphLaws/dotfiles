@@ -26,6 +26,11 @@
 
 set -uo pipefail
 
+# El hook `after-select-window` de tmux lanza este script con un PATH mínimo que
+# NO incluye Homebrew, así que `tmux` (y otros binarios) no se encuentran y el
+# script salía silenciosamente en la primera línea. Garantizamos el PATH aquí.
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 # Sin sesión de split activa => no hacemos nada (cero overhead en uso normal).
 [ "$(tmux show-options -gqv @quarto_active 2>/dev/null)" = "1" ] || exit 0
 
