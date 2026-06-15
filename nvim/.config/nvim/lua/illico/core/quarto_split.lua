@@ -23,7 +23,9 @@ local function in_tmux()
 end
 
 local function wait_for_server(timeout_ms)
-  return vim.wait(timeout_ms or 20000, function()
+  -- 60s: el primer arranque en frío (kernel Jupyter + import de matplotlib/
+  -- numpy/pandas + render del documento) pasa de los 20s de antes.
+  return vim.wait(timeout_ms or 60000, function()
     return vim.fn.system({ "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", URL }) == "200"
   end, 250)
 end
