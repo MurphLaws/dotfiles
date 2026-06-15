@@ -18,6 +18,12 @@ const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retr
 const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->orange
 const float ABERRATION      = 0.0022; // separación RGB mínima hacia los bordes
 
+// Bloom: resplandor de fósforo que hace RESALTAR el texto (píxeles claros
+// irradian un halo). Subir BLOOM_STRENGTH = texto más brillante/marcado.
+const float BLOOM_STRENGTH  = 0.55;   // intensidad del halo del texto
+const float BLOOM_THRESHOLD = 0.30;   // a partir de qué brillo un pixel "irradia"
+const float BLOOM_RADIUS    = 1.6;    // qué tan lejos se esparce el halo (px)
+
 // Colores del glow (sRGB). Teal arriba-izquierda, orange abajo-derecha.
 // Ambos OSCUROS para contrastar con el texto blanco sin lavarlo.
 const vec3 GLOW_TEAL   = vec3(0.02, 0.20, 0.21);
@@ -53,6 +59,21 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     term.a = texture(iChannel0, uv).a;
 
     vec3 col = term.rgb;
+
+    // --- Bloom: el texto (píxeles claros) irradia un halo y RESALTA ---
+    // Promedia un vecindario 5x5 quedándose sólo con la parte brillante; ese
+    // resplandor se suma encima, así el texto destaca sobre el fondo oscuro.
+    vec2 texel = BLOOM_RADIUS / iResolution.xy;
+    vec3 bloom = vec3(0.0);
+    for (int x = -2; x <= 2; x++) {
+        for (int y = -2; y <= 2; y++) {
+            vec3 s = texture(iChannel0, clamp(uv + vec2(float(x), float(y)) * texel, 0.0, 1.0)).rgb;
+            float bl = dot(s, vec3(0.2126, 0.7152, 0.0722));
+            bloom += s * smoothstep(BLOOM_THRESHOLD, 1.0, bl);
+        }
+    }
+    bloom /= 25.0;
+    col += bloom * BLOOM_STRENGTH;
 
     // --- GLOW teal->orange (aditivo, sólo sobre zonas oscuras) ---
     // Teal en la esquina superior-izquierda, orange en la inferior-derecha.
