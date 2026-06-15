@@ -22,14 +22,6 @@ local function in_tmux()
   return vim.env.TMUX ~= nil and vim.env.TMUX ~= ""
 end
 
-local function wait_for_server(timeout_ms)
-  -- 60s: el primer arranque en frío (kernel Jupyter + import de matplotlib/
-  -- numpy/pandas + render del documento) pasa de los 20s de antes.
-  return vim.wait(timeout_ms or 60000, function()
-    return vim.fn.system({ "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", URL }) == "200"
-  end, 250)
-end
-
 local function ensure_viewer()
   if vim.fn.executable("swiftc") == 0 then
     fail("no encuentro `swiftc` (instala las Command Line Tools de Xcode)")
@@ -48,6 +40,27 @@ local function ensure_viewer()
   return true
 end
 
+-- Abre el visor WebKit y aplica el tiling. Se llama UNA sola vez, cuando el
+-- server ya respondió. Va envuelto en vim.schedule por los callbacks de job.
+local function launch_viewer_and_tile()
+  state.viewer = vim.fn.jobstart({ BIN, URL, "right" }, {
+    on_exit = function() state.viewer = nil end,
+  })
+  if state.viewer <= 0 then
+    state.viewer = nil
+    return fail("no pude arrancar el visor WebKit")
+  end
+
+  if in_tmux() then
+    tmux("set-option", "-g", "@quarto_active", "1")
+    tmux("set-option", "-w", "@quarto_tile", "1")
+    vim.fn.system({ "bash", TILE })
+    notify("split listo (Ghostty izq. / visor der.)")
+  else
+    notify("preview abierto; sin tmux no hay tiling automático de Ghostty")
+  end
+end
+
 local function open()
   if state.job then
     notify("ya hay un preview activo (usa :QuartoSplitClose primero)", vim.log.levels.WARN)
@@ -64,36 +77,42 @@ local function open()
     return
   end
   state.file = file
+  state.launched = false
 
+  -- Detecta de forma NO bloqueante que el server está listo leyendo la salida
+  -- de `quarto preview` ("Listening on …" / "Browse at …"). Antes se usaba
+  -- vim.wait(60000), que congela toda la UI de nvim durante el arranque en
+  -- frío (~20s) — por eso "se quedaba pegado".
+  local function watch(_, data)
+    if not data or state.launched then return end
+    for _, line in ipairs(data) do
+      if line:find("Listening on", 1, true) or line:find("Browse at", 1, true) then
+        state.launched = true
+        vim.schedule(launch_viewer_and_tile)
+        return
+      end
+    end
+  end
+
+  notify("arrancando quarto preview … (el primer arranque en frío tarda ~20s)")
   state.job = vim.fn.jobstart(
     { "quarto", "preview", file, "--port", tostring(PORT), "--no-browser" },
-    { on_exit = function() state.job = nil end }
+    {
+      on_stdout = watch,
+      on_stderr = watch,
+      on_exit = function(_, code)
+        state.job = nil
+        if not state.launched then
+          vim.schedule(function()
+            fail("quarto preview terminó (código " .. code .. ") sin levantar el server")
+          end)
+        end
+      end,
+    }
   )
   if state.job <= 0 then
     state.job = nil
     return fail("no pude arrancar `quarto preview`")
-  end
-
-  notify("arrancando server en " .. URL .. " …")
-  if not wait_for_server() then
-    return fail("el server no respondió a tiempo")
-  end
-
-  state.viewer = vim.fn.jobstart({ BIN, URL, "right" }, {
-    on_exit = function() state.viewer = nil end,
-  })
-  if state.viewer <= 0 then
-    state.viewer = nil
-    return fail("no pude arrancar el visor WebKit")
-  end
-
-  if in_tmux() then
-    tmux("set-option", "-g", "@quarto_active", "1")
-    tmux("set-option", "-w", "@quarto_tile", "1")
-    vim.fn.system({ "bash", TILE })
-    notify("split listo (Ghostty izq. / visor der.)")
-  else
-    notify("preview abierto; sin tmux no hay tiling automático de Ghostty")
   end
 end
 
