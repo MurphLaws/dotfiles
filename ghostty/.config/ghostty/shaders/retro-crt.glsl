@@ -12,11 +12,11 @@
 // ensuciaba los bordes antes y se mantiene desactivado.
 
 // --- CONFIGURACIÓN (subir/bajar para más o menos efecto) ---
-const float CURVATURE       = 0.02;   // abombado hacia AFUERA tipo CRT, muy leve (ver curveUV)
+const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin abombado
 const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
 const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
 const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->púrpura
-const float ABERRATION      = 0.004;  // separación RGB apenas perceptible hacia los bordes
+const float ABERRATION      = 0.0015; // separación RGB mínima hacia los bordes
 
 // Colores del glow (sRGB). Teal arriba-izquierda, púrpura abajo-derecha.
 const vec3 GLOW_TEAL   = vec3(0.04, 0.40, 0.42);
@@ -44,7 +44,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // Aberración cromática sutil: más fuerte hacia los bordes. Las coords
     // desplazadas se fijan al rango válido para no asomar bordes transparentes.
     vec2 dir = uv - 0.5;
-    float ab = ABERRATION * dot(dir, dir) * 4.0;
+    float ab = ABERRATION * dot(dir, dir) * 2.0;
     vec4 term;
     term.r = texture(iChannel0, clamp(uv + dir * ab, 0.0, 1.0)).r;
     term.g = texture(iChannel0, uv).g;
