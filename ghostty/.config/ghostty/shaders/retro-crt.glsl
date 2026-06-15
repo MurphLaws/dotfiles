@@ -15,12 +15,12 @@
 const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin bordes/bisel
 const float SCANLINE        = 0.08;   // profundidad de scanlines (visibles)
 const float VIGNETTE        = 0.10;   // oscurecimiento en los bordes (leve)
-const float GLOW_STRENGTH   = 0.70;   // intensidad del glow azul->verde
+const float GLOW_STRENGTH   = 0.32;   // intensidad del glow azul->verde (transparente)
 const float ABERRATION      = 0.0;    // 0 = sin línea de colores en el borde
 
 // Colores del glow (sRGB). Azul arriba-izquierda, verde abajo-derecha.
-const vec3 GLOW_AZUL  = vec3(0.14, 0.26, 0.70);
-const vec3 GLOW_VERDE = vec3(0.08, 0.44, 0.24);
+const vec3 GLOW_AZUL  = vec3(0.12, 0.22, 0.55);
+const vec3 GLOW_VERDE = vec3(0.07, 0.34, 0.20);
 
 const float PI = 3.14159265359;
 
