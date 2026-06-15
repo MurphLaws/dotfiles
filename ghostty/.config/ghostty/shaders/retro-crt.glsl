@@ -1,4 +1,4 @@
-// Retro CRT sutil para Ghostty — conserva los colores Catppuccin.
+// Retro CRT para Ghostty — conserva los colores Catppuccin.
 //
 // Autocontenido: NO intenta detectar "qué pixel es fondo" (ese era el bug del
 // gradiente anterior: dependía de umbrales de luminancia sRGB/lineal que nunca
@@ -7,19 +7,20 @@
 // ADITIVO ponderado por la oscuridad del pixel: brilla sobre el fondo oscuro y
 // es casi imperceptible sobre el texto claro, sin necesidad de detección.
 //
-// Intensidad: MUY SUTIL. Sin curvatura (no hay bisel/bordes) ni aberración
-// cromática (no hay línea de colores en el borde).
+// Intensidad: NOTORIA pero limpia. Sin curvatura (no hay bisel/bordes) ni
+// aberración cromática (no hay línea de colores en el borde) — eso era lo que
+// ensuciaba los bordes antes y se mantiene desactivado.
 
 // --- CONFIGURACIÓN (subir/bajar para más o menos efecto) ---
 const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin bordes/bisel
-const float SCANLINE        = 0.035;  // profundidad de scanlines (apenas)
+const float SCANLINE        = 0.08;   // profundidad de scanlines (visibles)
 const float VIGNETTE        = 0.10;   // oscurecimiento en los bordes (leve)
-const float GLOW_STRENGTH   = 0.38;   // intensidad del glow azul->verde
+const float GLOW_STRENGTH   = 0.70;   // intensidad del glow azul->verde
 const float ABERRATION      = 0.0;    // 0 = sin línea de colores en el borde
 
 // Colores del glow (sRGB). Azul arriba-izquierda, verde abajo-derecha.
-const vec3 GLOW_AZUL  = vec3(0.12, 0.22, 0.55);
-const vec3 GLOW_VERDE = vec3(0.07, 0.34, 0.20);
+const vec3 GLOW_AZUL  = vec3(0.14, 0.26, 0.70);
+const vec3 GLOW_VERDE = vec3(0.08, 0.44, 0.24);
 
 const float PI = 3.14159265359;
 
