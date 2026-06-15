@@ -12,7 +12,7 @@
 // ensuciaba los bordes antes y se mantiene desactivado.
 
 // --- CONFIGURACIÓN (subir/bajar para más o menos efecto) ---
-const float CURVATURE       = 0.04;   // abombado hacia AFUERA tipo CRT, leve (ver curveUV)
+const float CURVATURE       = 0.02;   // abombado hacia AFUERA tipo CRT, muy leve (ver curveUV)
 const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
 const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
 const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->púrpura
