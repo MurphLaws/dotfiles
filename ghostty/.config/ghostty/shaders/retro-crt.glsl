@@ -16,7 +16,7 @@ const float CURVATURE       = 0.04;   // abombado hacia AFUERA tipo CRT, leve (v
 const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
 const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
 const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->púrpura
-const float ABERRATION      = 0.06;   // separación RGB leve hacia los bordes
+const float ABERRATION      = 0.02;   // separación RGB muy sutil hacia los bordes
 
 // Colores del glow (sRGB). Teal arriba-izquierda, púrpura abajo-derecha.
 const vec3 GLOW_TEAL   = vec3(0.04, 0.40, 0.42);
