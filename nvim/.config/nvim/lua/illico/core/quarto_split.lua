@@ -4,6 +4,29 @@ local SRC = vim.fn.expand("~/.tmux/scripts/qpreview.swift")
 local BIN = vim.fn.expand("~/.cache/quarto-preview/qpreview")
 local TILE = vim.fn.expand("~/.tmux/scripts/quarto-tile.sh")
 
+-- Python para el motor Jupyter de quarto. nvim suele correr DENTRO de un env
+-- conda (p. ej. nvim-py) cuyo python NO tiene las dependencias de quarto
+-- (nbclient, nbformat…) ni el kernel `python3`; si quarto usa ese python falla
+-- con "kernel 'python3' not found" o "No module named 'nbclient'". Por eso le
+-- forzamos un python completo vía QUARTO_PYTHON. Se respeta un override del
+-- entorno; si no, se toma el primer candidato que exista en disco.
+local function resolve_quarto_python()
+  if vim.env.QUARTO_PYTHON and vim.env.QUARTO_PYTHON ~= "" then
+    return vim.env.QUARTO_PYTHON
+  end
+  for _, p in ipairs({
+    "/opt/miniconda3/bin/python",
+    "/opt/homebrew/bin/python3",
+    "/usr/bin/python3",
+  }) do
+    if vim.fn.filereadable(p) == 1 then
+      return p
+    end
+  end
+  return nil
+end
+local QUARTO_PYTHON = resolve_quarto_python()
+
 local state = { job = nil, viewer = nil, file = nil }
 
 local function notify(msg, level)
@@ -187,6 +210,7 @@ local function open()
   state.job = vim.fn.jobstart(
     { "quarto", "preview", file, "--port", tostring(PORT), "--no-browser" },
     {
+      env = QUARTO_PYTHON and { QUARTO_PYTHON = QUARTO_PYTHON } or nil,
       on_stdout = watch,
       on_stderr = watch,
       on_exit = function(_, code)
