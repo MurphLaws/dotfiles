@@ -35,9 +35,6 @@ palette = 15=#a6adc8
 # Transparency
 background-opacity = 0.95
 background-blur-radius = 20
-window-decoration = false
-window-height = 9999
-window-width = 9999
 keybind = shift+enter=text:\x1b\r
 
 # Auto-start tmux

@@ -1,22 +1,26 @@
 -- Quarto split preview, estilo markdown-preview:
---   :QuartoSplit       arranca `quarto preview` del archivo actual, abre el
---                      render en una ventana DEDICADA de Google Chrome (--app,
---                      sin pestañas) y tilea Ghostty (izq.) + Chrome (der.)
---                      marcando el tmux window con @quarto_tile.
---   :QuartoSplitClose  detiene el preview, cierra la ventana y restaura.
+--   :QuartoSplit       arranca `quarto preview` del archivo actual y abre el
+--                      render en un VISOR WebKit nativo (qpreview, NO un
+--                      navegador) que se coloca solo en la mitad derecha;
+--                      Ghostty se tilea a la izquierda marcando el tmux window
+--                      con @quarto_tile.
+--   :QuartoSplitClose  detiene el preview, cierra el visor y restaura el layout.
 --
--- Al guardar (:w) quarto re-renderiza y la ventana de Chrome se recarga sola.
+-- Al guardar (:w) quarto re-renderiza y el visor se recarga solo vía el
+-- livereload (websocket) que quarto inyecta en el HTML.
 --
--- Requisitos: `quarto` en PATH, Google Chrome, y permisos de macOS una sola vez
--- (Accesibilidad para Ghostty + Automatización para Chrome). El tiling lo hace
--- ~/.tmux/scripts/quarto-tile.sh, disparado por este comando y por el hook tmux.
+-- Requisitos: `quarto` y `swiftc` en PATH (swiftc viene con las Command Line
+-- Tools). El visor se compila una sola vez a ~/.cache/quarto-preview/qpreview.
+-- El tiling de Ghostty lo hace ~/.tmux/scripts/quarto-tile.sh (vía System
+-- Events => requiere permiso de Accesibilidad para Ghostty una sola vez).
 
 local PORT = 7777
 local URL = "http://127.0.0.1:" .. PORT
-local CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+local SRC = vim.fn.expand("~/.tmux/scripts/qpreview.swift")
+local BIN = vim.fn.expand("~/.cache/quarto-preview/qpreview")
 local TILE = vim.fn.expand("~/.tmux/scripts/quarto-tile.sh")
 
-local state = { job = nil, file = nil }
+local state = { job = nil, viewer = nil, file = nil }
 
 local function notify(msg, level)
   vim.notify("[QuartoSplit] " .. msg, level or vim.log.levels.INFO)
@@ -34,19 +38,24 @@ local function wait_for_server(timeout_ms)
   end, 250)
 end
 
--- Devuelve el id de la ventana de Chrome cuyo tab activo apunta a nuestro URL.
-local function chrome_window_id()
-  local script = string.format([[
-tell application "Google Chrome"
-  repeat with w in windows
-    try
-      if (URL of active tab of w) contains "%d" then return (id of w) as string
-    end try
-  end repeat
-end tell
-return ""]], PORT)
-  local id = vim.fn.system({ "osascript", "-e", script })
-  return (id or ""):gsub("%s+", "")
+-- Compila el visor WebKit si falta o si el fuente es más nuevo que el binario.
+local function ensure_viewer()
+  if vim.fn.executable("swiftc") == 0 then
+    notify("no encuentro `swiftc` (instala las Command Line Tools de Xcode)", vim.log.levels.ERROR)
+    return false
+  end
+  local fresh = vim.fn.filereadable(BIN) == 1 and vim.fn.getftime(BIN) >= vim.fn.getftime(SRC)
+  if fresh then
+    return true
+  end
+  vim.fn.mkdir(vim.fn.fnamemodify(BIN, ":h"), "p")
+  notify("compilando el visor WebKit (solo esta vez) …")
+  local out = vim.fn.system({ "swiftc", "-O", SRC, "-o", BIN })
+  if vim.v.shell_error ~= 0 then
+    notify("falló la compilación del visor:\n" .. out, vim.log.levels.ERROR)
+    return false
+  end
+  return true
 end
 
 local function open(opts)
@@ -61,6 +70,9 @@ local function open(opts)
   end
   if vim.fn.executable("quarto") == 0 then
     notify("no encuentro `quarto` en PATH", vim.log.levels.ERROR)
+    return
+  end
+  if not ensure_viewer() then
     return
   end
   state.file = file
@@ -86,27 +98,26 @@ local function open(opts)
     return
   end
 
-  -- 2) Ventana DEDICADA de Chrome en modo --app (sin pestañas).
-  vim.fn.jobstart({ CHROME, "--app=" .. URL, "--new-window" }, { detach = true })
+  -- 2) Visor WebKit en la mitad derecha (se posiciona solo desde el argumento).
+  state.viewer = vim.fn.jobstart({ BIN, URL, "right" }, {
+    on_exit = function()
+      state.viewer = nil
+    end,
+  })
+  if state.viewer <= 0 then
+    notify("no pude arrancar el visor WebKit", vim.log.levels.ERROR)
+    state.viewer = nil
+    return
+  end
 
-  -- 3) Esperar a que aparezca la ventana y capturar su id.
-  local id = ""
-  vim.wait(8000, function()
-    id = chrome_window_id()
-    return id ~= ""
-  end, 250)
-
-  -- 4) Marcar el tmux window y tilar.
+  -- 3) Tilar Ghostty a la izquierda vía tmux.
   if in_tmux() then
     vim.fn.system({ "tmux", "set-option", "-g", "@quarto_active", "1" })
     vim.fn.system({ "tmux", "set-option", "-w", "@quarto_tile", "1" })
-    if id ~= "" then
-      vim.fn.system({ "tmux", "set-option", "-w", "@quarto_chrome_id", id })
-    end
     vim.fn.system({ "bash", TILE })
-    notify("split listo (Ghostty izq. / Chrome der.)")
+    notify("split listo (Ghostty izq. / visor der.)")
   else
-    notify("preview abierto; sin tmux no hay tiling automático")
+    notify("preview abierto; sin tmux no hay tiling automático de Ghostty")
   end
 end
 
@@ -115,21 +126,14 @@ local function close(opts)
     vim.fn.jobstop(state.job)
     state.job = nil
   end
-  -- Cerrar la ventana --app de Chrome del preview.
-  local script = string.format([[
-tell application "Google Chrome"
-  repeat with w in windows
-    try
-      if (URL of active tab of w) contains "%d" then close w
-    end try
-  end repeat
-end tell]], PORT)
-  vim.fn.system({ "osascript", "-e", script })
+  -- Cerrar el visor (al matar el proceso, su NSWindow se cierra y el proceso sale).
+  if state.viewer then
+    vim.fn.jobstop(state.viewer)
+    state.viewer = nil
+  end
 
   if in_tmux() then
-    vim.fn.system({ "tmux", "set-option", "-gu", "@quarto_active" })
     vim.fn.system({ "tmux", "set-option", "-wu", "@quarto_tile" })
-    vim.fn.system({ "tmux", "set-option", "-wu", "@quarto_chrome_id" })
     -- restaurar Ghostty a pantalla completa
     vim.fn.system({ "tmux", "set-option", "-g", "@quarto_active", "1" })
     vim.fn.system({ "bash", TILE })
@@ -139,5 +143,5 @@ end tell]], PORT)
   notify("preview cerrado y layout restaurado")
 end
 
-vim.api.nvim_create_user_command("QuartoSplit", open, { desc = "Quarto preview en split (nvim izq / Chrome der)" })
+vim.api.nvim_create_user_command("QuartoSplit", open, { desc = "Quarto preview en split (nvim izq / visor WebKit der)" })
 vim.api.nvim_create_user_command("QuartoSplitClose", close, { desc = "Cierra el preview de Quarto y restaura el layout" })

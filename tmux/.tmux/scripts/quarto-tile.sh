@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
-# quarto-tile.sh — coloca Ghostty (mitad izquierda) y la ventana --app de Chrome
-# con el preview de Quarto (mitad derecha) cuando el tmux window activo está
-# marcado con @quarto_tile; si no, restaura Ghostty a pantalla completa.
+# quarto-tile.sh — coloca Ghostty en la mitad izquierda cuando el tmux window
+# activo está marcado con @quarto_tile (sesión de QuartoSplit); si no, restaura
+# Ghostty a pantalla completa. El visor WebKit del preview (qpreview) se coloca
+# a sí mismo en la mitad derecha, así que aquí no hay que tocarlo.
 #
 # Lo invoca:
 #   - el hook `after-select-window` de tmux (en cada cambio de tab)
 #   - el comando :QuartoSplit de nvim (al abrir el preview)
 #
 # Requiere permisos de macOS (una sola vez):
-#   - Accesibilidad para Ghostty  (mover su propia ventana vía System Events)
-#   - Automatización para controlar "Google Chrome" (se pide solo al primer uso)
+#   - Accesibilidad para Ghostty (mover su propia ventana vía System Events)
 #
 # Opciones tmux que consume:
 #   @quarto_active   (global)  1 => hay una sesión de split activa
-#   @quarto_tile     (window)  1 => este window es el que va mitad/mitad
-#   @quarto_chrome_id (window) id de la ventana de Chrome con el preview
+#   @quarto_tile     (window)  1 => este window es el que va a media pantalla
 
 set -uo pipefail
 
@@ -22,7 +21,6 @@ set -uo pipefail
 [ "$(tmux show-options -gqv @quarto_active 2>/dev/null)" = "1" ] || exit 0
 
 tile="$(tmux show-options -wqv @quarto_tile 2>/dev/null || true)"
-chrome_id="$(tmux show-options -wqv @quarto_chrome_id 2>/dev/null || true)"
 
 # Geometría de la pantalla principal (Finder devuelve: izq, arr, der, abj).
 read -r SCREEN_W SCREEN_H < <(
@@ -47,13 +45,6 @@ EOF
 
 if [ "$tile" = "1" ]; then
   ghostty_to 0 "$HALF" "$USABLE_H"
-  if [ -n "$chrome_id" ]; then
-    osascript <<EOF 2>/dev/null || true
-tell application "Google Chrome"
-  set bounds of (first window whose id is $chrome_id) to {$HALF, $TOP, $SCREEN_W, $SCREEN_H}
-end tell
-EOF
-  fi
 else
   # No estamos en el tab marcado => Ghostty a pantalla completa.
   ghostty_to 0 "$SCREEN_W" "$USABLE_H"
