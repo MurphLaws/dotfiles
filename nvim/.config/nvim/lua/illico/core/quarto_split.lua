@@ -22,6 +22,73 @@ local function in_tmux()
   return vim.env.TMUX ~= nil and vim.env.TMUX ~= ""
 end
 
+-- Indicador de carga: ventana flotante animada en la esquina inferior-derecha.
+local SPINNER = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+local spin = { timer = nil, win = nil, buf = nil, n = 0 }
+
+local function spinner_stop()
+  if spin.timer then
+    vim.fn.timer_stop(spin.timer)
+    spin.timer = nil
+  end
+  if spin.win and vim.api.nvim_win_is_valid(spin.win) then
+    vim.api.nvim_win_close(spin.win, true)
+  end
+  spin.win = nil
+  if spin.buf and vim.api.nvim_buf_is_valid(spin.buf) then
+    vim.api.nvim_buf_delete(spin.buf, { force = true })
+  end
+  spin.buf = nil
+end
+
+-- Arranca el spinner. timeout_s/on_timeout son opcionales: si pasa ese tiempo
+-- sin que se llame spinner_stop(), se cierra solo y dispara on_timeout().
+local function spinner_start(label, timeout_s, on_timeout)
+  spinner_stop()
+  spin.n = 0
+  spin.buf = vim.api.nvim_create_buf(false, true)
+  spin.win = vim.api.nvim_open_win(spin.buf, false, {
+    relative = "editor",
+    anchor = "SE",
+    row = vim.o.lines - 2,
+    col = vim.o.columns - 1,
+    width = vim.fn.strdisplaywidth(label) + 12,
+    height = 1,
+    style = "minimal",
+    border = "rounded",
+    focusable = false,
+    noautocmd = true,
+    zindex = 200,
+  })
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    "Normal:DiagnosticInfo,FloatBorder:DiagnosticInfo",
+    { win = spin.win }
+  )
+
+  local function render()
+    if not (spin.buf and vim.api.nvim_buf_is_valid(spin.buf)) then
+      return
+    end
+    local frame = SPINNER[(spin.n % #SPINNER) + 1]
+    local secs = math.floor(spin.n / 10)
+    vim.api.nvim_buf_set_lines(spin.buf, 0, -1, false, {
+      string.format(" %s %s (%ds)", frame, label, secs),
+    })
+  end
+
+  render()
+  spin.timer = vim.fn.timer_start(100, function()
+    spin.n = spin.n + 1
+    if timeout_s and spin.n >= timeout_s * 10 then
+      spinner_stop()
+      if on_timeout then on_timeout() end
+      return
+    end
+    render()
+  end, { ["repeat"] = -1 })
+end
+
 local function ensure_viewer()
   if vim.fn.executable("swiftc") == 0 then
     fail("no encuentro `swiftc` (instala las Command Line Tools de Xcode)")
@@ -43,6 +110,7 @@ end
 -- Abre el visor WebKit y aplica el tiling. Se llama UNA sola vez, cuando el
 -- server ya respondió. Va envuelto en vim.schedule por los callbacks de job.
 local function launch_viewer_and_tile()
+  spinner_stop()
   state.viewer = vim.fn.jobstart({ BIN, URL, "right" }, {
     on_exit = function() state.viewer = nil end,
   })
@@ -94,7 +162,13 @@ local function open()
     end
   end
 
-  notify("arrancando quarto preview … (el primer arranque en frío tarda ~20s)")
+  spinner_start("Quarto: arrancando preview", 90, function()
+    if state.job then
+      vim.fn.jobstop(state.job)
+      state.job = nil
+    end
+    fail("el server no respondió a tiempo (90s)")
+  end)
   state.job = vim.fn.jobstart(
     { "quarto", "preview", file, "--port", tostring(PORT), "--no-browser" },
     {
@@ -104,6 +178,7 @@ local function open()
         state.job = nil
         if not state.launched then
           vim.schedule(function()
+            spinner_stop()
             fail("quarto preview terminó (código " .. code .. ") sin levantar el server")
           end)
         end
@@ -112,11 +187,13 @@ local function open()
   )
   if state.job <= 0 then
     state.job = nil
+    spinner_stop()
     return fail("no pude arrancar `quarto preview`")
   end
 end
 
 local function close()
+  spinner_stop()
   if state.job then
     vim.fn.jobstop(state.job)
     state.job = nil

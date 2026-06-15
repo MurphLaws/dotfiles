@@ -12,52 +12,53 @@
 // ensuciaba los bordes antes y se mantiene desactivado.
 
 // --- CONFIGURACIÓN (subir/bajar para más o menos efecto) ---
-const float CURVATURE       = 0.08;   // curva la pantalla SIN bordes (ver curveUV)
-const float SCANLINE        = 0.15;   // profundidad de scanlines (bien marcadas)
-const float VIGNETTE        = 0.12;   // oscurecimiento en los bordes (leve)
-const float GLOW_STRENGTH   = 0.32;   // intensidad del glow azul->verde (transparente)
-const float ABERRATION      = 0.0;    // 0 = sin línea de colores en el borde
+const float CURVATURE       = 0.12;   // abombado hacia AFUERA tipo CRT (ver curveUV)
+const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
+const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
+const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->púrpura
+const float ABERRATION      = 0.06;   // separación RGB leve hacia los bordes
 
-// Colores del glow (sRGB). Azul arriba-izquierda, verde abajo-derecha.
-const vec3 GLOW_AZUL  = vec3(0.12, 0.22, 0.55);
-const vec3 GLOW_VERDE = vec3(0.07, 0.34, 0.20);
+// Colores del glow (sRGB). Teal arriba-izquierda, púrpura abajo-derecha.
+const vec3 GLOW_TEAL   = vec3(0.04, 0.40, 0.42);
+const vec3 GLOW_PURPLE = vec3(0.38, 0.10, 0.55);
 
 const float PI = 3.14159265359;
 
-// Curvatura tipo CRT SIN bordes. El intento anterior abombaba las uv hacia
-// AFUERA, lo que mandaba las esquinas fuera de [0,1] y dejaba franjas/bisel
-// transparentes. Aquí hacemos lo contrario: comprimimos las uv hacia ADENTRO
-// según la distancia² al centro. Ningún pixel muestrea fuera de [0,1] => nunca
-// hay borde, pero el centro se magnifica y los bordes se "doblan", dando la
-// sensación de pantalla curva de un monitor viejo.
+// Curvatura tipo CRT abombada hacia AFUERA (como el vidrio de un monitor viejo)
+// pero SIN bordes transparentes. El abombado por sí solo manda las esquinas
+// fuera de [0,1] y deja franjas/bisel; para evitarlo aplicamos un OVERSCAN (un
+// leve zoom) calibrado para que la esquina caiga justo en 1.0. Resultado: las
+// líneas se curvan hacia afuera y la imagen sigue cubriendo toda la pantalla.
 vec2 curveUV(vec2 uv) {
-    uv = uv * 2.0 - 1.0;             // -1..1
-    float r2 = dot(uv, uv);          // dist² al centro (0 centro .. 2 esquinas)
-    uv *= 1.0 - CURVATURE * r2;      // comprime más cuanto más lejos del centro
-    return uv * 0.5 + 0.5;           // de vuelta a 0..1
+    uv = uv * 2.0 - 1.0;                 // -1..1
+    float r2 = dot(uv, uv);              // dist² al centro (0 centro .. 2 esquinas)
+    uv *= 1.0 + CURVATURE * r2;          // barril hacia afuera (esquinas se alejan)
+    uv *= 1.0 / (1.0 + 2.0 * CURVATURE); // overscan: la esquina (r2=2) vuelve a 1.0
+    return uv * 0.5 + 0.5;               // de vuelta a 0..1
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv0 = fragCoord.xy / iResolution.xy;
-    vec2 uv  = curveUV(uv0);
+    vec2 uv  = clamp(curveUV(uv0), 0.0, 1.0); // clamp: jamás muestrear fuera => sin bordes
 
-    // Aberración cromática sutil: más fuerte hacia los bordes.
+    // Aberración cromática sutil: más fuerte hacia los bordes. Las coords
+    // desplazadas se fijan al rango válido para no asomar bordes transparentes.
     vec2 dir = uv - 0.5;
     float ab = ABERRATION * dot(dir, dir) * 4.0;
     vec4 term;
-    term.r = texture(iChannel0, uv + dir * ab).r;
+    term.r = texture(iChannel0, clamp(uv + dir * ab, 0.0, 1.0)).r;
     term.g = texture(iChannel0, uv).g;
-    term.b = texture(iChannel0, uv - dir * ab).b;
+    term.b = texture(iChannel0, clamp(uv - dir * ab, 0.0, 1.0)).b;
     term.a = texture(iChannel0, uv).a;
 
     vec3 col = term.rgb;
 
-    // --- GLOW azul->verde (aditivo, sólo sobre zonas oscuras) ---
-    // Azul en la esquina superior-izquierda, verde en la inferior-derecha.
+    // --- GLOW teal->púrpura (aditivo, sólo sobre zonas oscuras) ---
+    // Teal en la esquina superior-izquierda, púrpura en la inferior-derecha.
     // Aquí uv.y=0 cae arriba en pantalla, así que "abajo" es uv.y grande:
-    // t=1 (verde) cuando uv.x=1 (derecha) y uv.y=1 (abajo).
+    // t=1 (púrpura) cuando uv.x=1 (derecha) y uv.y=1 (abajo).
     float t = clamp((uv.x + uv.y) * 0.5, 0.0, 1.0);
-    vec3 glow = mix(GLOW_AZUL, GLOW_VERDE, t);
+    vec3 glow = mix(GLOW_TEAL, GLOW_PURPLE, t);
     float lum = dot(term.rgb, vec3(0.2126, 0.7152, 0.0722));
     float darkness = clamp(1.0 - lum * 1.3, 0.0, 1.0); // ~1 en fondo, ~0 en texto
     col += glow * GLOW_STRENGTH * darkness;
