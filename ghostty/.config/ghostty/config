@@ -32,6 +32,10 @@ palette = 13=#f5c2e7
 palette = 14=#94e2d5
 palette = 15=#a6adc8
 
+# Window — fullscreen no-nativo: "pantalla completa" es una ventana maximizada
+# en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
+macos-non-native-fullscreen = true
+
 # Transparency
 background-opacity = 0.95
 background-blur-radius = 20
