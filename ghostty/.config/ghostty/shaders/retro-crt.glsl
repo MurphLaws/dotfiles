@@ -7,14 +7,15 @@
 // ADITIVO ponderado por la oscuridad del pixel: brilla sobre el fondo oscuro y
 // es casi imperceptible sobre el texto claro, sin necesidad de detección.
 //
-// Intensidad: SUTIL (cómodo para uso diario).
+// Intensidad: MUY SUTIL. Sin curvatura (no hay bisel/bordes) ni aberración
+// cromática (no hay línea de colores en el borde).
 
 // --- CONFIGURACIÓN (subir/bajar para más o menos efecto) ---
-const float CURVATURE       = 0.025;  // barrel distortion (0 = plano)
-const float SCANLINE        = 0.07;   // profundidad de scanlines
-const float VIGNETTE        = 0.22;   // oscurecimiento en los bordes
-const float GLOW_STRENGTH   = 0.55;   // intensidad del glow azul->verde
-const float ABERRATION      = 0.0008; // aberración cromática en los bordes
+const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin bordes/bisel
+const float SCANLINE        = 0.035;  // profundidad de scanlines (apenas)
+const float VIGNETTE        = 0.10;   // oscurecimiento en los bordes (leve)
+const float GLOW_STRENGTH   = 0.38;   // intensidad del glow azul->verde
+const float ABERRATION      = 0.0;    // 0 = sin línea de colores en el borde
 
 // Colores del glow (sRGB). Azul arriba-izquierda, verde abajo-derecha.
 const vec3 GLOW_AZUL  = vec3(0.12, 0.22, 0.55);
