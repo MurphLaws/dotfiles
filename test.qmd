@@ -1,82 +1,150 @@
 ---
-title: "Demo EDA — datos en vivo desde una API (USGS)"
+title: "Quarto Folding Examples"
+author: "AI Collaborator"
+date: "2026-06-15"
 format:
   html:
     toc: true
-    code-fold: false
-    theme: cosmo
-jupyter: lacardio
 ---
 
-## Qué hace este notebook
+## Introduction
 
-Análisis exploratorio breve sobre los sismos de la última semana, usando
-la API pública del **USGS** (`earthquake.usgs.gov`, sin clave). Guarda el
-archivo (`:w`) y el preview se recarga solo.
+This file demonstrates the three primary ways to create collapsible folds inside a Quarto document.
 
-## 1. Traer los datos de la API
+---
+
+## 1. Native Code Folding
+
+Below is a Python code chunk that is folded by default.
 
 ```{python}
-import requests
-import pandas as pd
+#| code-fold: true
+#| code-summary: "👉 Click here to reveal the Python code"
 
-URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
-params = dict(
-    format="geojson",
-    starttime="2026-06-08",
-    endtime="2026-06-15",
-    minmagnitude=2.5,
-)
-features = requests.get(URL, params=params, timeout=30).json()["features"]
+import math
 
-df = pd.json_normalize(features)
-df = df.rename(columns=lambda c: c.replace("properties.", ""))
-df["time"] = pd.to_datetime(df["time"], unit="ms")
-df["depth_km"] = df["geometry.coordinates"].str[2]
-df = df[["time", "mag", "depth_km", "place"]].dropna(subset=["mag"])
-
-print(f"{len(df)} sismos (mag ≥ 2.5) entre {df['time'].min():%Y-%m-%d} y {df['time'].max():%Y-%m-%d}")
-df.head()
+radius = 5
+area = math.pi * (radius ** 2)
+print(f"The area of the circle is {area:.2f}")
 ```
 
-## 2. Resumen estadístico
+---
 
-```{python}
-df[["mag", "depth_km"]].describe().round(2)
+## 2. Collapsible Callout
+
+Quarto callouts can be made collapsible with `collapse="true"`. They start folded
+and expand on click.
+
+::: {.callout-note collapse="true"}
+## 📝 Click to expand this note
+
+This content is hidden until you click the title. Callouts support full Markdown
+inside them, including lists and code:
+
+- First hidden point
+- Second hidden point
+
+```python
+print("Even code blocks work inside a collapsed callout")
 ```
+:::
 
-## 3. Distribución de magnitudes
+::: {.callout-tip collapse="true"}
+## 💡 A folded tip
+
+Use `collapse="false"` (the default for some types) to have them open initially.
+:::
+
+---
+
+## 3. Raw HTML `<details>` Fold
+
+For arbitrary collapsible content, drop straight into HTML. This works in any
+HTML output and is the most flexible option.
+
+<details>
+<summary>🔽 Click to reveal arbitrary content</summary>
+
+This block is a native browser `<details>` element. You can put **any** Markdown
+or HTML here — tables, images, math, etc.
+
+| Column A | Column B |
+|----------|----------|
+| 1        | 2        |
+| 3        | 4        |
+
+</details>
+
+---
+
+## 4. Images
+
+### Remote image
+
+A standard Markdown image pulled from the web, with a caption and sizing:
+
+![The Quarto logo](https://quarto.org/quarto.png){width=300 fig-alt="Quarto logo"}
+
+### Generated image (folded code)
+
+The code that produces this plot is folded; only the resulting image shows by
+default.
 
 ```{python}
+#| code-fold: true
+#| code-summary: "👉 Show the plotting code"
+#| fig-cap: "A simple sine wave generated with matplotlib"
+
+import numpy as np
 import matplotlib.pyplot as plt
 
-fig, ax = plt.subplots(figsize=(8, 3))
-ax.hist(df["mag"], bins=24, color="#4c78a8", edgecolor="white")
-ax.set_title("Distribución de magnitudes (última semana)")
-ax.set_xlabel("Magnitud"); ax.set_ylabel("Frecuencia"); ax.grid(True, alpha=0.3)
+x = np.linspace(0, 2 * np.pi, 200)
+y = np.sin(x)
+
+plt.figure(figsize=(6, 3))
+plt.plot(x, y, color="#89b4fa")
+plt.title("sin(x)")
+plt.tight_layout()
 plt.show()
 ```
 
-## 4. Magnitud vs. profundidad
+---
 
-```{python}
-fig, ax = plt.subplots(figsize=(8, 3))
-ax.scatter(df["depth_km"], df["mag"], s=12, alpha=0.5, color="#e45756")
-ax.set_title("¿Los sismos más profundos son más fuertes?")
-ax.set_xlabel("Profundidad [km]"); ax.set_ylabel("Magnitud"); ax.grid(True, alpha=0.3)
-plt.show()
+## 5. Foldable Entire Sections
+
+The previous folds only collapse a block. To fold a **whole section** — its
+heading *and* every paragraph, list, code chunk and image under it — wrap the
+section in a raw `<details>` element and put the heading text in the `<summary>`.
+
+<details>
+<summary><strong>📂 Section A — click to expand the entire section</strong></summary>
+
+Everything between the `<summary>` and the closing `</details>` is hidden until
+you click, including subheadings:
+
+#### Subsection A.1
+
+Full Markdown still works in here:
+
+- A bullet
+- Another bullet
+
+```python
+print("A code block living inside a folded section")
 ```
 
-```{python}
-corr = df["mag"].corr(df["depth_km"])
-print(f"Correlación magnitud–profundidad: {corr:+.3f}")
-```
+#### Subsection A.2
 
-## 5. Sismos más fuertes de la semana
+And even images:
 
-```{python}
-(df.sort_values("mag", ascending=False)
-   .head(10)
-   .loc[:, ["time", "mag", "depth_km", "place"]]
-   .reset_index(drop=True))
-```
+![Quarto logo, folded away](https://quarto.org/quarto.png){width=200 fig-alt="Quarto logo"}
+
+</details>
+
+<details open>
+<summary><strong>📂 Section B — starts expanded (note the `open` attribute)</strong></summary>
+
+Add `open` to the `<details>` tag to have a section rendered expanded by default,
+while still letting the reader collapse it.
+
+</details>

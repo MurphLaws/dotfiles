@@ -27,7 +27,11 @@ local function resolve_quarto_python()
 end
 local QUARTO_PYTHON = resolve_quarto_python()
 
-local state = { job = nil, viewer = nil, file = nil }
+local state = { job = nil, viewer = nil, file = nil, bufnr = nil }
+
+-- Autocmds que cierran el preview cuando el buffer del .qmd desaparece, para
+-- que nvim recupere todo el ancho sin tener que llamar :QuartoSplitClose a mano.
+local AUGROUP = vim.api.nvim_create_augroup("QuartoSplitAuto", { clear = true })
 
 local function notify(msg, level)
   vim.notify("[QuartoSplit] " .. msg, level or vim.log.levels.INFO)
@@ -152,6 +156,9 @@ local function launch_viewer_and_tile()
   end
 end
 
+-- forward declaration: open() registra un autocmd que llama a close()
+local close
+
 local function open()
   if state.job then
     notify("ya hay un preview activo (usa :QuartoSplitClose primero)", vim.log.levels.WARN)
@@ -168,8 +175,28 @@ local function open()
     return
   end
   state.file = file
+  state.bufnr = vim.api.nvim_get_current_buf()
   state.launched = false
   state.output = {}
+
+  -- Cerrar el .qmd (:bd/:bw, :q de su ventana, o salir de nvim) restaura el
+  -- layout automáticamente: nvim vuelve a ocupar todo el ancho.
+  vim.api.nvim_clear_autocmds({ group = AUGROUP })
+  vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout", "QuitPre" }, {
+    group = AUGROUP,
+    buffer = state.bufnr,
+    callback = function()
+      if state.job then
+        vim.schedule(close)
+      end
+    end,
+  })
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = AUGROUP,
+    callback = function()
+      if state.job then close() end
+    end,
+  })
 
   -- Detecta de forma NO bloqueante que el server está listo leyendo la salida
   -- de `quarto preview` ("Listening on …" / "Browse at …"). Antes se usaba
@@ -236,7 +263,8 @@ local function open()
   end
 end
 
-local function close()
+close = function()
+  vim.api.nvim_clear_autocmds({ group = AUGROUP })
   spinner_stop()
   if state.job then
     vim.fn.jobstop(state.job)
@@ -253,6 +281,7 @@ local function close()
     tmux("set-option", "-gu", "@quarto_active")
   end
   state.file = nil
+  state.bufnr = nil
   notify("preview cerrado y layout restaurado")
 end
 
