@@ -15,12 +15,13 @@
 const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin abombado
 const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
 const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
-const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->púrpura
-const float ABERRATION      = 0.0015; // separación RGB mínima hacia los bordes
+const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->orange
+const float ABERRATION      = 0.0022; // separación RGB mínima hacia los bordes
 
-// Colores del glow (sRGB). Teal arriba-izquierda, púrpura abajo-derecha.
-const vec3 GLOW_TEAL   = vec3(0.04, 0.40, 0.42);
-const vec3 GLOW_PURPLE = vec3(0.38, 0.10, 0.55);
+// Colores del glow (sRGB). Teal arriba-izquierda, orange abajo-derecha.
+// Ambos OSCUROS para contrastar con el texto blanco sin lavarlo.
+const vec3 GLOW_TEAL   = vec3(0.02, 0.20, 0.21);
+const vec3 GLOW_ORANGE = vec3(0.28, 0.12, 0.02);
 
 const float PI = 3.14159265359;
 
@@ -53,12 +54,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     vec3 col = term.rgb;
 
-    // --- GLOW teal->púrpura (aditivo, sólo sobre zonas oscuras) ---
-    // Teal en la esquina superior-izquierda, púrpura en la inferior-derecha.
+    // --- GLOW teal->orange (aditivo, sólo sobre zonas oscuras) ---
+    // Teal en la esquina superior-izquierda, orange en la inferior-derecha.
     // Aquí uv.y=0 cae arriba en pantalla, así que "abajo" es uv.y grande:
-    // t=1 (púrpura) cuando uv.x=1 (derecha) y uv.y=1 (abajo).
+    // t=1 (orange) cuando uv.x=1 (derecha) y uv.y=1 (abajo).
     float t = clamp((uv.x + uv.y) * 0.5, 0.0, 1.0);
-    vec3 glow = mix(GLOW_TEAL, GLOW_PURPLE, t);
+    vec3 glow = mix(GLOW_TEAL, GLOW_ORANGE, t);
     float lum = dot(term.rgb, vec3(0.2126, 0.7152, 0.0722));
     float darkness = clamp(1.0 - lum * 1.3, 0.0, 1.0); // ~1 en fondo, ~0 en texto
     col += glow * GLOW_STRENGTH * darkness;

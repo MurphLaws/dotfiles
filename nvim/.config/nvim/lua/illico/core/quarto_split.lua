@@ -146,20 +146,35 @@ local function open()
   end
   state.file = file
   state.launched = false
+  state.output = {}
 
   -- Detecta de forma NO bloqueante que el server está listo leyendo la salida
   -- de `quarto preview` ("Listening on …" / "Browse at …"). Antes se usaba
   -- vim.wait(60000), que congela toda la UI de nvim durante el arranque en
-  -- frío (~20s) — por eso "se quedaba pegado".
+  -- frío (~20s) — por eso "se quedaba pegado". De paso guardamos la salida
+  -- para poder mostrar el error real de quarto si falla.
   local function watch(_, data)
-    if not data or state.launched then return end
+    if not data then return end
     for _, line in ipairs(data) do
-      if line:find("Listening on", 1, true) or line:find("Browse at", 1, true) then
+      if line ~= "" then
+        table.insert(state.output, line)
+      end
+      if not state.launched and (line:find("Listening on", 1, true) or line:find("Browse at", 1, true)) then
         state.launched = true
         vim.schedule(launch_viewer_and_tile)
-        return
       end
     end
+  end
+
+  -- Última línea de error útil de la salida de quarto (para el aviso).
+  local function last_error()
+    for i = #state.output, 1, -1 do
+      local l = state.output[i]:gsub("\27%[%d*m", "") -- limpia códigos ANSI
+      if l:find("ERROR", 1, true) or l:find("Error", 1, true) then
+        return l
+      end
+    end
+    return state.output[#state.output]
   end
 
   spinner_start("Quarto: arrancando preview", 90, function()
@@ -179,7 +194,12 @@ local function open()
         if not state.launched then
           vim.schedule(function()
             spinner_stop()
-            fail("quarto preview terminó (código " .. code .. ") sin levantar el server")
+            local err = last_error()
+            local msg = "quarto preview falló (código " .. code .. ")"
+            if err then
+              msg = msg .. ":\n" .. err
+            end
+            fail(msg)
           end)
         end
       end,
