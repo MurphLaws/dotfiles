@@ -1,0 +1,82 @@
+---
+title: "Demo EDA — datos en vivo desde una API (USGS)"
+format:
+  html:
+    toc: true
+    code-fold: false
+    theme: cosmo
+jupyter: lacardio
+---
+
+## Qué hace este notebook
+
+Análisis exploratorio breve sobre los sismos de la última semana, usando
+la API pública del **USGS** (`earthquake.usgs.gov`, sin clave). Guarda el
+archivo (`:w`) y el preview se recarga solo.
+
+## 1. Traer los datos de la API
+
+```{python}
+import requests
+import pandas as pd
+
+URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
+params = dict(
+    format="geojson",
+    starttime="2026-06-08",
+    endtime="2026-06-15",
+    minmagnitude=2.5,
+)
+features = requests.get(URL, params=params, timeout=30).json()["features"]
+
+df = pd.json_normalize(features)
+df = df.rename(columns=lambda c: c.replace("properties.", ""))
+df["time"] = pd.to_datetime(df["time"], unit="ms")
+df["depth_km"] = df["geometry.coordinates"].str[2]
+df = df[["time", "mag", "depth_km", "place"]].dropna(subset=["mag"])
+
+print(f"{len(df)} sismos (mag ≥ 2.5) entre {df['time'].min():%Y-%m-%d} y {df['time'].max():%Y-%m-%d}")
+df.head()
+```
+
+## 2. Resumen estadístico
+
+```{python}
+df[["mag", "depth_km"]].describe().round(2)
+```
+
+## 3. Distribución de magnitudes
+
+```{python}
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(8, 3))
+ax.hist(df["mag"], bins=24, color="#4c78a8", edgecolor="white")
+ax.set_title("Distribución de magnitudes (última semana)")
+ax.set_xlabel("Magnitud"); ax.set_ylabel("Frecuencia"); ax.grid(True, alpha=0.3)
+plt.show()
+```
+
+## 4. Magnitud vs. profundidad
+
+```{python}
+fig, ax = plt.subplots(figsize=(8, 3))
+ax.scatter(df["depth_km"], df["mag"], s=12, alpha=0.5, color="#e45756")
+ax.set_title("¿Los sismos más profundos son más fuertes?")
+ax.set_xlabel("Profundidad [km]"); ax.set_ylabel("Magnitud"); ax.grid(True, alpha=0.3)
+plt.show()
+```
+
+```{python}
+corr = df["mag"].corr(df["depth_km"])
+print(f"Correlación magnitud–profundidad: {corr:+.3f}")
+```
+
+## 5. Sismos más fuertes de la semana
+
+```{python}
+(df.sort_values("mag", ascending=False)
+   .head(10)
+   .loc[:, ["time", "mag", "depth_km", "place"]]
+   .reset_index(drop=True))
+```
