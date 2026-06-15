@@ -3,9 +3,7 @@
 // Autocontenido: NO intenta detectar "qué pixel es fondo" (ese era el bug del
 // gradiente anterior: dependía de umbrales de luminancia sRGB/lineal que nunca
 // acertaban). En vez de eso aplica el efecto a TODA la pantalla, que es como
-// funciona un CRT de verdad. El gradiente azul->verde se añade como GLOW
-// ADITIVO ponderado por la oscuridad del pixel: brilla sobre el fondo oscuro y
-// es casi imperceptible sobre el texto claro, sin necesidad de detección.
+// funciona un CRT de verdad.
 //
 // Intensidad: NOTORIA pero limpia. Sin curvatura (no hay bisel/bordes) ni
 // aberración cromática (no hay línea de colores en el borde) — eso era lo que
@@ -15,7 +13,6 @@
 const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin abombado
 const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
 const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
-const float GLOW_STRENGTH   = 0.36;   // intensidad del glow teal->orange
 const float ABERRATION      = 0.0022; // separación RGB mínima hacia los bordes
 
 // Bloom: resplandor de fósforo que hace RESALTAR el texto (píxeles claros
@@ -23,11 +20,6 @@ const float ABERRATION      = 0.0022; // separación RGB mínima hacia los borde
 const float BLOOM_STRENGTH  = 0.55;   // intensidad del halo del texto
 const float BLOOM_THRESHOLD = 0.30;   // a partir de qué brillo un pixel "irradia"
 const float BLOOM_RADIUS    = 1.6;    // qué tan lejos se esparce el halo (px)
-
-// Colores del glow (sRGB). Teal arriba-izquierda, orange abajo-derecha.
-// Ambos OSCUROS para contrastar con el texto blanco sin lavarlo.
-const vec3 GLOW_TEAL   = vec3(0.02, 0.20, 0.21);
-const vec3 GLOW_ORANGE = vec3(0.28, 0.12, 0.02);
 
 const float PI = 3.14159265359;
 
@@ -75,15 +67,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bloom /= 25.0;
     col += bloom * BLOOM_STRENGTH;
 
-    // --- GLOW teal->orange (aditivo, sólo sobre zonas oscuras) ---
-    // Teal en la esquina superior-izquierda, orange en la inferior-derecha.
-    // Aquí uv.y=0 cae arriba en pantalla, así que "abajo" es uv.y grande:
-    // t=1 (orange) cuando uv.x=1 (derecha) y uv.y=1 (abajo).
-    float t = clamp((uv.x + uv.y) * 0.5, 0.0, 1.0);
-    vec3 glow = mix(GLOW_TEAL, GLOW_ORANGE, t);
     float lum = dot(term.rgb, vec3(0.2126, 0.7152, 0.0722));
-    float darkness = clamp(1.0 - lum * 1.3, 0.0, 1.0); // ~1 en fondo, ~0 en texto
-    col += glow * GLOW_STRENGTH * darkness;
 
     // --- Scanlines (líneas horizontales tenues) ---
     // Las líneas oscurecen sobre todo el FONDO; sobre el texto (píxeles claros)

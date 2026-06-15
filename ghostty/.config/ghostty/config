@@ -36,13 +36,15 @@ palette = 15=#a6adc8
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
 macos-non-native-fullscreen = true
 
-# Transparency
-background-opacity = 0.95
-background-blur-radius = 20
+# Transparency + window blur (estilo Hyprland)
+#   El blur lo hace el COMPOSITOR de macOS sobre lo que hay DETRÁS de la
+#   ventana (escritorio/otras ventanas). Sólo se ve a través de la parte
+#   translúcida, así que la opacidad debe ser < 1 para que el blur sea visible.
+background-opacity = 0.88
+background-blur-radius = 30
 
 # Shaders (GLSL) — método builtin de Ghostty (custom-shader)
-#   1) CRT retro sutil + glow azul->verde (aplica a toda la pantalla, no
-#      detecta "fondo", por eso sí funciona — conserva los colores Catppuccin)
+#   1) CRT retro sutil (scanlines + bloom + viñeta, conserva Catppuccin)
 #   2) animación de cursor tipo "smear" (estilo Neovide)
 # El CRT va PRIMERO; el cursor smear se dibuja encima.
 custom-shader = shaders/retro-crt.glsl
