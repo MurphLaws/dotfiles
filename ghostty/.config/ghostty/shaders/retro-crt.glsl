@@ -86,7 +86,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     col += glow * GLOW_STRENGTH * darkness;
 
     // --- Scanlines (líneas horizontales tenues) ---
-    float scan = 1.0 - SCANLINE * (0.5 + 0.5 * sin(uv.y * iResolution.y * PI));
+    // Las líneas oscurecen sobre todo el FONDO; sobre el texto (píxeles claros)
+    // se atenúan casi por completo para no ensombrecerlo. Reutilizamos `lum`.
+    float scanDepth = SCANLINE * (1.0 - smoothstep(0.25, 0.6, lum));
+    float scan = 1.0 - scanDepth * (0.5 + 0.5 * sin(uv.y * iResolution.y * PI));
     col *= scan;
 
     // --- Viñeta (bordes más oscuros) ---
