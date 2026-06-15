@@ -41,12 +41,11 @@ background-opacity = 0.95
 background-blur-radius = 20
 
 # Shaders (GLSL) — método builtin de Ghostty (custom-shader)
-#   1) gradiente de fondo azul->verde (preserva la transparencia)
+#   1) CRT retro sutil + glow azul->verde (aplica a toda la pantalla, no
+#      detecta "fondo", por eso sí funciona — conserva los colores Catppuccin)
 #   2) animación de cursor tipo "smear" (estilo Neovide)
-# El gradiente va PRIMERO a propósito: le da un alpha real al fondo, lo que
-# además hace visible el rastro del cursor (hereda el alpha del fondo).
-# El gradiente también se ve a través de nvim porque nvim es transparente.
-custom-shader = shaders/gradient-azul-verde.glsl
+# El CRT va PRIMERO; el cursor smear se dibuja encima.
+custom-shader = shaders/retro-crt.glsl
 custom-shader = shaders/cursor-smear.glsl
 custom-shader-animation = true
 
