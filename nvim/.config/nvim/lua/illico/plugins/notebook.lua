@@ -1,7 +1,6 @@
--- Jupyter notebook editing inside Neovim:
--- image.nvim renders plots inline, quarto-nvim wires LSP over markdown
--- code-blocks, jupytext.nvim transparently converts .ipynb <-> markdown
--- on read/write.
+-- Jupyter/Quarto editing inside Neovim:
+-- image.nvim renders plots inline y quarto-nvim conecta el LSP sobre los
+-- bloques de código en markdown.
 return {
   {
     "3rd/image.nvim",
@@ -33,27 +32,6 @@ return {
         diagnostics = { enabled = true, triggers = { "BufWritePost" } },
         completion  = { enabled = true },
       },
-    },
-  },
-
-  {
-    "GCBallesteros/jupytext.nvim",
-    lazy = false,
-    init = function()
-      -- jupytext.nvim (sin mantenimiento, última versión abr-2024) todavía llama
-      -- a la API pre-0.10 `vim.health.report_*`, que Neovim removió. Eso hace que
-      -- `:checkhealth jupytext` falle. Restauramos los alias si faltan.
-      local health = vim.health
-      health.report_start = health.report_start or health.start
-      health.report_ok = health.report_ok or health.ok
-      health.report_warn = health.report_warn or health.warn
-      health.report_error = health.report_error or health.error
-      health.report_info = health.report_info or health.info
-    end,
-    opts = {
-      style            = "markdown",
-      output_extension = "md",
-      force_ft         = "markdown",
     },
   },
 

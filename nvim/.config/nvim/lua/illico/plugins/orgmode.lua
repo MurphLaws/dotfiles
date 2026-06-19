@@ -4,7 +4,6 @@ return {
 	ft = { "org" },
 	dependencies = {
 		{ "nvim-treesitter/nvim-treesitter", lazy = true },
-		{ "danilshvalov/org-modern.nvim" },
 		{ "akinsho/org-bullets.nvim" },
 	},
 	config = function()
@@ -46,7 +45,6 @@ return {
 		local icloud_path = os.getenv("ICLOUD_ORG_PATH")
 			or (os.getenv("HOME") .. "/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org")
 		local refile_file = icloud_path .. "/refile.org"
-		local Menu = require("org-modern.menu")
 
 		require("orgmode").setup({
 			org_agenda_files = { icloud_path .. "/**/*" },
@@ -71,23 +69,6 @@ return {
 				org = {
 					-- Remap the checkbox toggle to <leader>cc
 					org_toggle_checkbox = "<leader>cc",
-				},
-			},
-
-			ui = {
-				menu = {
-					handler = function(data)
-						Menu:new({
-							window = {
-								margin = { 1, 0, 1, 0 },
-								padding = { 0, 1, 0, 1 },
-								title_pos = "center",
-								border = "single",
-								zindex = 1000,
-							},
-							icons = { separator = "➜" },
-						}):open(data)
-					end,
 				},
 			},
 		})
