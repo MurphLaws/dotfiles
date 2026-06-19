@@ -47,6 +47,11 @@ return {
 					"gdscript", -- Godot GDScript
 					"gdshader", -- Godot Shaders
 					"godot_resource", -- Godot Resources
+					"latex", -- Math en vimtex / render-markdown
+					"regex", -- requerido por snacks.picker
+					"scss", -- estilos
+					"typst", -- documentos typst
+					"vue", -- SFC de Vue
 				},
 				incremental_selection = {
 					enable = true,
