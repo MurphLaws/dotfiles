@@ -11,13 +11,16 @@
 
 // --- CONFIGURACIÓN (subir/bajar para más o menos efecto) ---
 const float CURVATURE       = 0.0;    // 0 = pantalla plana, sin abombado
-const float SCANLINE        = 0.20;   // profundidad de scanlines (bien marcadas)
-const float VIGNETTE        = 0.18;   // oscurecimiento en los bordes (más retro)
-const float ABERRATION      = 0.0022; // separación RGB mínima hacia los bordes
+const float SCANLINE        = 0.28;   // profundidad de scanlines (bien marcadas)
+const float VIGNETTE        = 0.24;   // oscurecimiento en los bordes (más retro)
+const float ABERRATION      = 0.0032; // separación RGB hacia los bordes (más retro)
+
+// Brillo global: baja un poco la intensidad del texto/imagen (1.0 = sin cambio).
+const float BRIGHTNESS      = 0.90;   // texto algo más tenue
 
 // Bloom: resplandor de fósforo que hace RESALTAR el texto (píxeles claros
 // irradian un halo). Subir BLOOM_STRENGTH = texto más brillante/marcado.
-const float BLOOM_STRENGTH  = 0.55;   // intensidad del halo del texto
+const float BLOOM_STRENGTH  = 0.42;   // intensidad del halo del texto (menos brillo)
 const float BLOOM_THRESHOLD = 0.30;   // a partir de qué brillo un pixel "irradia"
 const float BLOOM_RADIUS    = 1.6;    // qué tan lejos se esparce el halo (px)
 
@@ -50,7 +53,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     term.b = texture(iChannel0, clamp(uv - dir * ab, 0.0, 1.0)).b;
     term.a = texture(iChannel0, uv).a;
 
-    vec3 col = term.rgb;
+    vec3 col = term.rgb * BRIGHTNESS;
 
     // --- Bloom: el texto (píxeles claros) irradia un halo y RESALTA ---
     // Promedia un vecindario 5x5 quedándose sólo con la parte brillante; ese
