@@ -4,6 +4,12 @@
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+-- Desactivar providers que no se usan (solo usamos python3).
+-- Silencia los warnings de :checkhealth por neovim npm / perl / ruby gem.
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+
 -- ===== Basics =====
 -- Configuración del cursor:
 vim.opt.guicursor = "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20"

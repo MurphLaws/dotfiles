@@ -15,7 +15,6 @@ return {
 		},
 		config = function(_, opts)
 			require("catppuccin").setup(opts)
-			vim.cmd.colorscheme("catppuccin-mocha")
 
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
@@ -46,9 +45,31 @@ return {
 				"SnacksPickerInput",
 				"SnacksPickerList",
 			}
-			for _, group in ipairs(transparent_groups) do
-				vim.api.nvim_set_hl(0, group, { bg = "NONE" })
+
+			-- Reaplicar la transparencia en cada ColorScheme. Hacerlo dentro del
+			-- evento (y no solo una vez) mantiene `Normal` sin bg sincronizado con
+			-- el caché de transparencia de snacks.nvim, que se invalida justo en
+			-- este evento. Si no, snacks cachea "no transparente", luego Normal
+			-- pierde el bg y revienta al mezclar el backdrop (fg nil en blend()).
+			local function apply_transparency()
+				for _, group in ipairs(transparent_groups) do
+					-- Preservar fg y demás atributos; solo limpiar el fondo.
+					-- Pasar { bg = "NONE" } a secas REEMPLAZA el grupo y borra el
+					-- fg, lo que dejaba Normal/NormalFloat sin foreground y hacía
+					-- crashear a snacks.gh al mezclar colores (fg nil en blend()).
+					local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+					hl.bg = "NONE"
+					hl.ctermbg = nil
+					vim.api.nvim_set_hl(0, group, hl)
+				end
 			end
+			vim.api.nvim_create_autocmd("ColorScheme", {
+				group = vim.api.nvim_create_augroup("illico_transparency", { clear = true }),
+				callback = apply_transparency,
+			})
+
+			vim.cmd.colorscheme("catppuccin-mocha")
+			apply_transparency()
 
 			-- Catppuccin Mocha palette, mapped onto the accent keys the rest of
 			-- the config already consumes (lualine, mini.icons, org/neorg overrides).

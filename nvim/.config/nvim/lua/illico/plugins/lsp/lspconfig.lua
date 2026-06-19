@@ -61,16 +61,6 @@ return {
 					"svelte",
 				},
 			},
-			-- Go
-			gopls = {
-				settings = {
-					gopls = {
-						analyses = { unusedparams = true },
-						staticcheck = true,
-						gofumpt = true,
-					},
-				},
-			},
 			-- TypeScript (Usamos ts_ls que es el nombre moderno)
 			ts_ls = {
 				init_options = {

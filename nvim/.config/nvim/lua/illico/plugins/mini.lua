@@ -34,7 +34,11 @@ return {
 
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				callback = function()
-					trailspace.trim()
+					-- Solo recortar en buffers normales y modificables.
+					-- Evita E21 en buffers especiales (checkhealth, terminal, etc.).
+					if vim.bo.modifiable and vim.bo.buftype == "" then
+						trailspace.trim()
+					end
 				end,
 			})
 

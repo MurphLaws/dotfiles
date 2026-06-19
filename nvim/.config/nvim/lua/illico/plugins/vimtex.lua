@@ -1,55 +1,47 @@
--- VimTeX: edición LaTeX con auto-compilación y sync con Skim PDF viewer.
--- Requisitos externos: latexmk + biber (vienen con TinyTeX) y Skim.app.
+-- VimTeX: edición LaTeX con compilación vía tectonic (sin TinyTeX/latexmk).
+-- tectonic es un motor LaTeX autocontenido que descarga paquetes bajo demanda
+-- y maneja la bibliografía internamente (no requiere biber/bibtex aparte).
 --
 -- Atajos principales (en modo normal, en un archivo .tex):
---   <leader>ll  -> arrancar/parar compilación continua (latexmk -pvc)
---   <leader>lv  -> ver PDF en Skim (forward search)
+--   <leader>ll  -> compilar el documento (tectonic, one-shot)
+--   <leader>lv  -> ver PDF (visor por defecto del sistema, p.ej. Preview)
 --   <leader>lc  -> limpiar archivos auxiliares
 --   <leader>lk  -> matar compilador en background
 --   <leader>le  -> mostrar errores en quickfix
 --   <leader>lt  -> mostrar TOC del documento
 --
--- Forward search: <leader>lv salta a la línea actual en el PDF.
--- Inverse search: Cmd+Shift+click en Skim te devuelve al .tex.
+-- NOTA: tectonic no tiene modo "continuo" como latexmk -pvc; cada <leader>ll
+-- hace una compilación completa. El forward/inverse search con SyncTeX requiere
+-- Skim; sin él, <leader>lv abre el PDF con la app por defecto (sin sync).
 
 return {
   "lervag/vimtex",
   lazy = false, -- VimTeX no soporta lazy-loading
   ft = { "tex", "plaintex", "bib" },
   init = function()
-    -- Asegurar que latexmk/biber/pdflatex (TinyTeX) estén en PATH.
-    local tinytex_bin = vim.fn.expand("$HOME/Library/TinyTeX/bin/universal-darwin")
-    if vim.fn.isdirectory(tinytex_bin) == 1 then
-      vim.env.PATH = vim.env.PATH .. ":" .. tinytex_bin
-    end
-
-    -- Visor PDF: Skim con SyncTeX (forward + inverse).
-    vim.g.vimtex_view_method = "skim"
-    vim.g.vimtex_view_skim_sync = 1        -- forward search al recompilar
-    vim.g.vimtex_view_skim_activate = 1    -- traer Skim al frente al ver
-
-    -- Compilador: latexmk (corre pdflatex + biber + pdflatex × 2 automáticamente).
-    vim.g.vimtex_compiler_method = "latexmk"
-    vim.g.vimtex_compiler_latexmk = {
-      aux_dir = "",
-      out_dir = "",
+    -- Compilador: tectonic (motor LaTeX moderno y autocontenido).
+    vim.g.vimtex_compiler_method = "tectonic"
+    vim.g.vimtex_compiler_tectonic = {
+      build_dir = "",
       callback = 1,
-      continuous = 1,
-      executable = "latexmk",
+      continuous = 0, -- tectonic no soporta watch nativo; one-shot por compilación
+      executable = "tectonic",
       hooks = {},
       options = {
-        "-verbose",
-        "-file-line-error",
-        "-synctex=1",
-        "-interaction=nonstopmode",
-        "-pdf",
+        "--keep-logs",
+        "--synctex",
       },
     }
 
-    -- Bib backend: biber (lo usa biblatex-apa).
-    vim.g.vimtex_compiler_latexmk_engines = {
-      _ = "-pdf",
-    }
+    -- Visor PDF: usar Skim si está instalado (con SyncTeX forward/inverse),
+    -- si no, caer al visor "general" que abre el PDF con la app por defecto.
+    if vim.fn.isdirectory("/Applications/Skim.app") == 1 then
+      vim.g.vimtex_view_method = "skim"
+      vim.g.vimtex_view_skim_sync = 1
+      vim.g.vimtex_view_skim_activate = 1
+    else
+      vim.g.vimtex_view_method = "general"
+    end
 
     -- Quickfix sólo abre si hay errores (no para warnings).
     vim.g.vimtex_quickfix_mode = 0
