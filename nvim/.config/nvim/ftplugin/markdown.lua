@@ -10,13 +10,18 @@ vim.opt_local.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt_local.foldenable = true
 vim.opt_local.foldlevel = 99
 
--- Texto del fold: flecha + título del heading, sin nada más.
+-- Texto del fold: solo el título del heading (la flecha de estado va en la
+-- columna de folds, no aquí, para no duplicarla).
 function _G.IllicoMdFoldtext()
-  return "▸ " .. vim.fn.getline(vim.v.foldstart)
+  return vim.fn.getline(vim.v.foldstart)
 end
 vim.opt_local.foldtext = "v:lua.IllicoMdFoldtext()"
--- Quitar los "····" de relleno a la derecha del fold (fillchar `fold` = espacio).
-vim.opt_local.fillchars:append({ fold = " " })
+
+-- Columna de folds con triángulo según estado: ▼ abierto, ▶ cerrado. nvim lo
+-- alterna solo en la línea del heading. foldsep en blanco para no dibujar la
+-- línea vertical de anidamiento; fold en blanco quita los "····" del foldtext.
+vim.opt_local.foldcolumn = "1"
+vim.opt_local.fillchars:append({ fold = " ", foldopen = "▼", foldclose = "▶", foldsep = " " })
 
 -- render-markdown re-renderiza por eventos y nvim NO tiene evento de fold, así
 -- que al plegar una sección con tabla/elementos virtuales esos quedan pegados.
