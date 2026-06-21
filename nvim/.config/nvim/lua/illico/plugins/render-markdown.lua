@@ -14,9 +14,13 @@ return {
 		-- Desactivarlo deja la línea siempre renderizada -> scroll fluido.
 		anti_conceal = { enabled = false },
 		heading = {
+			-- Sin icono ni barra de fondo en los headings normales (eran los
+			-- "flags" de la izquierda). El texto sigue coloreado por nivel.
+			icons = {},
+			backgrounds = {},
 			-- Badge por patrón de texto del heading (solo del lado de nvim, no
-			-- toca el archivo). "Bloque ..." y "Ejercicio ..." se distinguen del
-			-- resto de H3/H4 con su propio icono y color de fondo.
+			-- toca el archivo). Solo "Bloque ..." y "Ejercicio ..." llevan icono
+			-- y barra de color, para distinguirlos del resto.
 			custom = {
 				bloque = {
 					pattern = "^Bloque",

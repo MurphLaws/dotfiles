@@ -28,22 +28,35 @@ function _G.IllicoMdFoldtext()
 end
 vim.opt_local.foldtext = "v:lua.IllicoMdFoldtext()"
 
--- Columna de folds con triángulo según estado: ▼ abierto, ▶ cerrado. nvim lo
--- alterna solo en la línea del heading. foldsep en blanco para no dibujar la
--- línea vertical de anidamiento; fold en blanco quita los "····" del foldtext.
-vim.opt_local.foldcolumn = "1"
-vim.opt_local.fillchars:append({ fold = " ", foldopen = "▼", foldclose = "▶", foldsep = " " })
+-- Triángulo de fold con statuscolumn propio (en vez de foldcolumn nativo, que
+-- además metía los dígitos de nivel "2" que no se querían). Solo dibuja ▼/▶ en
+-- la línea que INICIA un fold; el resto va en blanco. Conserva signos y números.
+vim.opt_local.fillchars:append({ fold = " " }) -- quita los "····" del foldtext
+function _G.IllicoMdFoldChar()
+  local l = vim.v.lnum
+  if vim.fn.foldlevel(l) > vim.fn.foldlevel(l - 1) then
+    return vim.fn.foldclosed(l) == -1 and "▼" or "▶"
+  end
+  return " "
+end
+vim.opt_local.foldcolumn = "0"
+vim.opt_local.numberwidth = 3
+-- [signo][triángulo][número relativo/absoluto] + espacio
+vim.opt_local.statuscolumn = "%s%{v:lua.IllicoMdFoldChar()} %=%{v:relnum?v:relnum:v:lnum} "
 
 -- render-markdown re-renderiza por eventos y nvim NO tiene evento de fold, así
--- que al plegar una sección con tabla/elementos virtuales esos quedan pegados.
--- Tras un comando de fold re-emitimos WinScrolled (que render-markdown sí
--- escucha) para que vuelva a pintar respetando los folds (usa foldclosed).
+-- que al plegar una sección con tabla/elementos virtuales esos quedan pegados
+-- (el borde de la tabla "se filtra"). Tras un comando de fold forzamos un
+-- re-render completo vía la API (limpia los extmarks y respeta foldclosed).
 for _, key in ipairs({ "za", "zA", "zo", "zO", "zc", "zC", "zM", "zR", "zr", "zm", "zv", "zx" }) do
   vim.keymap.set("n", key, function()
     local cnt = vim.v.count > 0 and tostring(vim.v.count) or ""
     vim.cmd("normal! " .. cnt .. key)
+    local buf = vim.api.nvim_get_current_buf()
     vim.schedule(function()
-      pcall(vim.api.nvim_exec_autocmds, "WinScrolled", { modeline = false })
+      pcall(function()
+        require("render-markdown.api").render({ buf = buf, event = "Fold" })
+      end)
     end)
   end, { buffer = true, silent = true, desc = "fold + refrescar render-markdown" })
 end
