@@ -40,22 +40,8 @@ vim.opt_local.numberwidth = 3
 -- [signo][triángulo][número relativo/absoluto] + espacio
 vim.opt_local.statuscolumn = "%s%{v:lua.IllicoMdFoldChar()} %=%{v:relnum?v:relnum:v:lnum} "
 
--- render-markdown re-renderiza por eventos y nvim NO tiene evento de fold, así
--- que al plegar una sección con tabla/elementos virtuales esos quedan pegados
--- (el borde de la tabla "se filtra"). Tras un comando de fold forzamos un
--- re-render completo vía la API (limpia los extmarks y respeta foldclosed).
-for _, key in ipairs({ "za", "zA", "zo", "zO", "zc", "zC", "zM", "zR", "zr", "zm", "zv", "zx" }) do
-  vim.keymap.set("n", key, function()
-    local cnt = vim.v.count > 0 and tostring(vim.v.count) or ""
-    vim.cmd("normal! " .. cnt .. key)
-    local buf = vim.api.nvim_get_current_buf()
-    vim.schedule(function()
-      pcall(function()
-        require("render-markdown.api").render({ buf = buf, event = "Fold" })
-      end)
-    end)
-  end, { buffer = true, silent = true, desc = "fold + refrescar render-markdown" })
-end
+-- (Sin remap de teclas de fold: el borde de la tabla ya no se filtra porque está
+-- desactivado en render-markdown; las teclas za/zM/zR/... funcionan normales.)
 
 local ok_quarto, quarto = pcall(require, "quarto")
 if not ok_quarto then return end

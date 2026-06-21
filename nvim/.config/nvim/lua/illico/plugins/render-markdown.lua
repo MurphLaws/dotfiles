@@ -2,16 +2,25 @@ return {
 	"MeanderingProgrammer/render-markdown.nvim",
 	dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
 	ft = { "markdown", "quarto" },
-	-- LaTeX desactivado: no hay parser latex ni latex2text/utftex instalados.
-	-- Evita los warnings de :checkhealth render-markdown.
-	-- file_types incluye quarto para embellecer/concealar también los .qmd.
 	opts = {
+		-- LaTeX off: no hay parser latex instalado (evita warnings de checkhealth).
 		latex = { enabled = false },
 		file_types = { "markdown", "quarto" },
-		-- Antilag al scrollear: anti_conceal revela el markdown crudo en la línea
-		-- del cursor y re-renderiza en CADA movimiento. Desactivarlo deja la línea
-		-- siempre renderizada -> scroll fluido. (La distinción visual de jornadas/
-		-- bloques/ejercicios se hace al PLEGAR vía foldtext.nvim.)
+		-- anti_conceal off: evita el re-render por movimiento del cursor (lag).
 		anti_conceal = { enabled = false },
+		heading = {
+			-- Sin "flags": ni sign en el gutter ni icono circular inline. El '#'
+			-- se sigue ocultando (icono = string vacío) y el texto queda al margen.
+			-- Se conservan los fondos (highlight) y los colores por nivel.
+			sign = false,
+			icons = { "", "", "", "", "", "" },
+			position = "inline",
+		},
+		pipe_table = {
+			-- render-markdown NO es fold-aware: el borde de la tabla (líneas
+			-- virtuales) se "filtra" cuando la sección está plegada. Sin borde no
+			-- hay nada que filtrar; las celdas se siguen alineando.
+			border_enabled = false,
+		},
 	},
 }
