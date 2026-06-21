@@ -31,17 +31,17 @@ return {
 			tmux = { enabled = false },
 		},
 		on_open = function()
-			-- Barras laterales: EXACTAMENTE el color del colorscheme (mocha base
-			-- #1e1e2e) al 90% de opacidad. El color sólido va en ZenBg; el 90% lo
-			-- da winblend = 10 (winblend es el % transparente, así que 10 = 90%
-			-- opaco). fg = bg deja los "·" del eob invisibles.
-			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#1e1e2e", fg = "#1e1e2e" })
-			-- winblend se aplica diferido porque zen-mode resetea winblend=0 al
-			-- ajustar el layout. Sube el número para más transparencia.
+			-- Barras laterales = ESCRITORIO, no el buffer original.
+			--   bg = NONE  -> el terminal (con su opacidad) compone el wallpaper.
+			--   winblend = 0 -> la ventana de fondo OCLUYE el buffer; con winblend
+			--   > 0 se mezclaba con el buffer de abajo y por eso "se colaba".
+			-- fillchars eob = espacio para que no aparezcan los "·" en las barras.
+			vim.api.nvim_set_hl(0, "ZenBg", { bg = "NONE", fg = "NONE" })
 			vim.schedule(function()
 				local view = require("zen-mode.view")
 				if view.bg_win and vim.api.nvim_win_is_valid(view.bg_win) then
-					vim.wo[view.bg_win].winblend = 10
+					vim.wo[view.bg_win].winblend = 0
+					vim.wo[view.bg_win].fillchars = "eob: "
 				end
 			end)
 			-- focus.nvim auto-resizes the active window and eats zen-mode's

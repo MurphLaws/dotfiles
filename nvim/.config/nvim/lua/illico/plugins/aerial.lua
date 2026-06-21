@@ -12,7 +12,10 @@ return {
 		backends = { "treesitter", "lsp", "markdown", "man" },
 		layout = {
 			default_direction = "right",
-			min_width = 30,
+			-- El max_width por defecto (0.2 del ancho) dejaba el float angosto y
+			-- truncaba los títulos. Lo ampliamos para que quepan los headings.
+			min_width = 40,
+			max_width = { 80, 0.5 },
 			-- bg sólido del colorscheme (no transparente) para que el panel y el
 			-- float se vean integrados, no como un agujero negro.
 			win_opts = {
