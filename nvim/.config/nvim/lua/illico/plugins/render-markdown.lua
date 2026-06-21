@@ -9,48 +9,9 @@ return {
 		latex = { enabled = false },
 		file_types = { "markdown", "quarto" },
 		-- Antilag al scrollear: anti_conceal revela el markdown crudo en la línea
-		-- del cursor y re-renderiza en CADA movimiento. Con saltos de 10 líneas
-		-- (J/K) y C-d/C-u eso provoca redibujados constantes y el tirón visible.
-		-- Desactivarlo deja la línea siempre renderizada -> scroll fluido.
+		-- del cursor y re-renderiza en CADA movimiento. Desactivarlo deja la línea
+		-- siempre renderizada -> scroll fluido. (La distinción visual de jornadas/
+		-- bloques/ejercicios se hace al PLEGAR vía foldtext.nvim.)
 		anti_conceal = { enabled = false },
-		heading = {
-			-- Sin icono ni barra de fondo en los headings normales (eran los
-			-- "flags" de la izquierda). El texto sigue coloreado por nivel.
-			icons = {},
-			backgrounds = {},
-			-- Badge por patrón de texto del heading (solo del lado de nvim, no
-			-- toca el archivo). Solo "Bloque ..." y "Ejercicio ..." llevan icono
-			-- y barra de color, para distinguirlos del resto.
-			custom = {
-				bloque = {
-					pattern = "^Bloque",
-					icon = "  ", -- nf-fa-file_text_o (bloque de texto)
-					background = "RmBloqueBg",
-					foreground = "RmBloqueFg",
-				},
-				ejercicio = {
-					pattern = "^Ejercicio",
-					icon = "  ", -- nf-fa-briefcase (trabajo)
-					background = "RmEjercicioBg",
-					foreground = "RmEjercicioFg",
-				},
-			},
-		},
 	},
-	config = function(_, opts)
-		require("render-markdown").setup(opts)
-		-- Colores de los badges. En grupos propios para que sobrevivan a la
-		-- transparencia global y a recargas de colorscheme.
-		local function hls()
-			vim.api.nvim_set_hl(0, "RmBloqueFg", { fg = "#89b4fa", bold = true }) -- azul
-			vim.api.nvim_set_hl(0, "RmBloqueBg", { fg = "#89b4fa", bg = "#1e3050", bold = true })
-			vim.api.nvim_set_hl(0, "RmEjercicioFg", { fg = "#fab387", bold = true }) -- durazno
-			vim.api.nvim_set_hl(0, "RmEjercicioBg", { fg = "#fab387", bg = "#3a2a1e", bold = true })
-		end
-		hls()
-		vim.api.nvim_create_autocmd("ColorScheme", {
-			group = vim.api.nvim_create_augroup("illico_rendermd_hl", { clear = true }),
-			callback = hls,
-		})
-	end,
 }

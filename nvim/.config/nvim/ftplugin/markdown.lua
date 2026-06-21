@@ -21,12 +21,8 @@ vim.schedule(function()
   end
 end)
 
--- Texto del fold: solo el título del heading (la flecha de estado va en la
--- columna de folds, no aquí, para no duplicarla).
-function _G.IllicoMdFoldtext()
-  return vim.fn.getline(vim.v.foldstart)
-end
-vim.opt_local.foldtext = "v:lua.IllicoMdFoldtext()"
+-- El texto del fold lo maneja foldtext.nvim (iconos nerd-font para Jornada/
+-- Bloque/Ejercicio). No seteamos foldtext aquí para no chocar con él.
 
 -- Triángulo de fold con statuscolumn propio (en vez de foldcolumn nativo, que
 -- además metía los dígitos de nivel "2" que no se querían). Solo dibuja ▼/▶ en
