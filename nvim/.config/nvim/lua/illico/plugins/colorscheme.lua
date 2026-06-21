@@ -62,6 +62,13 @@ return {
 					hl.ctermbg = nil
 					vim.api.nvim_set_hl(0, group, hl)
 				end
+
+				-- Números de línea legibles: el LineNr de Catppuccin (#45475a) casi
+				-- no contrasta sobre el fondo transparente. overlay1 (#7f849c) se ve
+				-- sin robar protagonismo. bg = NONE conserva la transparencia.
+				vim.api.nvim_set_hl(0, "LineNr", { fg = "#7f849c", bg = "NONE" })
+				vim.api.nvim_set_hl(0, "LineNrAbove", { fg = "#7f849c", bg = "NONE" })
+				vim.api.nvim_set_hl(0, "LineNrBelow", { fg = "#7f849c", bg = "NONE" })
 			end
 			vim.api.nvim_create_autocmd("ColorScheme", {
 				group = vim.api.nvim_create_augroup("illico_transparency", { clear = true }),

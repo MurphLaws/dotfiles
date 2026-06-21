@@ -8,5 +8,10 @@ return {
 	opts = {
 		latex = { enabled = false },
 		file_types = { "markdown", "quarto" },
+		-- Antilag al scrollear: anti_conceal revela el markdown crudo en la línea
+		-- del cursor y re-renderiza en CADA movimiento. Con saltos de 10 líneas
+		-- (J/K) y C-d/C-u eso provoca redibujados constantes y el tirón visible.
+		-- Desactivarlo deja la línea siempre renderizada -> scroll fluido.
+		anti_conceal = { enabled = false },
 	},
 }
