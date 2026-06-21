@@ -18,6 +18,20 @@ vim.opt_local.foldtext = "v:lua.IllicoMdFoldtext()"
 -- Quitar los "····" de relleno a la derecha del fold (fillchar `fold` = espacio).
 vim.opt_local.fillchars:append({ fold = " " })
 
+-- render-markdown re-renderiza por eventos y nvim NO tiene evento de fold, así
+-- que al plegar una sección con tabla/elementos virtuales esos quedan pegados.
+-- Tras un comando de fold re-emitimos WinScrolled (que render-markdown sí
+-- escucha) para que vuelva a pintar respetando los folds (usa foldclosed).
+for _, key in ipairs({ "za", "zA", "zo", "zO", "zc", "zC", "zM", "zR", "zr", "zm", "zv", "zx" }) do
+  vim.keymap.set("n", key, function()
+    local cnt = vim.v.count > 0 and tostring(vim.v.count) or ""
+    vim.cmd("normal! " .. cnt .. key)
+    vim.schedule(function()
+      pcall(vim.api.nvim_exec_autocmds, "WinScrolled", { modeline = false })
+    end)
+  end, { buffer = true, silent = true, desc = "fold + refrescar render-markdown" })
+end
+
 local ok_quarto, quarto = pcall(require, "quarto")
 if not ok_quarto then return end
 

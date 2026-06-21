@@ -46,6 +46,10 @@ return {
 			min_height = 0.4,
 		},
 		attach_mode = "global",
+		-- Los folds del árbol de aerial son INDEPENDIENTES de los folds del
+		-- buffer markdown (plegar en aerial no pliega el documento y viceversa).
+		link_tree_to_folds = false,
+		manage_folds = false,
 		show_guides = true,
 		filter_kind = false, -- en markdown muestra todos los headings, sin filtrar por tipo
 		close_on_select = true, -- al saltar a un heading, cierra (modo TOC)
