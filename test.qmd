@@ -1,150 +1,50 @@
 ---
-title: "Quarto Folding Examples"
-author: "AI Collaborator"
-date: "2026-06-15"
+title: "Notas"
 format:
   html:
     toc: true
+    theme: [cosmo, custom.scss]
 ---
 
-## Introduction
+<!-- El cuerpo es markdown puro: nada de <div>, <details> ni style="...".
+     Todo el aspecto visual está en custom.scss. -->
 
-This file demonstrates the three primary ways to create collapsible folds inside a Quarto document.
+## Introducción
 
----
+Texto normal en markdown. Puedes **negrita**, *cursiva*, `código`, listas y
+enlaces sin tocar una sola etiqueta HTML.
 
-## 1. Native Code Folding
-
-Below is a Python code chunk that is folded by default.
+## Plegar código
 
 ```{python}
 #| code-fold: true
-#| code-summary: "👉 Click here to reveal the Python code"
+#| code-summary: "Mostrar el código"
 
 import math
-
-radius = 5
-area = math.pi * (radius ** 2)
-print(f"The area of the circle is {area:.2f}")
+print(f"Área: {math.pi * 5**2:.2f}")
 ```
 
----
-
-## 2. Collapsible Callout
-
-Quarto callouts can be made collapsible with `collapse="true"`. They start folded
-and expand on click.
+## Plegar un bloque de contenido
 
 ::: {.callout-note collapse="true"}
-## 📝 Click to expand this note
+## Clic para expandir
 
-This content is hidden until you click the title. Callouts support full Markdown
-inside them, including lists and code:
+Esto reemplaza al `<details>` de HTML. Admite markdown completo dentro:
 
-- First hidden point
-- Second hidden point
-
-```python
-print("Even code blocks work inside a collapsed callout")
-```
+- Un punto
+- Otro punto
 :::
 
-::: {.callout-tip collapse="true"}
-## 💡 A folded tip
+## Caja con estilo propio
 
-Use `collapse="false"` (the default for some types) to have them open initially.
+::: {.caja}
+Esta caja usa la clase `.caja` definida en `custom.scss`. En el cuerpo solo
+escribes los `:::` y el contenido — el color, el padding y el borde viven en
+el tema, no aquí.
 :::
 
----
+Texto con una palabra [resaltada]{.resaltado} sin usar `<span>`.
 
-## 3. Raw HTML `<details>` Fold
+## Imágenes
 
-For arbitrary collapsible content, drop straight into HTML. This works in any
-HTML output and is the most flexible option.
-
-<details>
-<summary>🔽 Click to reveal arbitrary content</summary>
-
-This block is a native browser `<details>` element. You can put **any** Markdown
-or HTML here — tables, images, math, etc.
-
-| Column A | Column B |
-|----------|----------|
-| 1        | 2        |
-| 3        | 4        |
-
-</details>
-
----
-
-## 4. Images
-
-### Remote image
-
-A standard Markdown image pulled from the web, with a caption and sizing:
-
-![The Quarto logo](https://quarto.org/quarto.png){width=300 fig-alt="Quarto logo"}
-
-### Generated image (folded code)
-
-The code that produces this plot is folded; only the resulting image shows by
-default.
-
-```{python}
-#| code-fold: true
-#| code-summary: "👉 Show the plotting code"
-#| fig-cap: "A simple sine wave generated with matplotlib"
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-x = np.linspace(0, 2 * np.pi, 200)
-y = np.sin(x)
-
-plt.figure(figsize=(6, 3))
-plt.plot(x, y, color="#89b4fa")
-plt.title("sin(x)")
-plt.tight_layout()
-plt.show()
-```
-
----
-
-## 5. Foldable Entire Sections
-
-The previous folds only collapse a block. To fold a **whole section** — its
-heading *and* every paragraph, list, code chunk and image under it — wrap the
-section in a raw `<details>` element and put the heading text in the `<summary>`.
-
-<details>
-<summary><strong>📂 Section A — click to expand the entire section</strong></summary>
-
-Everything between the `<summary>` and the closing `</details>` is hidden until
-you click, including subheadings:
-
-#### Subsection A.1
-
-Full Markdown still works in here:
-
-- A bullet
-- Another bullet
-
-```python
-print("A code block living inside a folded section")
-```
-
-#### Subsection A.2
-
-And even images:
-
-![Quarto logo, folded away](https://quarto.org/quarto.png){width=200 fig-alt="Quarto logo"}
-
-</details>
-
-<details open>
-<summary><strong>📂 Section B — starts expanded (note the `open` attribute)</strong></summary>
-
-Add `open` to the `<details>` tag to have a section rendered expanded by default,
-while still letting the reader collapse it.
-
-</details>
+![Logo de Quarto](https://quarto.org/quarto.png){width=300 fig-alt="Logo de Quarto"}

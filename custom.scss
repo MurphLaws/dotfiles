@@ -1,0 +1,37 @@
+/*-- scss:defaults --*/
+// Todo el "look" del documento vive aquí, no en el cuerpo del .qmd.
+// Paleta Catppuccin Mocha para que combine con tu terminal/nvim.
+$body-bg:    #1e1e2e;
+$body-color: #cdd6f4;
+$link-color: #89b4fa;
+
+$blue:   #89b4fa;
+$green:  #a6e3a1;
+$yellow: #f9e2af;
+$red:    #f38ba8;
+$mauve:  #cba6f7;
+
+/*-- scss:rules --*/
+// Clases reutilizables: en el cuerpo solo escribes `::: {.caja}` — sin HTML,
+// sin estilos inline. Si quieres otro look, lo cambias aquí una sola vez.
+.caja {
+  background: #181825;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid $blue;
+  margin: 1rem 0;
+}
+
+.caja-acento {
+  background: #181825;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid $mauve;
+  margin: 1rem 0;
+}
+
+// Texto destacado sin <span style=...>: usa `[texto]{.resaltado}`.
+.resaltado {
+  color: $yellow;
+  font-weight: 600;
+}
