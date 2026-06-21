@@ -185,7 +185,14 @@ end
 -- server ya respondió. Va envuelto en vim.schedule por los callbacks de job.
 local function launch_viewer_and_tile()
   spinner_stop()
-  state.viewer = vim.fn.jobstart({ BIN, state.url or URL, "right", tostring(CTRL_PORT) }, {
+  local doc_url = state.url
+  if not doc_url then
+    -- Respaldo si no capturamos la URL: <raíz>/<archivo>.html. Es la ruta en la
+    -- que quarto sirve un .qmd ubicado en la raíz del proyecto (modo proyecto),
+    -- evitando el 404 de abrir "/".
+    doc_url = URL .. "/" .. vim.fn.fnamemodify(state.file, ":t:r") .. ".html"
+  end
+  state.viewer = vim.fn.jobstart({ BIN, doc_url, "right", tostring(CTRL_PORT) }, {
     on_exit = function() state.viewer = nil end,
   })
   if state.viewer <= 0 then
@@ -297,11 +304,18 @@ local function open()
       -- en la raíz; "Browse at <url>" trae la URL real. La capturamos (limpiando
       -- códigos ANSI) para que el visor abra esa página y no un 404 en "/".
       local clean = line:gsub("\27%[[%d;]*m", "")
-      local url = clean:match("Browse at%s+(https?://%S+)")
+      -- Captura la URL del documento: es la única con `.html` que imprime quarto
+      -- ("Browse at http://…/archivo.html"). En modo proyecto el doc NO está en
+      -- la raíz, así que abrir "/" da 404.
+      local url = clean:match("(https?://%S+%.html)")
       if url then
         state.url = url:gsub("localhost", "127.0.0.1")
       end
-      if not state.launched and (clean:find("Listening on", 1, true) or clean:find("Browse at", 1, true)) then
+      -- Arranca el visor en cuanto tengamos la URL del doc, o como respaldo al
+      -- ver "Listening on". stdout y stderr llegan por callbacks separados y su
+      -- orden NO está garantizado: si dependiéramos solo de "Browse at" podríamos
+      -- lanzar con la URL aún sin capturar y caer en la raíz (404).
+      if not state.launched and (state.url ~= nil or clean:find("Listening on", 1, true)) then
         state.launched = true
         vim.schedule(launch_viewer_and_tile)
       end
