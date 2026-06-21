@@ -352,3 +352,29 @@ end
 
 vim.api.nvim_create_user_command("QuartoSplit", open, { desc = "Quarto preview en split (nvim izq / visor WebKit der)" })
 vim.api.nvim_create_user_command("QuartoSplitClose", close, { desc = "Cierra el preview de Quarto y restaura el layout" })
+
+-- Inserta un comentario de Quarto/markdown "<!--  -->" en la posición del
+-- cursor y entra en modo inserción justo en el medio, listo para escribir.
+local function insert_comment()
+  local left, right = "<!-- ", " -->"
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_get_current_line()
+  vim.api.nvim_set_current_line(line:sub(1, col) .. left .. right .. line:sub(col + 1))
+  vim.api.nvim_win_set_cursor(0, { row, col + #left })
+  vim.cmd("startinsert")
+end
+
+vim.api.nvim_create_user_command("QuartoComment", insert_comment, { desc = "Inserta <!--  --> y deja el cursor en medio" })
+
+-- Keymap buffer-local solo en archivos quarto/markdown: <leader>ci ("comment insert").
+-- Grupo propio: AUGROUP se limpia al abrir/cerrar el split y borraría el keymap.
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("QuartoComment", { clear = true }),
+  pattern = { "quarto", "markdown" },
+  callback = function(ev)
+    vim.keymap.set("n", "<leader>ci", insert_comment, {
+      buffer = ev.buf,
+      desc = "Insertar comentario Quarto (cursor en medio)",
+    })
+  end,
+})
