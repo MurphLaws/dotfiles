@@ -37,8 +37,10 @@ function _G.IllicoMdFoldChar()
 end
 vim.opt_local.foldcolumn = "0"
 vim.opt_local.numberwidth = 3
--- [signo][triángulo][número relativo/absoluto] + espacio
-vim.opt_local.statuscolumn = "%s%{v:lua.IllicoMdFoldChar()} %=%{v:relnum?v:relnum:v:lnum} "
+-- Color claro para la flecha de fold (antes heredaba un tono oscuro).
+vim.api.nvim_set_hl(0, "IllicoFoldArrow", { fg = "#cdd6f4" })
+-- [signo][triángulo claro][número relativo/absoluto] + espacio
+vim.opt_local.statuscolumn = "%s%#IllicoFoldArrow#%{v:lua.IllicoMdFoldChar()}%* %=%{v:relnum?v:relnum:v:lnum} "
 
 -- (Sin remap de teclas de fold: el borde de la tabla ya no se filtra porque está
 -- desactivado en render-markdown; las teclas za/zM/zR/... funcionan normales.)
