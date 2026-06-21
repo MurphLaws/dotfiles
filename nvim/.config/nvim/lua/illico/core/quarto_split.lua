@@ -206,6 +206,28 @@ end
 -- forward declaration: open() registra un autocmd que llama a close()
 local close
 
+-- Libera los puertos de un preview/visor huérfano (p. ej. si nvim se recargó o
+-- crasheó y perdió los handles de los jobs). Sin esto, quarto aborta el arranque
+-- con "Requested port 7777 is already in use".
+local function free_ports()
+  local killed = false
+  for _, p in ipairs({ PORT, CTRL_PORT }) do
+    for _, pid in ipairs(vim.fn.systemlist({ "lsof", "-ti", "tcp:" .. p })) do
+      if pid ~= "" then
+        vim.fn.system({ "kill", pid })
+        killed = true
+      end
+    end
+  end
+  if killed then
+    -- `kill` envía SIGTERM y vuelve enseguida; espera a que el SO libere el
+    -- puerto antes de relanzar quarto (máx. ~1s, sale en cuanto está libre).
+    vim.wait(1000, function()
+      return #vim.fn.systemlist({ "lsof", "-ti", "tcp:" .. PORT }) == 0
+    end, 50)
+  end
+end
+
 local function open()
   if state.job then
     notify("ya hay un preview activo (usa :QuartoSplitClose primero)", vim.log.levels.WARN)
@@ -221,6 +243,7 @@ local function open()
   if not ensure_viewer() then
     return
   end
+  free_ports()
   state.file = file
   state.bufnr = vim.api.nvim_get_current_buf()
   state.launched = false
