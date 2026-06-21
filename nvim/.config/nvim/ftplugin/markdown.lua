@@ -4,11 +4,22 @@
 
 -- Folds por secciones (headings) vía treesitter. Nativo, sin plugin.
 --   za  toggle fold   zR  abrir todo   zM  cerrar todo   zo/zc abrir/cerrar
--- foldlevel = 99 -> arranca todo ABIERTO; ponlo en 0 o 1 para arrancar plegado.
+-- foldlevel = 0 -> arranca TODO PLEGADO; sube el número para arrancar más abierto.
 vim.opt_local.foldmethod = "expr"
 vim.opt_local.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt_local.foldenable = true
-vim.opt_local.foldlevel = 99
+vim.opt_local.foldlevel = 0
+
+-- Forzar el cálculo de folds al abrir: el parser de treesitter puede no estar
+-- listo cuando corre el ftplugin, así que los folds no se cierran solos. Tras un
+-- tick recalculamos (zx) y reaplicamos foldlevel=0 para dejar todo plegado.
+local fold_buf = vim.api.nvim_get_current_buf()
+vim.schedule(function()
+  if vim.api.nvim_buf_is_valid(fold_buf) and vim.api.nvim_get_current_buf() == fold_buf then
+    pcall(vim.cmd, "normal! zx")
+    vim.wo.foldlevel = 0
+  end
+end)
 
 -- Texto del fold: solo el título del heading (la flecha de estado va en la
 -- columna de folds, no aquí, para no duplicarla).

@@ -20,13 +20,13 @@ return {
 			custom = {
 				bloque = {
 					pattern = "^Bloque",
-					icon = "▊ ",
+					icon = "  ", -- nf-fa-file_text_o (bloque de texto)
 					background = "RmBloqueBg",
 					foreground = "RmBloqueFg",
 				},
 				ejercicio = {
 					pattern = "^Ejercicio",
-					icon = "▍ ",
+					icon = "  ", -- nf-fa-briefcase (trabajo)
 					background = "RmEjercicioBg",
 					foreground = "RmEjercicioFg",
 				},
@@ -40,8 +40,8 @@ return {
 		local function hls()
 			vim.api.nvim_set_hl(0, "RmBloqueFg", { fg = "#89b4fa", bold = true }) -- azul
 			vim.api.nvim_set_hl(0, "RmBloqueBg", { fg = "#89b4fa", bg = "#1e3050", bold = true })
-			vim.api.nvim_set_hl(0, "RmEjercicioFg", { fg = "#a6e3a1", bold = true }) -- verde
-			vim.api.nvim_set_hl(0, "RmEjercicioBg", { fg = "#a6e3a1", bg = "#1e3a2a", bold = true })
+			vim.api.nvim_set_hl(0, "RmEjercicioFg", { fg = "#fab387", bold = true }) -- durazno
+			vim.api.nvim_set_hl(0, "RmEjercicioBg", { fg = "#fab387", bg = "#3a2a1e", bold = true })
 		end
 		hls()
 		vim.api.nvim_create_autocmd("ColorScheme", {
