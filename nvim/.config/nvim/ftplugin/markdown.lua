@@ -119,6 +119,11 @@ cmap("x", "<leader>md", vwrap("{--", "--}"), "Critic: borrar selección")
 -- VISUAL comentar: resalta la selección y abre un comentario al lado
 cmap("x", "<leader>mc", vwrap("{==", '==}{>><<}'), "Critic: resaltar + comentar")
 
+-- Narrow: abrir la sección bajo el cursor en un buffer temporal (sincroniza al :w)
+cmap("n", "<leader>mn", function()
+  require("illico.narrow").narrow_section()
+end, "Narrow: editar sección en buffer temporal")
+
 local ok_quarto, quarto = pcall(require, "quarto")
 if not ok_quarto then return end
 

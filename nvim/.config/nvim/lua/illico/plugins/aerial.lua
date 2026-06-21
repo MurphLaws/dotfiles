@@ -59,6 +59,24 @@ return {
 			["<Esc>"] = "actions.close",
 		},
 	},
+	config = function(_, opts)
+		require("aerial").setup(opts)
+		-- Tecla 'e' en el panel de aerial: salta a la sección bajo el cursor y la
+		-- abre en un buffer temporal (narrow). Al guardar (:w) se sincroniza con el
+		-- .md original. '<CR>' sigue siendo el salto normal.
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "aerial",
+			group = vim.api.nvim_create_augroup("illico_aerial_narrow", { clear = true }),
+			callback = function(ev)
+				vim.keymap.set("n", "e", function()
+					require("aerial").select()
+					vim.schedule(function()
+						require("illico.narrow").narrow_section()
+					end)
+				end, { buffer = ev.buf, desc = "Aerial: editar sección (narrow)" })
+			end,
+		})
+	end,
 	cmd = { "AerialToggle", "AerialOpen" },
 	keys = {
 		{ "<leader>O", outline("right"), desc = "Outline lateral plegado (aerial)" },
