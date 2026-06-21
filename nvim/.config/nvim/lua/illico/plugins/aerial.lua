@@ -1,8 +1,8 @@
 return {
 	"stevearc/aerial.nvim",
-	-- main exige Neovim >= 0.12; este nvim es 0.11.5. La rama nvim-0.x es la
-	-- versión mantenida para 0.x. Quitar este branch al actualizar a nvim 0.12+.
-	branch = "nvim-0.x",
+	-- master exige Neovim >= 0.12; este nvim es 0.11.5. La rama nvim-0.11 es la
+	-- mantenida para esta versión. Quitar este branch al actualizar a nvim 0.12+.
+	branch = "nvim-0.11",
 	dependencies = {
 		"nvim-treesitter/nvim-treesitter",
 		"nvim-tree/nvim-web-devicons",
