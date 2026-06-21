@@ -185,7 +185,7 @@ end
 -- server ya respondió. Va envuelto en vim.schedule por los callbacks de job.
 local function launch_viewer_and_tile()
   spinner_stop()
-  state.viewer = vim.fn.jobstart({ BIN, URL, "right", tostring(CTRL_PORT) }, {
+  state.viewer = vim.fn.jobstart({ BIN, state.url or URL, "right", tostring(CTRL_PORT) }, {
     on_exit = function() state.viewer = nil end,
   })
   if state.viewer <= 0 then
@@ -224,6 +224,7 @@ local function open()
   state.file = file
   state.bufnr = vim.api.nvim_get_current_buf()
   state.launched = false
+  state.url = nil
   state.output = {}
 
   -- Cerrar el .qmd (:bd/:bw, :q de su ventana, o salir de nvim) restaura el
@@ -269,7 +270,15 @@ local function open()
       if line ~= "" then
         table.insert(state.output, line)
       end
-      if not state.launched and (line:find("Listening on", 1, true) or line:find("Browse at", 1, true)) then
+      -- En modo proyecto (_quarto.yml) quarto sirve el doc en /archivo.html, no
+      -- en la raíz; "Browse at <url>" trae la URL real. La capturamos (limpiando
+      -- códigos ANSI) para que el visor abra esa página y no un 404 en "/".
+      local clean = line:gsub("\27%[[%d;]*m", "")
+      local url = clean:match("Browse at%s+(https?://%S+)")
+      if url then
+        state.url = url:gsub("localhost", "127.0.0.1")
+      end
+      if not state.launched and (clean:find("Listening on", 1, true) or clean:find("Browse at", 1, true)) then
         state.launched = true
         vim.schedule(launch_viewer_and_tile)
       end
