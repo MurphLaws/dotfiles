@@ -31,15 +31,13 @@ return {
 			tmux = { enabled = false },
 		},
 		on_open = function()
-			-- Barras laterales con el MISMO look que el centro: bg = NONE deja que
-			-- el compositor del terminal pinte el wallpaper también ahí, en vez del
-			-- negro sólido opaco de antes. fg = mantle deja los "·" del eob casi
-			-- invisibles sobre el fondo oscuro.
-			vim.api.nvim_set_hl(0, "ZenBg", { bg = "NONE", fg = "#181825" })
-			-- Velo sutil: winblend sobre la ventana de fondo da algo de "menos
-			-- opacidad" perceptible sin perder la transparencia. 0 = igual al
-			-- centro; sube el número para un velo más marcado. Se aplica diferido
-			-- porque zen-mode resetea winblend=0 al ajustar el layout.
+			-- Barras laterales: EXACTAMENTE el color del colorscheme (mocha base
+			-- #1e1e2e) al 90% de opacidad. El color sólido va en ZenBg; el 90% lo
+			-- da winblend = 10 (winblend es el % transparente, así que 10 = 90%
+			-- opaco). fg = bg deja los "·" del eob invisibles.
+			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#1e1e2e", fg = "#1e1e2e" })
+			-- winblend se aplica diferido porque zen-mode resetea winblend=0 al
+			-- ajustar el layout. Sube el número para más transparencia.
 			vim.schedule(function()
 				local view = require("zen-mode.view")
 				if view.bg_win and vim.api.nvim_win_is_valid(view.bg_win) then
