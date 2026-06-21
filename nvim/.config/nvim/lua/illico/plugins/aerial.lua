@@ -35,48 +35,25 @@ return {
 			max_width = { 80, 0.5 },
 		},
 		float = {
-			-- Borde redondeado para delimitar el menú (sin él se confunde con el
-			-- texto de atrás). El interior sigue transparente: NormalFloat y
-			-- FloatBorder tienen bg=NONE (forzado por la config global) y
-			-- winblend=0 hace que el float ocluya el buffer => se ve el
-			-- ESCRITORIO dentro del menú, solo el borde lo enmarca.
+			-- Borde redondeado para delimitar el menú; interior transparente
+			-- (NormalFloat/FloatBorder con bg=NONE por la config global).
 			border = "rounded",
-			relative = "editor", -- centrado en el editor
+			relative = "editor",
 			max_height = 0.8,
 			min_height = 0.4,
 		},
 		attach_mode = "global",
-		-- Los folds del árbol de aerial son INDEPENDIENTES de los folds del
-		-- buffer markdown (plegar en aerial no pliega el documento y viceversa).
-		link_tree_to_folds = false,
-		manage_folds = false,
 		show_guides = true,
-		filter_kind = false, -- en markdown muestra todos los headings, sin filtrar por tipo
-		close_on_select = true, -- al saltar a un heading, cierra (modo TOC)
-		-- Cerrar con q (default), Q o Esc para no quedar atrapado.
+		filter_kind = false, -- en markdown muestra todos los headings, sin filtrar
+		-- Al seleccionar (<CR>): salta a la sección en el buffer COMPLETO, cierra
+		-- el panel y deja el foco en el buffer. No parte la ventana en dos.
+		close_on_select = true,
+		-- Cerrar el panel con q (default), Q o Esc.
 		keymaps = {
 			["Q"] = "actions.close",
 			["<Esc>"] = "actions.close",
 		},
 	},
-	config = function(_, opts)
-		require("aerial").setup(opts)
-		-- Tecla 'e' en el panel de aerial: salta a la sección bajo el cursor y la
-		-- abre en un buffer temporal (narrow). Al guardar (:w) se sincroniza con el
-		-- .md original. '<CR>' sigue siendo el salto normal.
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = "aerial",
-			group = vim.api.nvim_create_augroup("illico_aerial_narrow", { clear = true }),
-			callback = function(ev)
-				vim.keymap.set("n", "e", function()
-					require("aerial").select()
-					vim.schedule(function()
-						require("illico.narrow").narrow_section()
-					end)
-				end, { buffer = ev.buf, desc = "Aerial: editar sección (narrow)" })
-			end,
-		})
-	end,
 	cmd = { "AerialToggle", "AerialOpen" },
 	keys = {
 		{ "<leader>O", outline("right"), desc = "Outline lateral plegado (aerial)" },
