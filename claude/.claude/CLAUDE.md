@@ -14,3 +14,14 @@
 ## Git Commits
 - Never add Co-Authored-By lines to commit messages. Only the user is the author.
 - Always commit changes after completing work, unless explicitly told not to.
+
+## Comentarios CriticMarkup en archivos markdown
+- En archivos `.md`/`.qmd` el usuario y su equipo dejan comentarios y sugerencias con sintaxis CriticMarkup:
+  - `{>>comentario<<}` comentario al margen
+  - `{==texto==}` resaltado
+  - `{++añadir++}` sugerencia de inserción
+  - `{--quitar--}` sugerencia de borrado
+  - `{~~viejo~>nuevo~~}` sugerencia de reemplazo
+- Los comentarios que empiezan con `@claude:` (p. ej. `{>>@claude: divide este bloque en dos<<}`) son TAREAS para ti: resuélvelas editando el documento y **borra la marca CriticMarkup** al terminar.
+- Los comentarios que empiezan con `@<nombre>:` (cualquier otro nombre) son para esa persona: NO los toques ni los borres.
+- Al aplicar una sugerencia `{++ ++}`/`{-- --}`/`{~~ ~>~~}` que apruebes, deja el texto final limpio (sin las marcas).
