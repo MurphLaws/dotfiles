@@ -1,4 +1,5 @@
 local PORT = 7777
+local CTRL_PORT = PORT + 1 -- canal de control del visor para el forward-sync
 local URL = "http://127.0.0.1:" .. PORT
 local SRC = vim.fn.expand("~/.tmux/scripts/qpreview.swift")
 local BIN = vim.fn.expand("~/.cache/quarto-preview/qpreview")
@@ -28,6 +29,52 @@ end
 local QUARTO_PYTHON = resolve_quarto_python()
 
 local state = { job = nil, viewer = nil, file = nil, bufnr = nil }
+
+-- Forward-sync: al mover el cursor en el .qmd, centra en el preview la sección
+-- del encabezado más cercano por encima del cursor. No es línea-a-línea como
+-- SyncTeX (el render es HTML, no hay mapa línea↔píxel), sino a nivel de sección.
+local sync = { timer = nil, last = nil }
+
+-- Devuelve (texto_encabezado, ocurrencia) del heading más cercano en o por
+-- encima del cursor. Ignora los `#` dentro de bloques de código cercados. La
+-- ocurrencia (1-based) desempata headings con texto idéntico.
+local function current_heading()
+  local cur = vim.api.nvim_win_get_cursor(0)[1]
+  local lines = vim.api.nvim_buf_get_lines(state.bufnr, 0, cur, false)
+  local in_fence = false
+  local heading, count, counts = nil, 0, {}
+  for _, l in ipairs(lines) do
+    if l:match("^%s*[`~][`~][`~]") then
+      in_fence = not in_fence
+    elseif not in_fence then
+      local h = l:match("^#+%s+(.+)$")
+      if h then
+        h = h:gsub("%s*{[^}]*}%s*$", "") -- quita {#id .clase} al final
+        h = h:gsub("%s+#+%s*$", "")        -- quita ### de cierre estilo atx
+        h = vim.trim(h)
+        if h ~= "" then
+          counts[h] = (counts[h] or 0) + 1
+          heading, count = h, counts[h]
+        end
+      end
+    end
+  end
+  return heading, count
+end
+
+local function send_scroll()
+  if not (state.job and state.viewer) then return end
+  if vim.api.nvim_get_current_buf() ~= state.bufnr then return end
+  local h, n = current_heading()
+  if not h then return end
+  local key = n .. "\31" .. h
+  if key == sync.last then return end
+  sync.last = key
+  local url = string.format(
+    "http://127.0.0.1:%d/scroll?n=%d&text=%s", CTRL_PORT, n, vim.uri_encode(h)
+  )
+  vim.fn.jobstart({ "curl", "-s", "-m", "1", url }, { detach = true })
+end
 
 -- Autocmds que cierran el preview cuando el buffer del .qmd desaparece, para
 -- que nvim recupere todo el ancho sin tener que llamar :QuartoSplitClose a mano.
@@ -138,7 +185,7 @@ end
 -- server ya respondió. Va envuelto en vim.schedule por los callbacks de job.
 local function launch_viewer_and_tile()
   spinner_stop()
-  state.viewer = vim.fn.jobstart({ BIN, URL, "right" }, {
+  state.viewer = vim.fn.jobstart({ BIN, URL, "right", tostring(CTRL_PORT) }, {
     on_exit = function() state.viewer = nil end,
   })
   if state.viewer <= 0 then
@@ -195,6 +242,19 @@ local function open()
     group = AUGROUP,
     callback = function()
       if state.job then close() end
+    end,
+  })
+
+  -- Forward-sync: con debounce (~150 ms) para no inundar el visor con curls.
+  sync.last = nil
+  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+    group = AUGROUP,
+    buffer = state.bufnr,
+    callback = function()
+      if sync.timer then vim.fn.timer_stop(sync.timer) end
+      sync.timer = vim.fn.timer_start(150, function()
+        vim.schedule(send_scroll)
+      end)
     end,
   })
 
@@ -265,6 +325,11 @@ end
 
 close = function()
   vim.api.nvim_clear_autocmds({ group = AUGROUP })
+  if sync.timer then
+    vim.fn.timer_stop(sync.timer)
+    sync.timer = nil
+  end
+  sync.last = nil
   spinner_stop()
   if state.job then
     vim.fn.jobstop(state.job)
