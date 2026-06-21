@@ -18,11 +18,12 @@ return {
 			max_width = { 80, 0.5 },
 		},
 		float = {
-			-- Limpio: sin borde. El fondo es transparente (NormalFloat, que la
-			-- config global ya fuerza a bg=NONE) y winblend=0 hace que el float
-			-- ocluya el buffer => se ve el ESCRITORIO a través del menú, no el
-			-- texto de abajo.
-			border = "none",
+			-- Borde redondeado para delimitar el menú (sin él se confunde con el
+			-- texto de atrás). El interior sigue transparente: NormalFloat y
+			-- FloatBorder tienen bg=NONE (forzado por la config global) y
+			-- winblend=0 hace que el float ocluya el buffer => se ve el
+			-- ESCRITORIO dentro del menú, solo el borde lo enmarca.
+			border = "rounded",
 			relative = "editor", -- centrado en el editor
 			max_height = 0.8,
 			min_height = 0.4,
