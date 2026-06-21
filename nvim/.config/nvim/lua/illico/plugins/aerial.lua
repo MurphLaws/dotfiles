@@ -1,3 +1,20 @@
+-- Abre el outline en la dirección dada y lo deja PLEGADO al nivel superior
+-- (solo jornadas/apéndice visibles). Si ya está abierto, lo cierra (toggle).
+-- El plegado se difiere porque los symbols se cargan async tras abrir.
+local function outline(direction)
+	return function()
+		local aerial = require("aerial")
+		if aerial.is_open() then
+			aerial.close()
+		else
+			aerial.open({ direction = direction })
+			vim.defer_fn(function()
+				pcall(aerial.tree_set_collapse_level, 0, 1) -- 1 = nivel; sube para mostrar más
+			end, 60)
+		end
+	end
+end
+
 return {
 	"stevearc/aerial.nvim",
 	-- master exige Neovim >= 0.12; este nvim es 0.11.5. La rama nvim-0.11 es la
@@ -40,7 +57,7 @@ return {
 	},
 	cmd = { "AerialToggle", "AerialOpen" },
 	keys = {
-		{ "<leader>O", "<cmd>AerialToggle right<CR>", desc = "Outline lateral (aerial)" },
-		{ "<leader>a", "<cmd>AerialToggle float<CR>", desc = "Outline flotante (aerial)" },
+		{ "<leader>O", outline("right"), desc = "Outline lateral plegado (aerial)" },
+		{ "<leader>a", outline("float"), desc = "Outline flotante plegado (aerial)" },
 	},
 }
