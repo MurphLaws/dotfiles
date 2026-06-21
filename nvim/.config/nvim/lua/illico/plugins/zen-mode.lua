@@ -31,9 +31,21 @@ return {
 			tmux = { enabled = false },
 		},
 		on_open = function()
-			-- Paint the sidebars with catppuccin mocha's mantle so they stay opaque
-			-- during focus (no terminal wallpaper bleeding through).
-			vim.api.nvim_set_hl(0, "ZenBg", { bg = "#181825", fg = "#181825" })
+			-- Barras laterales con el MISMO look que el centro: bg = NONE deja que
+			-- el compositor del terminal pinte el wallpaper también ahí, en vez del
+			-- negro sólido opaco de antes. fg = mantle deja los "·" del eob casi
+			-- invisibles sobre el fondo oscuro.
+			vim.api.nvim_set_hl(0, "ZenBg", { bg = "NONE", fg = "#181825" })
+			-- Velo sutil: winblend sobre la ventana de fondo da algo de "menos
+			-- opacidad" perceptible sin perder la transparencia. 0 = igual al
+			-- centro; sube el número para un velo más marcado. Se aplica diferido
+			-- porque zen-mode resetea winblend=0 al ajustar el layout.
+			vim.schedule(function()
+				local view = require("zen-mode.view")
+				if view.bg_win and vim.api.nvim_win_is_valid(view.bg_win) then
+					vim.wo[view.bg_win].winblend = 10
+				end
+			end)
 			-- focus.nvim auto-resizes the active window and eats zen-mode's
 			-- centering padding. Pause it while zen is on.
 			vim.g._illico_zen_focus_was_enabled = vim.g.focus_disable ~= true
