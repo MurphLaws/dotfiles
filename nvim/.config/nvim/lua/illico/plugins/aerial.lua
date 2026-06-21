@@ -16,19 +16,13 @@ return {
 			-- truncaba los títulos. Lo ampliamos para que quepan los headings.
 			min_width = 40,
 			max_width = { 80, 0.5 },
-			-- bg sólido del colorscheme (no transparente) para que el panel y el
-			-- float se vean integrados, no como un agujero negro.
-			win_opts = {
-				winhighlight = table.concat({
-					"Normal:AerialNormal",
-					"NormalFloat:AerialNormal",
-					"FloatBorder:AerialBorder",
-					"EndOfBuffer:AerialNormal",
-				}, ","),
-			},
 		},
 		float = {
-			border = "rounded",
+			-- Limpio: sin borde. El fondo es transparente (NormalFloat, que la
+			-- config global ya fuerza a bg=NONE) y winblend=0 hace que el float
+			-- ocluya el buffer => se ve el ESCRITORIO a través del menú, no el
+			-- texto de abajo.
+			border = "none",
 			relative = "editor", -- centrado en el editor
 			max_height = 0.8,
 			min_height = 0.4,
@@ -43,21 +37,6 @@ return {
 			["<Esc>"] = "actions.close",
 		},
 	},
-	config = function(_, opts)
-		require("aerial").setup(opts)
-		-- Colores de aerial = colorscheme (mocha base), borde redondeado visible.
-		-- En un grupo propio para que la transparencia global (que vacía
-		-- NormalFloat) no se lo lleve. Se reaplica en cada ColorScheme.
-		local function set_hl()
-			vim.api.nvim_set_hl(0, "AerialNormal", { bg = "#1e1e2e" })
-			vim.api.nvim_set_hl(0, "AerialBorder", { bg = "#1e1e2e", fg = "#585b70" })
-		end
-		set_hl()
-		vim.api.nvim_create_autocmd("ColorScheme", {
-			group = vim.api.nvim_create_augroup("illico_aerial_hl", { clear = true }),
-			callback = set_hl,
-		})
-	end,
 	cmd = { "AerialToggle", "AerialOpen" },
 	keys = {
 		{ "<leader>O", "<cmd>AerialToggle right<CR>", desc = "Outline lateral (aerial)" },
