@@ -43,7 +43,24 @@ return {
 				"SnacksPickerTitle",
 				"SnacksPickerPrompt",
 				"SnacksPickerInput",
+				"SnacksPickerInputBorder",
+				"SnacksPickerInputTitle",
 				"SnacksPickerList",
+				"SnacksPickerListBorder",
+				"SnacksPickerListTitle",
+				"SnacksPickerPreview",
+				"SnacksPickerPreviewBorder",
+				"SnacksPickerPreviewTitle",
+				"SnacksPickerBox",
+				"SnacksPickerBoxBorder",
+				-- vim.ui.input / ventanas flotantes genéricas de snacks
+				"SnacksNormal",
+				"SnacksNormalNC",
+				"SnacksWinBar",
+				"SnacksInput",
+				"SnacksInputNormal",
+				"SnacksInputBorder",
+				"SnacksInputTitle",
 			}
 
 			-- Reaplicar la transparencia en cada ColorScheme. Hacerlo dentro del

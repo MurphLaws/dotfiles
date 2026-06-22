@@ -6,7 +6,15 @@ return {
 
 		opts = {
 			input = { enabled = true },
-			picker = { enabled = true },
+			picker = {
+				enabled = true,
+				-- Enruta vim.ui.select por el picker: code actions, LSP,
+				-- selección de opciones… todos los menús comparten este look.
+				ui_select = true,
+				-- Layout estilo telescope: input + lista a la izquierda,
+				-- preview a la derecha (el del screenshot). Limpio y consistente.
+				layout = { preset = "telescope" },
+			},
 			notifier = {
 				enabled = true,
 				timeout = 3000,
