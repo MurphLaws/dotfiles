@@ -20,7 +20,11 @@ return {
 			fallback = { enabled = true, provider = "auto" },
 			integrations = {
 				snacks_picker = true, -- el menú de búsqueda (Find Files / Grep)
-				mini_files = true, -- explorador mini.files
+				-- mini_files: DESACTIVADO. Con preview=true en mini.files, real-icons
+				-- rasteriza un icono-imagen por entrada y por archivo del preview de
+				-- forma síncrona al abrir → congela nvim en <leader>e. El explorador
+				-- usa los glyphs de mini.icons como siempre.
+				mini_files = false,
 				-- lualine = true,  -- descomenta si quieres iconos-imagen en la statusline
 			},
 		},
