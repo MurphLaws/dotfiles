@@ -78,10 +78,17 @@ vim.opt.viewoptions = { "cursor", "folds" }
 vim.o.wildmenu = false
 vim.o.wildoptions = "" -- IMPORTANT: removes the built-in popupmenu behavior
 
+-- ===== Floating windows: sin borde por defecto =====
+-- Neovim 0.11: borde por defecto de TODOS los flotantes que no especifiquen uno
+-- (LSP hover, diagnostics, etc.). Los plugins que fijan su propio borde se
+-- ajustan en su config; colorscheme.lua además hace invisibles los *Border.
+vim.opt.winborder = "none"
+
 -- ===== Transparency =====
--- Clear background for main window and floating windows
+-- El editor queda transparente; los menús/flotantes llevan un fondo de panel
+-- (más opaco) que se define de forma autoritativa en colorscheme.lua.
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#181825" })
 
 -- ===== Default filetype for new buffers =====
 -- New unnamed buffers open as markdown by default

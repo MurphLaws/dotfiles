@@ -19,48 +19,63 @@ return {
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			-- Force transparency on common float/sidebar groups
-			local transparent_groups = {
+			-- Fondo de los menús/flotantes: panel oscuro un poco más opaco que el
+			-- editor transparente. Con la opacidad de Ghostty (0.95) se ve como un
+			-- panel sólido que resalta sobre el área transparente del editor.
+			local float_bg = "#181825" -- Catppuccin mantle
+
+			-- El editor sí queda 100% transparente (deja ver Ghostty/tmux).
+			local editor_transparent = {
 				"Normal",
-				"NormalFloat",
 				"NormalNC",
 				"SignColumn",
+			}
+
+			-- Menús y ventanas flotantes: fondo float_bg (panel opaco), fg intacto.
+			local float_groups = {
+				"NormalFloat",
 				"Pmenu",
-				"FloatBorder",
 				"TelescopeNormal",
-				"TelescopeBorder",
 				"TelescopePromptNormal",
-				"TelescopePromptBorder",
 				"TelescopeResultsNormal",
-				"TelescopeResultsBorder",
 				"TelescopePreviewNormal",
-				"TelescopePreviewBorder",
+				"WhichKeyNormal",
 				"WhichKeyFloat",
-				"WhichKeyBorder",
 				"SnacksPicker",
 				"SnacksPickerNormal",
-				"SnacksPickerBorder",
 				"SnacksPickerTitle",
 				"SnacksPickerPrompt",
 				"SnacksPickerInput",
-				"SnacksPickerInputBorder",
 				"SnacksPickerInputTitle",
 				"SnacksPickerList",
-				"SnacksPickerListBorder",
 				"SnacksPickerListTitle",
 				"SnacksPickerPreview",
-				"SnacksPickerPreviewBorder",
 				"SnacksPickerPreviewTitle",
 				"SnacksPickerBox",
-				"SnacksPickerBoxBorder",
-				-- vim.ui.input / ventanas flotantes genéricas de snacks
 				"SnacksNormal",
 				"SnacksNormalNC",
 				"SnacksWinBar",
 				"SnacksInput",
 				"SnacksInputNormal",
-				"SnacksInputBorder",
 				"SnacksInputTitle",
+			}
+
+			-- Bordes invisibles (fg = bg = float_bg): red de seguridad para
+			-- cualquier plugin que dibuje borde aunque le pidamos "none". Así no
+			-- se ve ningún borde ni esquina redondeada en ningún menú.
+			local border_groups = {
+				"FloatBorder",
+				"TelescopeBorder",
+				"TelescopePromptBorder",
+				"TelescopeResultsBorder",
+				"TelescopePreviewBorder",
+				"WhichKeyBorder",
+				"SnacksPickerBorder",
+				"SnacksPickerInputBorder",
+				"SnacksPickerListBorder",
+				"SnacksPickerPreviewBorder",
+				"SnacksPickerBoxBorder",
+				"SnacksInputBorder",
 			}
 
 			-- Reaplicar la transparencia en cada ColorScheme. Hacerlo dentro del
@@ -69,15 +84,27 @@ return {
 			-- este evento. Si no, snacks cachea "no transparente", luego Normal
 			-- pierde el bg y revienta al mezclar el backdrop (fg nil en blend()).
 			local function apply_transparency()
-				for _, group in ipairs(transparent_groups) do
-					-- Preservar fg y demás atributos; solo limpiar el fondo.
-					-- Pasar { bg = "NONE" } a secas REEMPLAZA el grupo y borra el
-					-- fg, lo que dejaba Normal/NormalFloat sin foreground y hacía
-					-- crashear a snacks.gh al mezclar colores (fg nil en blend()).
+				-- Editor: 100% transparente. Preservar fg y demás atributos;
+				-- pasar { bg = "NONE" } a secas REEMPLAZA el grupo y borra el fg,
+				-- lo que dejaba Normal sin foreground y hacía crashear snacks.gh.
+				for _, group in ipairs(editor_transparent) do
 					local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
 					hl.bg = "NONE"
 					hl.ctermbg = nil
 					vim.api.nvim_set_hl(0, group, hl)
+				end
+
+				-- Menús/flotantes: panel opaco float_bg, conservando el fg.
+				for _, group in ipairs(float_groups) do
+					local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+					hl.bg = float_bg
+					hl.ctermbg = nil
+					vim.api.nvim_set_hl(0, group, hl)
+				end
+
+				-- Bordes invisibles.
+				for _, group in ipairs(border_groups) do
+					vim.api.nvim_set_hl(0, group, { fg = float_bg, bg = float_bg })
 				end
 
 				-- Números de línea legibles: el LineNr de Catppuccin (#45475a) casi

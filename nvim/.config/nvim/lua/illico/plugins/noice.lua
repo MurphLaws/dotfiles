@@ -27,12 +27,12 @@ return {
 				cmdline_popup = {
 					position = { row = "50%", col = "50%" },
 					size = { width = 60, height = "auto" },
-					border = { style = "rounded" },
+					border = { style = "none", padding = { 0, 1 } },
 				},
 				popupmenu = {
 					position = { row = "55%", col = "50%" }, -- completion menu near the cmdline popup
 					size = { width = 60, height = 10 },
-					border = { style = "rounded" },
+					border = { style = "none", padding = { 0, 1 } },
 				},
 			},
 		},
