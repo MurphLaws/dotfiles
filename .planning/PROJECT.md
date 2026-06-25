@@ -19,16 +19,16 @@ La config de Neovim se ve y se comporta como el usuario quiere: menús con un pa
 - ✓ `real-icons.nvim` instalado (pack `material`, backend `ghostty`, fallback a glyphs) — existing
 - ✓ Cadena gráfica Ghostty → tmux (`allow-passthrough on`) → nvim para protocolo de imágenes — existing
 - ✓ Despliegue stow por paquete; toda edición se hace en el repo, no en `~/.config` — existing
+- ✓ Menús/flotantes **semitransparentes** (`winblend`/`pumblend = 10` global + `picker.win.*.wo.winblend` en snacks), panel naturalmente más oscuro, sin borde — v1.0 (FLOAT-01)
+- ✓ `tunnelvision.nvim` instalado con toggle `<leader>tv` (lazy, opt-in, no interfiere) — v1.0 (TUNNEL-01)
+- ✓ Cadena de `real-icons.nvim` verificada de punta a punta (magick, passthrough, pack `material` renderizado, fallback) — v1.0 (ICONS-01)
+- ✓ Indicador de tmux "Claude done" con glifo campana  (U+F0F3) rojo, disparando en `Stop` + `Notification`; hook y `settings.json` versionados en el repo (symlinks) — v1.0 (NOTIFY-01/02)
 
 ### Active
 
-<!-- Scope de este milestone. Hipótesis hasta validarse. -->
+<!-- Scope del próximo milestone. Vacío por ahora. -->
 
-- [ ] Los menús/flotantes son **semitransparentes** (menos transparentes que el editor) en lugar de 100% opacos, resultando en un panel naturalmente más oscuro — conservando sin borde y sin esquinas redondeadas
-- [ ] `tunnelvision.nvim` (leolaurindo) instalado y funcional, con toggle en `<leader>tv` que no interfiere con otros keymaps
-- [ ] La cadena de `real-icons.nvim` (Mirsmog) está verificada de extremo a extremo a nivel de código/config: plugin presente, pack `material` instalable, `magick` disponible, `allow-passthrough` activo, fallback correcto
-- [ ] El indicador de tmux "Claude terminó" usa el glifo de campana  (U+F0F3) en rojo en lugar del exclamation-circle , y se muestra de forma fiable cuando una sesión de Claude termina durante un flujo GSD con subagentes; el hook que lo dispara queda versionado en el repo
-- [ ] Todos los cambios commiteados y árbol de git limpio al terminar
+(Ninguno — milestone v1.0 enviado. Usa `/gsd:new-milestone` para el siguiente.)
 
 ### Out of Scope
 
@@ -61,11 +61,11 @@ La config de Neovim se ve y se comporta como el usuario quiere: menús con un pa
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Flotantes semitransparentes en vez de opacos | El usuario prefiere un panel naturalmente más oscuro, menos transparente que el editor | — Pending |
-| Toggle de tunnelvision en `<leader>tv` | Libre y mnemónico; no colisiona con `tb/ths/tw/tz` | — Pending |
-| Descartar evaluación visual por pantallazos | El usuario la retiró; verificación a nivel de código + reporte manual | — Pending |
-| Indicador "Claude terminó" con glifo campana  (U+F0F3) | El usuario prefiere la campana sobre el exclamation-circle  | — Pending |
-| Traer el hook `tmux-claude-done.sh` al repo (claude/.claude/hooks/, stow) | Versionar el fix del indicador; hoy vive en ~/.claude sin trackear | — Pending |
+| Flotantes semitransparentes vía `winblend`/`pumblend` (=10) + `wo.winblend` en snacks picker | Global no llega al picker de snacks (lo detectó el plan-checker); se setea por ventana | ✓ Good — v1.0 |
+| Toggle de tunnelvision en `<leader>tv` (comando `:TunnelVision toggle`, lazy) | Libre y mnemónico; comando documentado robusto; opt-in no interfiere | ✓ Good — v1.0 |
+| Descartar evaluación visual por pantallazos | El usuario la retiró; verificación a nivel de código + reporte manual | ✓ Good — v1.0 |
+| Indicador con glifo campana  (U+F0F3) + evento `Notification` además de `Stop` | Campana preferida; `Notification` cubre "necesita acknowledgement" durante GSD (antes solo `Stop`) | ✓ Good — v1.0 |
+| Versionar hook `tmux-claude-done.sh` + `settings.json` en el repo (symlinks desde ~/.claude) | El usuario pidió versionar el fix; settings.json sin secretos | ✓ Good — v1.0 |
 
 ## Evolution
 
@@ -85,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-25 after adding the tmux "Claude done" indicator requirement*
+*Last updated: 2026-06-25 after v1.0 milestone (Ajustes gráficos de Neovim)*

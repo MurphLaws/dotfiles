@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-current_plan: 1
-status: phase_02_complete
-last_updated: "2026-06-25T23:42:50.727Z"
+status: Awaiting next milestone
+last_updated: "2026-06-25T23:45:51.945Z"
+last_activity: 2026-06-25 — Milestone v1.0 completed and archived
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 4
-  completed_plans: 4
-  percent: 80
+  completed_phases: 5
+  total_plans: 5
+  completed_plans: 5
+  percent: 100
 ---
 
 # STATE — Dotfiles — Ajustes gráficos de Neovim
@@ -34,20 +33,10 @@ Phase 05 — Repository Closure
 
 ## Current Position
 
-Phase: 05 (Repository Closure) — EXECUTING
-Plan: 1 of 1
-**Milestone:** Dotfiles — Ajustes gráficos de Neovim  
-**Total Phases:** 5  
-**Current Phase:** 05
-**Phase Status:** Plan 1/1 complete — tunnelvision.nvim configured with lazy-loaded toggle  
-
-```
-[████░░░░░░░░░░░░░░░░░░░░░░] Phase 1/5 (20%)
-```
-
-**Current Plan:** 1
-
----
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-25 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -107,3 +96,7 @@ None. Ready for planning.
 *Revised: 2026-06-25 to reflect 5-phase structure after tmux indicator insertion*
 *Updated: 2026-06-25 14:15:00Z — Phase 01 Plan 01 execution complete*
 *Updated: 2026-06-25 23:25:30Z — Phase 02 Plan 01 execution complete (tunnelvision.nvim configured)*
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
