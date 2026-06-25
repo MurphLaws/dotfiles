@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 01
+current_phase: 02
 current_plan: 1
-status: plan_01_complete
-last_updated: "2026-06-25T14:15:00Z"
+status: phase_02_complete
+last_updated: "2026-06-25T23:25:30.000Z"
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
-  percent: 20
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 3
+  percent: 40
 ---
 
 # STATE — Dotfiles — Ajustes gráficos de Neovim
@@ -28,24 +28,24 @@ progress:
 La config de Neovim se ve y se comporta como el usuario quiere: menús con un panel naturalmente más oscuro (no 100% opaco), sin romper la transparencia del editor ni la estética sin bordes ya establecida.
 
 **Current Focus:**  
-Phase 01 — Semitransparent Floats
+Phase 02 — Tunnelvision Plugin (Complete)
 
 ---
 
 ## Current Position
 
-Phase: 01 (Semitransparent Floats) — COMPLETE
-Plan: 1 of 1 — Complete
+Phase: 02 (Tunnelvision Plugin) — COMPLETE
+Plan: 1 of 1
 **Milestone:** Dotfiles — Ajustes gráficos de Neovim  
 **Total Phases:** 5  
-**Current Phase:** 01
-**Phase Status:** Plan 1/1 complete — floating windows configured with semitransparency  
+**Current Phase:** 02
+**Phase Status:** Plan 1/1 complete — tunnelvision.nvim configured with lazy-loaded toggle  
 
 ```
 [████░░░░░░░░░░░░░░░░░░░░░░] Phase 1/5 (20%)
 ```
 
-**Current Plan:** Complete (1/1)
+**Current Plan:** 1
 
 ---
 
@@ -85,7 +85,7 @@ Plan: 1 of 1 — Complete
 ### TODOs
 
 - [x] Execute plan for Phase 1 (floating window semitransparency)
-- [ ] Generate and execute plan for Phase 2
+- [x] Generate and execute plan for Phase 2 (tunnelvision.nvim toggle)
 - [ ] Generate and execute plan for Phase 3
 - [ ] Generate and execute plan for Phase 4
 - [ ] Generate and execute plan for Phase 5
@@ -98,11 +98,12 @@ None. Ready for planning.
 
 ## Session Continuity
 
-**Last Session:** 2026-06-25 (Execution of Phase 01 Plan 01 — floating window semitransparency)  
-**Next Action:** `/gsd:plan-phase 2` (Tunnelvision UI isolation)
+**Last Session:** 2026-06-25 (Execution of Phase 02 Plan 01 — tunnelvision.nvim plugin configuration)  
+**Next Action:** `/gsd:plan-phase 3` (Real-icons verification)
 
 ---
 
 *State initialized: 2026-06-25*
 *Revised: 2026-06-25 to reflect 5-phase structure after tmux indicator insertion*
 *Updated: 2026-06-25 14:15:00Z — Phase 01 Plan 01 execution complete*
+*Updated: 2026-06-25 23:25:30Z — Phase 02 Plan 01 execution complete (tunnelvision.nvim configured)*

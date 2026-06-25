@@ -11,7 +11,7 @@
 ## Phases
 
 - [x] **Phase 1: Semitransparent Floats** - Configure float backgrounds with transparency blending
-- [ ] **Phase 2: Tunnelvision Plugin** - Install and configure tunnelvision.nvim with toggle
+- [x] **Phase 2: Tunnelvision Plugin** - Install and configure tunnelvision.nvim with toggle
 - [ ] **Phase 3: Real-icons Verification** - Verify real-icons.nvim chain end-to-end
 - [ ] **Phase 4: tmux "Claude Done" Indicator** - Implement bell glyph notification with reliable hook versioning
 - [ ] **Phase 5: Repository Closure** - Commit all changes and verify clean tree
@@ -44,7 +44,7 @@
   3. Plugin loads without errors and toggle is functional
   4. No other plugins or keymaps are affected by the addition
 **Plans:**
-- [ ] 02-01-PLAN.md — Create tunnelvision.lua plugin spec with lazy-loaded <leader>tv toggle
+- [x] 02-01-PLAN.md — Create tunnelvision.lua plugin spec with lazy-loaded <leader>tv toggle
 
 ### Phase 3: Real-icons Verification
 **Goal:** Real-icons.nvim chain is verified end-to-end at the code/config level: plugin installed, pack `material` available, ImageMagick available, tmux passthrough active, and fallback rendering configured.
@@ -89,7 +89,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Semitransparent Floats | 1/1 | Complete   | 2026-06-25 |
-| 2. Tunnelvision Plugin | 0/1 | Planned | - |
+| 2. Tunnelvision Plugin | 1/1 | Complete | 2026-06-25 |
 | 3. Real-icons Verification | 0/1 | Not started | - |
 | 4. tmux "Claude Done" Indicator | 0/1 | Not started | - |
 | 5. Repository Closure | 0/1 | Not started | - |
