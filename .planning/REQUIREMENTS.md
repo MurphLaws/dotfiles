@@ -19,9 +19,14 @@ Requisitos para este milestone. Cada uno mapea a fases del roadmap.
 
 - [ ] **ICONS-01**: La cadena de `real-icons.nvim` (Mirsmog) está verificada de extremo a extremo a nivel de código/config — plugin presente, pack `material` instalable, `magick` disponible, `allow-passthrough` activo en tmux, fallback correcto — y los iconos renderizan como el plugin pretende
 
+### Notificación tmux
+
+- [ ] **NOTIFY-01**: El indicador de tmux "Claude terminó" usa el glifo de campana  (U+F0F3) en rojo en lugar del exclamation-circle , junto al número/nombre de la tab de la ventana donde Claude terminó, manteniendo la lógica de mostrarse solo en ventanas no activas y borrarse al seleccionarlas
+- [ ] **NOTIFY-02**: El indicador se muestra de forma fiable cuando una sesión de Claude termina durante un flujo GSD con subagentes (no se pierde por eventos `SubagentStop`); el hook que lo dispara queda versionado en el repo (`claude/.claude/hooks/`, desplegado vía stow)
+
 ### Cierre
 
-- [ ] **REPO-01**: Todos los cambios quedan commiteados y el árbol de git queda limpio al finalizar
+- [ ] **REPO-01**: Todos los cambios (nvim, tmux, hook de claude) quedan commiteados y el árbol de git queda limpio al finalizar
 
 ## v2 Requirements
 
@@ -44,16 +49,19 @@ Qué fases cubren qué requisitos. Se actualiza durante la creación del roadmap
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FLOAT-01 | TBD | Pending |
-| TUNNEL-01 | TBD | Pending |
-| ICONS-01 | TBD | Pending |
-| REPO-01 | TBD | Pending |
+| FLOAT-01 | Phase 1 | Pending |
+| TUNNEL-01 | Phase 2 | Pending |
+| ICONS-01 | Phase 3 | Pending |
+| NOTIFY-01 | Phase 4 | Pending |
+| NOTIFY-02 | Phase 4 | Pending |
+| REPO-01 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 4 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 4 ⚠️
+- v1 requirements: 6 total
+- Mapped to phases: 6 ✓
+- Unmapped: 0 ✓
 
 ---
+
 *Requirements defined: 2026-06-25*
-*Last updated: 2026-06-25 after initial definition*
+*Last updated: 2026-06-25 after roadmap creation*

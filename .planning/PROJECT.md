@@ -27,6 +27,7 @@ La config de Neovim se ve y se comporta como el usuario quiere: menús con un pa
 - [ ] Los menús/flotantes son **semitransparentes** (menos transparentes que el editor) en lugar de 100% opacos, resultando en un panel naturalmente más oscuro — conservando sin borde y sin esquinas redondeadas
 - [ ] `tunnelvision.nvim` (leolaurindo) instalado y funcional, con toggle en `<leader>tv` que no interfiere con otros keymaps
 - [ ] La cadena de `real-icons.nvim` (Mirsmog) está verificada de extremo a extremo a nivel de código/config: plugin presente, pack `material` instalable, `magick` disponible, `allow-passthrough` activo, fallback correcto
+- [ ] El indicador de tmux "Claude terminó" usa el glifo de campana  (U+F0F3) en rojo en lugar del exclamation-circle , y se muestra de forma fiable cuando una sesión de Claude termina durante un flujo GSD con subagentes; el hook que lo dispara queda versionado en el repo
 - [ ] Todos los cambios commiteados y árbol de git limpio al terminar
 
 ### Out of Scope
@@ -36,7 +37,7 @@ La config de Neovim se ve y se comporta como el usuario quiere: menús con un pa
 - Evaluación visual por pantallazos — el usuario la descartó; la corrección se verifica a nivel de código y el usuario reporta si algo no se ve bien
 - Cambiar la estética de bordes de los menús — el usuario explícitamente quiere mantener sin borde / sin esquinas redondeadas
 - Tocar la transparencia del editor (`Normal`) — debe seguir 100% transparente
-- Cambios en otras herramientas del repo (tmux, ghostty, taskwarrior, claude) salvo que la verificación de real-icons exija ajustar la cadena de passthrough
+- Cambios en ghostty/taskwarrior y demás herramientas del repo — fuera del milestone (el milestone sí toca nvim, tmux y el hook de claude para el indicador "Claude terminó")
 
 ## Context
 
@@ -45,6 +46,7 @@ La config de Neovim se ve y se comporta como el usuario quiere: menús con un pa
 - `real-icons.nvim` se configura en `nvim/.config/nvim/lua/illico/plugins/real-icons.lua` con `build = ":RealIconsInstallPack material"`, `mini_files = false` (se desactivó porque congelaba `<leader>e`).
 - Ghostty corre con `background-opacity = 0.95`; la transparencia de los flotantes se compone con esa opacidad del terminal.
 - Prefijos de keymaps `<leader>t*` ocupados: `tb`, `ths`, `tw`, `tz` → `<leader>tv` queda libre.
+- Indicador "Claude terminó" en tmux: el hook `Stop` `~/.claude/hooks/tmux-claude-done.sh` pone `@claude_done 1` en la ventana (solo si no es la activa); `window-status-format`/`window-status-current-format` en `tmux/.tmux.conf` (líneas ~134/137) pintan el glifo rojo ``; `after-select-window` lo borra. El hook NO está trackeado en el repo (vive en `~/.claude/hooks/`). Sospecha de fallo con GSD: dependencia del `Stop` del agente principal frente a eventos `SubagentStop`.
 - Política de cierre: commit de todo y clean tree. Sin líneas Co-Authored-By (el usuario es único autor).
 
 ## Constraints
@@ -62,6 +64,8 @@ La config de Neovim se ve y se comporta como el usuario quiere: menús con un pa
 | Flotantes semitransparentes en vez de opacos | El usuario prefiere un panel naturalmente más oscuro, menos transparente que el editor | — Pending |
 | Toggle de tunnelvision en `<leader>tv` | Libre y mnemónico; no colisiona con `tb/ths/tw/tz` | — Pending |
 | Descartar evaluación visual por pantallazos | El usuario la retiró; verificación a nivel de código + reporte manual | — Pending |
+| Indicador "Claude terminó" con glifo campana  (U+F0F3) | El usuario prefiere la campana sobre el exclamation-circle  | — Pending |
+| Traer el hook `tmux-claude-done.sh` al repo (claude/.claude/hooks/, stow) | Versionar el fix del indicador; hoy vive en ~/.claude sin trackear | — Pending |
 
 ## Evolution
 
@@ -81,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-25 after initialization*
+*Last updated: 2026-06-25 after adding the tmux "Claude done" indicator requirement*
