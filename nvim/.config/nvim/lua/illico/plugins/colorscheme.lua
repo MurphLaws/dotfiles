@@ -24,6 +24,13 @@ return {
 			-- panel sólido que resalta sobre el área transparente del editor.
 			local float_bg = "#181825" -- Catppuccin mantle
 
+			-- Nivel de semitransparencia para menús/floats. Las ventanas flotantes
+			-- y el Pmenu se renderizan con este blend: 0 = totalmente opaco,
+			-- 100 = totalmente transparente. Valores 8–15 funcionan bien.
+			local blend_level = 10
+			vim.opt.winblend = blend_level
+			vim.opt.pumblend = blend_level
+
 			-- El editor sí queda 100% transparente (deja ver Ghostty/tmux).
 			local editor_transparent = {
 				"Normal",
