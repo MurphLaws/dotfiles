@@ -12,7 +12,7 @@
 
 - [x] **Phase 1: Semitransparent Floats** - Configure float backgrounds with transparency blending
 - [x] **Phase 2: Tunnelvision Plugin** - Install and configure tunnelvision.nvim with toggle
-- [ ] **Phase 3: Real-icons Verification** - Verify real-icons.nvim chain end-to-end
+- [x] **Phase 3: Real-icons Verification** - Verify real-icons.nvim chain end-to-end (completed 2026-06-25)
 - [ ] **Phase 4: tmux "Claude Done" Indicator** - Implement bell glyph notification with reliable hook versioning
 - [ ] **Phase 5: Repository Closure** - Commit all changes and verify clean tree
 
@@ -56,7 +56,7 @@
   2. ImageMagick (`magick`) is available at `/opt/homebrew/bin/magick`
   3. Tmux config has `allow-passthrough on` set for Kitty Graphics Protocol
   4. Fallback icon rendering (glyphs) is configured in real-icons.lua
-**Plans:** TBD
+**Plans:** 1/1 plans complete
 
 ### Phase 4: tmux "Claude Done" Indicator
 **Goal:** Tmux displays a reliable "Claude finished" notification using the bell glyph (U+F0F3) in red next to the window tab, with the hook that triggers it versioned in the repository and integrated with stow deployment.
@@ -90,7 +90,7 @@
 |-------|----------------|--------|-----------|
 | 1. Semitransparent Floats | 1/1 | Complete   | 2026-06-25 |
 | 2. Tunnelvision Plugin | 1/1 | Complete | 2026-06-25 |
-| 3. Real-icons Verification | 0/1 | Not started | - |
+| 3. Real-icons Verification | 1/1 | Complete   | 2026-06-25 |
 | 4. tmux "Claude Done" Indicator | 0/1 | Not started | - |
 | 5. Repository Closure | 0/1 | Not started | - |
 
