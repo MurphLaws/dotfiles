@@ -15,6 +15,12 @@ return {
 				-- Enruta vim.ui.select por el picker: code actions, LSP,
 				-- selección de opciones… todos los menús comparten este look.
 				ui_select = true,
+				-- Semitransparencia en las ventanas del picker: input, lista, preview.
+				win = {
+					input = { wo = { winblend = 10 } },
+					list = { wo = { winblend = 10 } },
+					preview = { wo = { winblend = 10 } },
+				},
 				-- Layout estilo telescope pero SIN bordes: input + lista a la
 				-- izquierda, preview a la derecha. El fondo de panel opaco lo
 				-- dan los grupos SnacksPicker* en colorscheme.lua.
