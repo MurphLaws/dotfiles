@@ -13,7 +13,7 @@
 - [x] **Phase 1: Semitransparent Floats** - Configure float backgrounds with transparency blending
 - [x] **Phase 2: Tunnelvision Plugin** - Install and configure tunnelvision.nvim with toggle
 - [x] **Phase 3: Real-icons Verification** - Verify real-icons.nvim chain end-to-end (completed 2026-06-25)
-- [ ] **Phase 4: tmux "Claude Done" Indicator** - Implement bell glyph notification with reliable hook versioning
+- [x] **Phase 4: tmux "Claude Done" Indicator** - Implement bell glyph notification with reliable hook versioning (completed 2026-06-25)
 - [ ] **Phase 5: Repository Closure** - Commit all changes and verify clean tree
 
 ---
@@ -68,7 +68,7 @@
   2. Hook file `claude/.claude/hooks/tmux-claude-done.sh` exists in repo and is symlinked via stow to `~/.claude/hooks/tmux-claude-done.sh`
   3. Hook version tracking in repo enables reliable Stop event handling without loss due to SubagentStop events
   4. Indicator shows only on non-active windows and clears on select (existing logic preserved and verified across GSD/subagent runs)
-**Plans:** TBD
+**Plans:** 1/1 plans complete
 
 ### Phase 5: Repository Closure
 **Goal:** All changes across phases 1–4 (nvim config, tmux config, claude hook) are committed to git with a clean working tree, establishing a stable baseline.
@@ -91,7 +91,7 @@
 | 1. Semitransparent Floats | 1/1 | Complete   | 2026-06-25 |
 | 2. Tunnelvision Plugin | 1/1 | Complete | 2026-06-25 |
 | 3. Real-icons Verification | 1/1 | Complete   | 2026-06-25 |
-| 4. tmux "Claude Done" Indicator | 0/1 | Not started | - |
+| 4. tmux "Claude Done" Indicator | 1/1 | Complete   | 2026-06-25 |
 | 5. Repository Closure | 0/1 | Not started | - |
 
 ---

@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03
+current_phase: 04
 current_plan: 1
 status: phase_02_complete
-last_updated: "2026-06-25T23:33:28.374Z"
+last_updated: "2026-06-25T23:38:48.522Z"
 progress:
   total_phases: 5
   completed_phases: 3
@@ -28,17 +28,17 @@ progress:
 La config de Neovim se ve y se comporta como el usuario quiere: menús con un panel naturalmente más oscuro (no 100% opaco), sin romper la transparencia del editor ni la estética sin bordes ya establecida.
 
 **Current Focus:**  
-Phase 03 — Real-icons Verification
+Phase 04 — tmux Claude Done Indicator
 
 ---
 
 ## Current Position
 
-Phase: 03 (Real-icons Verification) — EXECUTING
+Phase: 04 (tmux Claude Done Indicator) — EXECUTING
 Plan: 1 of 1
 **Milestone:** Dotfiles — Ajustes gráficos de Neovim  
 **Total Phases:** 5  
-**Current Phase:** 03
+**Current Phase:** 04
 **Phase Status:** Plan 1/1 complete — tunnelvision.nvim configured with lazy-loaded toggle  
 
 ```
