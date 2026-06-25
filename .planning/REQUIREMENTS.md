@@ -49,12 +49,12 @@ Qué fases cubren qué requisitos. Se actualiza durante la creación del roadmap
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FLOAT-01 | Phase 1 | Pending |
-| TUNNEL-01 | Phase 2 | Pending |
-| ICONS-01 | Phase 3 | Pending |
-| NOTIFY-01 | Phase 4 | Pending |
-| NOTIFY-02 | Phase 4 | Pending |
-| REPO-01 | Phase 5 | Pending |
+| FLOAT-01 | Phase 1 | Complete |
+| TUNNEL-01 | Phase 2 | Complete |
+| ICONS-01 | Phase 3 | Complete |
+| NOTIFY-01 | Phase 4 | Complete |
+| NOTIFY-02 | Phase 4 | Complete |
+| REPO-01 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 6 total
