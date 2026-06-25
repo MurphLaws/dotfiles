@@ -14,7 +14,7 @@
 - [x] **Phase 2: Tunnelvision Plugin** - Install and configure tunnelvision.nvim with toggle
 - [x] **Phase 3: Real-icons Verification** - Verify real-icons.nvim chain end-to-end (completed 2026-06-25)
 - [x] **Phase 4: tmux "Claude Done" Indicator** - Implement bell glyph notification with reliable hook versioning (completed 2026-06-25)
-- [ ] **Phase 5: Repository Closure** - Commit all changes and verify clean tree
+- [x] **Phase 5: Repository Closure** - Commit all changes and verify clean tree (completed 2026-06-25)
 
 ---
 
@@ -80,7 +80,7 @@
   2. Commit message documents all four feature changes (floats, tunnelvision, real-icons verification, tmux indicator)
   3. `git status` shows a clean tree (no unstaged, untracked, or staged files)
   4. Recent commit log includes the closure commit with all changes
-**Plans:** TBD
+**Plans:** 1/1 plans complete
 
 ---
 
@@ -92,7 +92,7 @@
 | 2. Tunnelvision Plugin | 1/1 | Complete | 2026-06-25 |
 | 3. Real-icons Verification | 1/1 | Complete   | 2026-06-25 |
 | 4. tmux "Claude Done" Indicator | 1/1 | Complete   | 2026-06-25 |
-| 5. Repository Closure | 0/1 | Not started | - |
+| 5. Repository Closure | 1/1 | Complete   | 2026-06-25 |
 
 ---
 
