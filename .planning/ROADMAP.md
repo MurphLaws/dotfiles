@@ -31,7 +31,7 @@
   3. Border and corner styles remain unchanged (borderless, no rounded corners)
   4. Editor transparency (`Normal`/`NormalNC`) remains unaffected at 100%
 **Plans:**
-- [ ] 01-01-PLAN.md — Add vim.opt.winblend and vim.opt.pumblend to apply transparency blending to floating windows and Pmenu
+- [x] 01-01-PLAN.md — Add vim.opt.winblend and vim.opt.pumblend to apply transparency blending to floating windows and Pmenu
 
 ### Phase 2: Tunnelvision Plugin
 **Goal:** Tunnelvision.nvim is installed and configured with a dedicated toggle keybinding that does not interfere with existing keymaps or plugins.
@@ -43,7 +43,8 @@
   2. Toggle keybinding `<leader>tv` is defined and verified not to collide with existing keymaps (`tb`, `ths`, `tw`, `tz`)
   3. Plugin loads without errors and toggle is functional
   4. No other plugins or keymaps are affected by the addition
-**Plans:** TBD
+**Plans:**
+- [ ] 02-01-PLAN.md — Create tunnelvision.lua plugin spec with lazy-loaded <leader>tv toggle
 
 ### Phase 3: Real-icons Verification
 **Goal:** Real-icons.nvim chain is verified end-to-end at the code/config level: plugin installed, pack `material` available, ImageMagick available, tmux passthrough active, and fallback rendering configured.
@@ -87,8 +88,8 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Semitransparent Floats | 1/1 | Planned | - |
-| 2. Tunnelvision Plugin | 0/1 | Not started | - |
+| 1. Semitransparent Floats | 1/1 | Complete   | 2026-06-25 |
+| 2. Tunnelvision Plugin | 0/1 | Planned | - |
 | 3. Real-icons Verification | 0/1 | Not started | - |
 | 4. tmux "Claude Done" Indicator | 0/1 | Not started | - |
 | 5. Repository Closure | 0/1 | Not started | - |
@@ -100,7 +101,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FLOAT-01 | Phase 1 | Planned |
-| TUNNEL-01 | Phase 2 | Pending |
+| TUNNEL-01 | Phase 2 | Planned |
 | ICONS-01 | Phase 3 | Pending |
 | NOTIFY-01 | Phase 4 | Pending |
 | NOTIFY-02 | Phase 4 | Pending |
@@ -112,4 +113,4 @@
 
 *Roadmap created: 2026-06-25*
 *Revised: 2026-06-25 to add Phase 4 (tmux indicator) and renumber closure to Phase 5*
-*Plans created: 2026-06-25 Phase 1*
+*Plans created: 2026-06-25 Phase 1; 2026-06-25 Phase 2*
