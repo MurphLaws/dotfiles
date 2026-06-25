@@ -15,7 +15,7 @@ return {
 
 			win = {
 				no_overlap = true,
-				border = "none",
+				border = "single",
 				padding = { 1, 2 },
 				title = false,
 			},

@@ -6,40 +6,14 @@ return {
 
 		opts = {
 			input = { enabled = true },
-			-- Quita el borde de vim.ui.input (snacks input).
-			styles = {
-				input = { border = "none" },
-			},
 			picker = {
 				enabled = true,
 				-- Enruta vim.ui.select por el picker: code actions, LSP,
 				-- selección de opciones… todos los menús comparten este look.
 				ui_select = true,
-				-- Semitransparencia en las ventanas del picker: input, lista, preview.
-				win = {
-					input = { wo = { winblend = 10 } },
-					list = { wo = { winblend = 10 } },
-					preview = { wo = { winblend = 10 } },
-				},
-				-- Layout estilo telescope pero SIN bordes: input + lista a la
-				-- izquierda, preview a la derecha. El fondo de panel opaco lo
-				-- dan los grupos SnacksPicker* en colorscheme.lua.
-				layout = {
-					layout = {
-						box = "horizontal",
-						backdrop = false,
-						width = 0.85,
-						height = 0.85,
-						border = "none",
-						{
-							box = "vertical",
-							border = "none",
-							{ win = "input", height = 1, border = "none" },
-							{ win = "list", border = "none" },
-						},
-						{ win = "preview", border = "none", width = 0.5 },
-					},
-				},
+				-- Layout estilo telescope: input + lista a la izquierda,
+				-- preview a la derecha (el del screenshot). Limpio y consistente.
+				layout = { preset = "telescope" },
 			},
 			notifier = {
 				enabled = true,
