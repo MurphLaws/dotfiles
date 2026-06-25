@@ -10,7 +10,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Semitransparent Floats** - Configure float backgrounds with transparency blending
+- [x] **Phase 1: Semitransparent Floats** - Configure float backgrounds with transparency blending
 - [ ] **Phase 2: Tunnelvision Plugin** - Install and configure tunnelvision.nvim with toggle
 - [ ] **Phase 3: Real-icons Verification** - Verify real-icons.nvim chain end-to-end
 - [ ] **Phase 4: tmux "Claude Done" Indicator** - Implement bell glyph notification with reliable hook versioning
@@ -30,7 +30,8 @@
   2. Float group highlights have blend/opacity setting applied
   3. Border and corner styles remain unchanged (borderless, no rounded corners)
   4. Editor transparency (`Normal`/`NormalNC`) remains unaffected at 100%
-**Plans:** TBD
+**Plans:**
+- [ ] 01-01-PLAN.md — Add vim.opt.winblend and vim.opt.pumblend to apply transparency blending to floating windows and Pmenu
 
 ### Phase 2: Tunnelvision Plugin
 **Goal:** Tunnelvision.nvim is installed and configured with a dedicated toggle keybinding that does not interfere with existing keymaps or plugins.
@@ -86,7 +87,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Semitransparent Floats | 0/1 | Not started | - |
+| 1. Semitransparent Floats | 1/1 | Planned | - |
 | 2. Tunnelvision Plugin | 0/1 | Not started | - |
 | 3. Real-icons Verification | 0/1 | Not started | - |
 | 4. tmux "Claude Done" Indicator | 0/1 | Not started | - |
@@ -98,7 +99,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FLOAT-01 | Phase 1 | Pending |
+| FLOAT-01 | Phase 1 | Planned |
 | TUNNEL-01 | Phase 2 | Pending |
 | ICONS-01 | Phase 3 | Pending |
 | NOTIFY-01 | Phase 4 | Pending |
@@ -111,3 +112,4 @@
 
 *Roadmap created: 2026-06-25*
 *Revised: 2026-06-25 to add Phase 4 (tmux indicator) and renumber closure to Phase 5*
+*Plans created: 2026-06-25 Phase 1*
