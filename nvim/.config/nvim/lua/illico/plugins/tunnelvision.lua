@@ -10,6 +10,12 @@ return {
 			-- que contiene el cursor. Así funciona igual con variables que
 			-- con funciones (sus llamadas viven en otras funciones del buffer).
 			scope = "buffer",
+			-- Combina LSP + emparejado por texto. Con el default "lsp_else_word",
+			-- cuando hay LSP se usan SOLO sus líneas y el LSP de Godot/GDScript
+			-- devuelve los usos pero NO la línea de declaración (`func nombre(...)`),
+			-- que quedaba atenuada. "lsp_and_word" suma el match por palabra, que
+			-- sí captura la declaración que el LSP omite.
+			source = "lsp_and_word",
 		},
 		keys = {
 			-- Persistente: fija el símbolo donde estás parado y lo mantiene
