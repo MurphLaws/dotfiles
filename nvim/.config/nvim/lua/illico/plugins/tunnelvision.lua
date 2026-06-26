@@ -6,6 +6,10 @@ return {
 		-- (surface2) para que las líneas fuera de foco recedan sin desaparecer.
 		opts = {
 			dim = { fg = "#585b70" },
+			-- Rastrea el símbolo en TODO el archivo, no solo en la función
+			-- que contiene el cursor. Así funciona igual con variables que
+			-- con funciones (sus llamadas viven en otras funciones del buffer).
+			scope = "buffer",
 		},
 		keys = {
 			-- Persistente: fija el símbolo donde estás parado y lo mantiene
