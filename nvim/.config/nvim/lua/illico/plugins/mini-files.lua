@@ -48,9 +48,21 @@ return {
 		vim.api.nvim_create_autocmd("User", {
 			pattern = "MiniFilesBufferCreate",
 			callback = function(args)
+				local mf = require("mini.files")
+				local buf = args.data.buf_id
 				vim.keymap.set("n", "<CR>", function()
-					require("mini.files").go_in({ close_on_file = true })
-				end, { buffer = args.data.buf_id, desc = "Mini.files: open & close on file" })
+					mf.go_in({ close_on_file = true })
+				end, { buffer = buf, desc = "Mini.files: open & close on file" })
+
+				-- Navegación con flechas (como antes): Right entra a la carpeta
+				-- o abre el archivo y cierra; Left sube al directorio padre.
+				-- Up/Down ya mueven el cursor por ser un buffer normal.
+				vim.keymap.set("n", "<Right>", function()
+					mf.go_in({ close_on_file = true })
+				end, { buffer = buf, desc = "Mini.files: go in / open" })
+				vim.keymap.set("n", "<Left>", function()
+					mf.go_out()
+				end, { buffer = buf, desc = "Mini.files: go out (parent)" })
 			end,
 		})
 	end,

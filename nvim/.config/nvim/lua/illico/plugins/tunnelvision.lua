@@ -2,10 +2,10 @@ return {
 	{
 		"leolaurindo/tunnelvision.nvim",
 		-- Por defecto el texto atenuado usa el color de `Comment` (#6c7086),
-		-- que se sigue leyendo bastante. Forzamos un fg más oscuro (surface1)
-		-- para que las líneas fuera de foco recedan más y el símbolo resalte.
+		-- que se sigue leyendo bastante. Forzamos un fg algo más oscuro
+		-- (surface2) para que las líneas fuera de foco recedan sin desaparecer.
 		opts = {
-			dim = { fg = "#45475a" },
+			dim = { fg = "#585b70" },
 		},
 		keys = {
 			-- Persistente: fija el símbolo donde estás parado y lo mantiene
