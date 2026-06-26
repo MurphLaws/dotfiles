@@ -6,6 +6,16 @@ return {
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 		local eslint = lint.linters.eslint_d
 
+		-- gdlint: silencia el warning de max-line-length (filtra ese diagnostico)
+		local gdlint = lint.linters.gdlint
+		local gdlint_parse = gdlint.parser
+		gdlint.parser = function(output, bufnr, ...)
+			local diagnostics = gdlint_parse(output, bufnr, ...)
+			return vim.tbl_filter(function(d)
+				return not (d.message and d.message:match("max%-line%-length"))
+			end, diagnostics)
+		end
+
 		-- Filetype → Linter mapping
 		lint.linters_by_ft = {
 			javascript = { "biomejs" },
