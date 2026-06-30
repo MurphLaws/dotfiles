@@ -41,7 +41,7 @@ macos-non-native-fullscreen = true
 #   ventana (escritorio/otras ventanas). Sólo se ve a través de la parte
 #   translúcida, así que la opacidad debe ser < 1 para que el blur sea visible.
 background-opacity = 0.88
-background-blur-radius = 30
+background-blur-radius = 20
 
 # Shaders (GLSL) — método builtin de Ghostty (custom-shader)
 #   1) CRT retro sutil (scanlines + bloom + viñeta, conserva Catppuccin)
@@ -49,7 +49,10 @@ background-blur-radius = 30
 # El CRT va PRIMERO; el cursor smear se dibuja encima.
 custom-shader = shaders/retro-crt.glsl
 custom-shader = shaders/cursor-smear.glsl
-custom-shader-animation = true
+# false = los shaders solo se redibujan cuando cambia la pantalla, no en bucle
+# continuo: en reposo la GPU baja a 0 FPS (menos batería/calor). Coste: el
+# cursor-smear pierde su animación fluida (el CRT estático no se ve afectado).
+custom-shader-animation = false
 
 keybind = shift+enter=text:\x1b\r
 
