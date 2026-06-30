@@ -10,6 +10,15 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(git)
 
+# Auto-update desactivado: el chequeo hacía una petición de red a GitHub en cada
+# arranque (~635 ms, 60% del tiempo de inicio y origen de los picos de varios
+# segundos). Actualiza a mano cuando quieras con: omz update
+zstyle ':omz:update' mode disabled
+
+# compinit cacheado: salta la auditoría/recompilación del dump de completado si
+# ya existe y tiene menos de ~20 h (oh-my-zsh lo regenera igual a diario).
+ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump-${ZSH_VERSION}"
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -46,19 +55,28 @@ typeset -g POWERLEVEL9K_VCS_COMMITS_BEHIND_BACKGROUND=23
 
 export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 
-# >>> conda initialize >>>
-__conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/opt/miniconda3/etc/profile.d/conda.sh"
+# >>> conda initialize (lazy) >>>
+# El init real (conda shell.zsh hook) corre Python y cuesta ~300-470 ms en CADA
+# shell. Lo diferimos: `conda` queda como función-trampolín que en su primer uso
+# corre el init de verdad (que la redefine) y reenvía los argumentos.
+# Trade-off: el entorno base NO se auto-activa al abrir la shell; corre `conda
+# activate base` (o cualquier comando conda) y a partir de ahí todo es normal.
+conda() {
+    unset -f conda
+    __conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+    if [ $? -eq 0 ]; then
+        eval "$__conda_setup"
     else
-        export PATH="/opt/miniconda3/bin:$PATH"
+        if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+            . "/opt/miniconda3/etc/profile.d/conda.sh"
+        else
+            export PATH="/opt/miniconda3/bin:$PATH"
+        fi
     fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+    unset __conda_setup
+    conda "$@"
+}
+# <<< conda initialize (lazy) <<<
 
 export SUMO_HOME=/opt/homebrew/Cellar/sumo/1.20.0/share/sumo
 export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
