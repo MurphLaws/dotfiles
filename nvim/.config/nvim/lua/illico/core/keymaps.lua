@@ -40,6 +40,49 @@ vim.keymap.set("n", "<leader>fp", function()
 	print("File path copied to clipboard: " .. filePath)
 end, { desc = "Copy file path to clipboard" })
 
+-- ===== Gists =====
+-- Pega el contenido de uno de tus gists en el cursor (usa el `gh` CLI)
+vim.keymap.set("n", "<leader>gp", function()
+	local list = vim.fn.systemlist({ "gh", "gist", "list", "--limit", "100" })
+	if vim.v.shell_error ~= 0 then
+		vim.notify("gh gist list falló:\n" .. table.concat(list, "\n"), vim.log.levels.ERROR)
+		return
+	end
+	if #list == 0 then
+		vim.notify("No tienes gists.", vim.log.levels.WARN)
+		return
+	end
+
+	local items = {}
+	for _, line in ipairs(list) do
+		local f = vim.split(line, "\t", { plain = true })
+		if f[1] then
+			table.insert(items, {
+				id = f[1],
+				label = string.format("%s  [%s]", (f[2] ~= "" and f[2] or "(sin descripción)"), f[4] or "?"),
+			})
+		end
+	end
+
+	vim.ui.select(items, {
+		prompt = "Pegar gist:",
+		format_item = function(it)
+			return it.label
+		end,
+	}, function(choice)
+		if not choice then
+			return
+		end
+		local content = vim.fn.systemlist({ "gh", "gist", "view", choice.id, "--raw" })
+		if vim.v.shell_error ~= 0 then
+			vim.notify("gh gist view falló:\n" .. table.concat(content, "\n"), vim.log.levels.ERROR)
+			return
+		end
+		local row = vim.api.nvim_win_get_cursor(0)[1]
+		vim.api.nvim_buf_set_lines(0, row, row, false, content)
+	end)
+end, { desc = "Gist: pegar contenido en el cursor" })
+
 --split management
 vim.keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" })
 -- split window vertically
