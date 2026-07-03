@@ -40,9 +40,9 @@ vim.keymap.set("n", "<leader>fp", function()
 	print("File path copied to clipboard: " .. filePath)
 end, { desc = "Copy file path to clipboard" })
 
--- ===== Gists =====
--- Pega el contenido de uno de tus gists en el cursor (usa el `gh` CLI)
-vim.keymap.set("n", "<leader>gp", function()
+-- ===== Gists (via `gh` CLI) =====
+-- Picker de tus gists; llama a on_choice({ id, label }) con el elegido.
+local function pick_gist(prompt, on_choice)
 	local list = vim.fn.systemlist({ "gh", "gist", "list", "--limit", "100" })
 	if vim.v.shell_error ~= 0 then
 		vim.notify("gh gist list falló:\n" .. table.concat(list, "\n"), vim.log.levels.ERROR)
@@ -65,23 +65,80 @@ vim.keymap.set("n", "<leader>gp", function()
 	end
 
 	vim.ui.select(items, {
-		prompt = "Pegar gist:",
+		prompt = prompt,
 		format_item = function(it)
 			return it.label
 		end,
 	}, function(choice)
-		if not choice then
-			return
+		if choice then
+			on_choice(choice)
 		end
-		local content = vim.fn.systemlist({ "gh", "gist", "view", choice.id, "--raw" })
-		if vim.v.shell_error ~= 0 then
-			vim.notify("gh gist view falló:\n" .. table.concat(content, "\n"), vim.log.levels.ERROR)
-			return
+	end)
+end
+
+-- Elige un archivo del gist y llama a on_file(filename); si solo hay uno, lo usa directo.
+local function pick_gist_file(id, prompt, on_file)
+	local files = {}
+	for _, name in ipairs(vim.fn.systemlist({ "gh", "gist", "view", id, "--files" })) do
+		if name ~= "" then
+			table.insert(files, name)
 		end
-		local row = vim.api.nvim_win_get_cursor(0)[1]
-		vim.api.nvim_buf_set_lines(0, row, row, false, content)
+	end
+	if #files == 0 then
+		vim.notify("El gist no tiene archivos.", vim.log.levels.WARN)
+		return
+	end
+	if #files == 1 then
+		on_file(files[1])
+	else
+		vim.ui.select(files, { prompt = prompt }, function(name)
+			if name then
+				on_file(name)
+			end
+		end)
+	end
+end
+
+-- <leader>gp — pega el contenido de un archivo de un gist en el cursor
+vim.keymap.set("n", "<leader>gp", function()
+	pick_gist("Pegar gist:", function(choice)
+		pick_gist_file(choice.id, "Archivo a pegar:", function(filename)
+			-- --filename devuelve solo el contenido del archivo (sin la descripción)
+			local content = vim.fn.systemlist({ "gh", "gist", "view", choice.id, "--filename", filename, "--raw" })
+			if vim.v.shell_error ~= 0 then
+				vim.notify("gh gist view falló:\n" .. table.concat(content, "\n"), vim.log.levels.ERROR)
+				return
+			end
+			local row = vim.api.nvim_win_get_cursor(0)[1]
+			vim.api.nvim_buf_set_lines(0, row, row, false, content)
+		end)
 	end)
 end, { desc = "Gist: pegar contenido en el cursor" })
+
+-- <leader>gu — actualiza un archivo de un gist con el contenido del buffer actual
+vim.keymap.set("n", "<leader>gu", function()
+	pick_gist("Actualizar gist con el buffer actual:", function(choice)
+		pick_gist_file(choice.id, "Archivo a sobrescribir:", function(filename)
+			local ok = vim.fn.confirm(
+				string.format("¿Sobrescribir '%s' del gist con el buffer actual?", filename),
+				"&Sí\n&No",
+				2
+			)
+			if ok ~= 1 then
+				return
+			end
+			local tmp = vim.fn.tempname()
+			vim.fn.writefile(vim.api.nvim_buf_get_lines(0, 0, -1, false), tmp)
+			local out = vim.fn.systemlist({ "gh", "gist", "edit", choice.id, "--filename", filename, tmp })
+			vim.fn.delete(tmp)
+			if vim.v.shell_error ~= 0 then
+				vim.notify("gh gist edit falló:\n" .. table.concat(out, "\n"), vim.log.levels.ERROR)
+				return
+			end
+			vim.notify(string.format("Gist actualizado: %s", filename), vim.log.levels.INFO)
+		end)
+	end)
+end, { desc = "Gist: actualizar con el buffer actual" })
 
 --split management
 vim.keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" })
