@@ -77,4 +77,19 @@ return {
       vim.g.lazygit_use_neovim_remote = 1
     end,
   },
+
+  -- 📝 Gist: crea/lista GitHub gists (usa el `gh` CLI por debajo)
+  {
+    "Rawnly/gist.nvim",
+    cmd = { "GistCreate", "GistCreateFromFile", "GistsList" },
+    keys = {
+      { "<leader>gc", "<cmd>GistCreate<cr>", mode = { "n", "v" }, desc = "Gist: crear (buffer/selección)" },
+      { "<leader>gf", "<cmd>GistCreateFromFile<cr>", desc = "Gist: crear desde archivo" },
+      { "<leader>gL", "<cmd>GistsList<cr>", desc = "Gist: listar mis gists" },
+    },
+    opts = {
+      platform = "github",
+      clipboard = "+", -- copia la URL del gist al portapapeles del sistema
+    },
+  },
 }
