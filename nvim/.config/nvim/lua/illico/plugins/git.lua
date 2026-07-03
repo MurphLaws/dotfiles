@@ -90,6 +90,13 @@ return {
     opts = {
       platform = "github",
       clipboard = "+", -- copia la URL del gist al portapapeles del sistema
+      prompts = {
+        create = {
+          description = true, -- pregunta la descripción
+          private = true, -- pregunta si es público o privado
+          confirmation = true, -- pide confirmación antes de crear
+        },
+      },
     },
   },
 }
