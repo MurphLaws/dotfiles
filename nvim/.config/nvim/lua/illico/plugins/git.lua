@@ -81,20 +81,25 @@ return {
   -- 📝 Gist: crea/lista GitHub gists (usa el `gh` CLI por debajo)
   {
     "Rawnly/gist.nvim",
-    cmd = { "GistCreate", "GistCreateFromFile", "GistsList" },
+    cmd = { "GistCreate", "GistsList" },
     keys = {
       { "<leader>gc", "<cmd>GistCreate<cr>", mode = { "n", "v" }, desc = "Gist: crear (buffer/selección)" },
-      { "<leader>gf", "<cmd>GistCreateFromFile<cr>", desc = "Gist: crear desde archivo" },
       { "<leader>gL", "<cmd>GistsList<cr>", desc = "Gist: listar mis gists" },
     },
     opts = {
       platform = "github",
       clipboard = "+", -- copia la URL del gist al portapapeles del sistema
-      prompts = {
-        create = {
-          description = true, -- pregunta la descripción
-          private = true, -- pregunta si es público o privado
-          confirmation = true, -- pide confirmación antes de crear
+      -- OJO: el backend de GitHub lee los prompts de platforms.github.prompts,
+      -- NO del prompts.create de nivel superior (inconsistencia del plugin).
+      platforms = {
+        github = {
+          prompts = {
+            create = {
+              description = true, -- pregunta la descripción
+              private = true, -- pregunta si es público o privado
+              confirmation = true, -- pide confirmación antes de crear
+            },
+          },
         },
       },
     },
