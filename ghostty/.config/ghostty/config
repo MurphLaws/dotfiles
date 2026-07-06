@@ -36,12 +36,9 @@ palette = 15=#a6adc8
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
 macos-non-native-fullscreen = true
 
-# Transparency + window blur (estilo Hyprland)
-#   El blur lo hace el COMPOSITOR de macOS sobre lo que hay DETRÁS de la
-#   ventana (escritorio/otras ventanas). Sólo se ve a través de la parte
-#   translúcida, así que la opacidad debe ser < 1 para que el blur sea visible.
-background-opacity = 0.88
-background-blur-radius = 20
+# Background fully opaque
+#   No transparency, no blur — solid background color matching Catppuccin Mocha.
+background-opacity = 1
 
 # Shaders (GLSL) — método builtin de Ghostty (custom-shader)
 #   1) CRT retro sutil (scanlines + bloom + viñeta, conserva Catppuccin)
