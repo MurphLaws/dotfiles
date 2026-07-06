@@ -6,7 +6,7 @@ return {
 		priority = 1000,
 		opts = {
 			flavour = "mocha",
-			transparent_background = true, -- let ghostty/tmux blur show through
+			transparent_background = false,
 			term_colors = true,
 			styles = {
 				comments = { "italic" },
@@ -19,81 +19,7 @@ return {
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			-- Force transparency on common float/sidebar groups
-			local transparent_groups = {
-				"Normal",
-				"NormalFloat",
-				"NormalNC",
-				"SignColumn",
-				"Pmenu",
-				"FloatBorder",
-				"TelescopeNormal",
-				"TelescopeBorder",
-				"TelescopePromptNormal",
-				"TelescopePromptBorder",
-				"TelescopeResultsNormal",
-				"TelescopeResultsBorder",
-				"TelescopePreviewNormal",
-				"TelescopePreviewBorder",
-				"WhichKeyFloat",
-				"WhichKeyBorder",
-				"SnacksPicker",
-				"SnacksPickerNormal",
-				"SnacksPickerBorder",
-				"SnacksPickerTitle",
-				"SnacksPickerPrompt",
-				"SnacksPickerInput",
-				"SnacksPickerInputBorder",
-				"SnacksPickerInputTitle",
-				"SnacksPickerList",
-				"SnacksPickerListBorder",
-				"SnacksPickerListTitle",
-				"SnacksPickerPreview",
-				"SnacksPickerPreviewBorder",
-				"SnacksPickerPreviewTitle",
-				"SnacksPickerBox",
-				"SnacksPickerBoxBorder",
-				-- vim.ui.input / ventanas flotantes genéricas de snacks
-				"SnacksNormal",
-				"SnacksNormalNC",
-				"SnacksWinBar",
-				"SnacksInput",
-				"SnacksInputNormal",
-				"SnacksInputBorder",
-				"SnacksInputTitle",
-			}
-
-			-- Reaplicar la transparencia en cada ColorScheme. Hacerlo dentro del
-			-- evento (y no solo una vez) mantiene `Normal` sin bg sincronizado con
-			-- el caché de transparencia de snacks.nvim, que se invalida justo en
-			-- este evento. Si no, snacks cachea "no transparente", luego Normal
-			-- pierde el bg y revienta al mezclar el backdrop (fg nil en blend()).
-			local function apply_transparency()
-				for _, group in ipairs(transparent_groups) do
-					-- Preservar fg y demás atributos; solo limpiar el fondo.
-					-- Pasar { bg = "NONE" } a secas REEMPLAZA el grupo y borra el
-					-- fg, lo que dejaba Normal/NormalFloat sin foreground y hacía
-					-- crashear a snacks.gh al mezclar colores (fg nil en blend()).
-					local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
-					hl.bg = "NONE"
-					hl.ctermbg = nil
-					vim.api.nvim_set_hl(0, group, hl)
-				end
-
-				-- Números de línea legibles: el LineNr de Catppuccin (#45475a) casi
-				-- no contrasta sobre el fondo transparente. overlay1 (#7f849c) se ve
-				-- sin robar protagonismo. bg = NONE conserva la transparencia.
-				vim.api.nvim_set_hl(0, "LineNr", { fg = "#7f849c", bg = "NONE" })
-				vim.api.nvim_set_hl(0, "LineNrAbove", { fg = "#7f849c", bg = "NONE" })
-				vim.api.nvim_set_hl(0, "LineNrBelow", { fg = "#7f849c", bg = "NONE" })
-			end
-			vim.api.nvim_create_autocmd("ColorScheme", {
-				group = vim.api.nvim_create_augroup("illico_transparency", { clear = true }),
-				callback = apply_transparency,
-			})
-
 			vim.cmd.colorscheme("catppuccin-mocha")
-			apply_transparency()
 
 			-- Catppuccin Mocha palette, mapped onto the accent keys the rest of
 			-- the config already consumes (lualine, mini.icons, org/neorg overrides).
