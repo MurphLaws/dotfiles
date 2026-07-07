@@ -40,6 +40,13 @@ macos-non-native-fullscreen = true
 #   No transparency, no blur — solid background color matching Catppuccin Mocha.
 background-opacity = 1
 
+# Fondo con degradado azul (PNG generado con ImageMagick:
+#   magick -size 1920x1080 gradient:'#10141f'-'#2e3a52' gradient-blue.png)
+# background-image-opacity < 1 lo mezcla con el background 1e1e2e.
+background-image = ~/.config/ghostty/backgrounds/gradient-blue.png
+background-image-fit = cover
+background-image-opacity = 0.7
+
 # Shaders (GLSL) — método builtin de Ghostty (custom-shader)
 #   1) CRT retro sutil (scanlines + bloom + viñeta, conserva Catppuccin)
 #   2) animación de cursor tipo "smear" (estilo Neovide)
