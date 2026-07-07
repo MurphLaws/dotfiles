@@ -28,7 +28,7 @@ return {
 				},
 			},
 			render = function(props)
-				vim.api.nvim_set_hl(0, "InclineNavicSeparator", { fg = "#6c7086" })
+				vim.api.nvim_set_hl(0, "InclineNavicSeparator", { fg = "#6e738d" })
 
 				local full_path = vim.api.nvim_buf_get_name(props.buf)
 				local display_path = vim.fn.fnamemodify(full_path, ":~:.:h")
@@ -125,7 +125,7 @@ return {
 
 				local result = {}
 
-				table.insert(result, { "▊ ", guifg = "#89b4fa" })
+				table.insert(result, { "▊ ", guifg = "#8aadf4" })
 
 				-- Add diagnostic labels
 				vim.list_extend(result, get_diagnostic_label())
@@ -135,7 +135,7 @@ return {
 
 				-- Add directory path when available
 				if display_path ~= "" and display_path ~= "." then
-					table.insert(result, { display_path .. "/", guifg = "#89dceb" })
+					table.insert(result, { display_path .. "/", guifg = "#91d7e3" })
 					table.insert(result, { " " })
 				end
 
@@ -146,23 +146,23 @@ return {
 				end
 
 				-- Add file icon and name
-				table.insert(result, { (ft_icon or "") .. " ", guifg = ft_color or "#89b4fa", guibg = "none" })
+				table.insert(result, { (ft_icon or "") .. " ", guifg = ft_color or "#8aadf4", guibg = "none" })
 				table.insert(result, {
 					filename,
 					gui = modified and "bold,italic" or "bold",
-					guifg = modified and "#f9e2af" or "#cdd6f4",
+					guifg = modified and "#eed49f" or "#cad3f5",
 				})
 
 				-- Modified indicator
 				if modified then
-					table.insert(result, { " ● ", guifg = "#f38ba8" })
+					table.insert(result, { " ● ", guifg = "#ed8796" })
 				else
 					table.insert(result, { " " })
 				end
 
 				-- Add window number
-				table.insert(result, { "│ ", guifg = "#6c7086" })
-				table.insert(result, { " " .. vim.api.nvim_win_get_number(props.win) .. " ", guifg = "#89b4fa" })
+				table.insert(result, { "│ ", guifg = "#6e738d" })
+				table.insert(result, { " " .. vim.api.nvim_win_get_number(props.win) .. " ", guifg = "#8aadf4" })
 
 				return result
 			end,

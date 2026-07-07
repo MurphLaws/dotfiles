@@ -92,7 +92,7 @@ return {
 				vim.api.nvim_set_hl(0, "@org.headline.level6", { fg = "#f7768e", bold = true }) -- Vibrant Red
 
 				-- Links (Italic + Underlined + Pastel Teal)
-				local link_opts = { fg = "#94E2D5", underline = true, italic = true }
+				local link_opts = { fg = "#8bd5ca", underline = true, italic = true }
 				vim.api.nvim_set_hl(0, "@org.hyperlink", link_opts)
 				vim.api.nvim_set_hl(0, "@org.hyperlink.desc", link_opts)
 			end,

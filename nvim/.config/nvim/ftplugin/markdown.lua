@@ -10,11 +10,11 @@
 --   {++añadir++}          sugerir inserción       (verde)
 --   {--quitar--}          sugerir borrado         (rojo, tachado)
 --   {~~viejo~>nuevo~~}    sugerir reemplazo       (cian)
-vim.api.nvim_set_hl(0, "CriticComment", { fg = "#f9e2af", bg = "#3a3320", italic = true })
-vim.api.nvim_set_hl(0, "CriticHighlight", { fg = "#1e1e2e", bg = "#f9e2af", bold = true })
-vim.api.nvim_set_hl(0, "CriticAdd", { fg = "#a6e3a1", bg = "#1e3a2a" })
-vim.api.nvim_set_hl(0, "CriticDel", { fg = "#f38ba8", strikethrough = true })
-vim.api.nvim_set_hl(0, "CriticSub", { fg = "#89dceb", bg = "#1e3040" })
+vim.api.nvim_set_hl(0, "CriticComment", { fg = "#eed49f", bg = "#3a3320", italic = true })
+vim.api.nvim_set_hl(0, "CriticHighlight", { fg = "#24273a", bg = "#eed49f", bold = true })
+vim.api.nvim_set_hl(0, "CriticAdd", { fg = "#a6da95", bg = "#1e3a2a" })
+vim.api.nvim_set_hl(0, "CriticDel", { fg = "#ed8796", strikethrough = true })
+vim.api.nvim_set_hl(0, "CriticSub", { fg = "#91d7e3", bg = "#1e3040" })
 
 local critic_patterns = {
   { "CriticComment", [[{>>\_.\{-}<<}]] },

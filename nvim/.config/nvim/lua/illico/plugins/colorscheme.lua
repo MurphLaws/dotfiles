@@ -5,7 +5,7 @@ return {
 		lazy = false,
 		priority = 1000,
 		opts = {
-			flavour = "mocha",
+			flavour = "macchiato",
 			transparent_background = false,
 			term_colors = true,
 			styles = {
@@ -19,23 +19,23 @@ return {
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			vim.cmd.colorscheme("catppuccin-mocha")
+			vim.cmd.colorscheme("catppuccin-macchiato")
 
-			-- Catppuccin Mocha palette, mapped onto the accent keys the rest of
+			-- Catppuccin Macchiato palette, mapped onto the accent keys the rest of
 			-- the config already consumes (lualine, mini.icons, org/neorg overrides).
-			-- Key names are historical handles — the values are pure Catppuccin Mocha.
+			-- Key names are historical handles — the values are pure Catppuccin Macchiato.
 			local p = {
-				coral = "#fab387", -- peach
-				peach = "#fab387", -- peach
-				green = "#a6e3a1",
-				amber = "#f9e2af", -- yellow
-				gold = "#f9e2af", -- yellow
-				sky = "#89dceb", -- sky
-				blue = "#89b4fa",
-				mauve = "#cba6f7", -- mauve
-				purple = "#b4befe", -- lavender
-				red = "#f38ba8",
-				fg_dim = "#6c7086", -- overlay0 (comment)
+				coral = "#f5a97f", -- peach
+				peach = "#f5a97f", -- peach
+				green = "#a6da95",
+				amber = "#eed49f", -- yellow
+				gold = "#eed49f", -- yellow
+				sky = "#91d7e3", -- sky
+				blue = "#8aadf4",
+				mauve = "#c6a0f6", -- mauve
+				purple = "#b7bdf8", -- lavender
+				red = "#ed8796",
+				fg_dim = "#6e738d", -- overlay0 (comment)
 			}
 
 			-- Orgmode
@@ -58,7 +58,7 @@ return {
 			end
 
 			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
-			-- Global names kept for back-compat; values are Catppuccin Mocha.
+			-- Global names kept for back-compat; values are Catppuccin Macchiato.
 			_G.superset_palette = p
 			_G.superset_accents = p
 			_G.tokyonight_accents = {

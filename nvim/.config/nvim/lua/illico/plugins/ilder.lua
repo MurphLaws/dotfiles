@@ -33,7 +33,7 @@ return {
 					accent = wilder.make_hl(
 						"WilderAccent",
 						"Pmenu",
-						{ { a = 1 }, { a = 1 }, { foreground = "#58FFD6", background = "#1e1e2e" } }
+						{ { a = 1 }, { a = 1 }, { foreground = "#58FFD6", background = "#24273a" } }
 					),
 				},
 				-- 'single', 'double', 'rounded' or 'solid'

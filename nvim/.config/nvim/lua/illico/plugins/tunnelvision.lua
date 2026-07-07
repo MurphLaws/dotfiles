@@ -2,10 +2,10 @@ return {
 	{
 		"leolaurindo/tunnelvision.nvim",
 		opts = {
-			-- Por defecto el texto atenuado usa el color de `Comment` (#6c7086),
+			-- Por defecto el texto atenuado usa el color de `Comment` (#6e738d),
 			-- que se sigue leyendo bastante. Forzamos un fg algo más oscuro
 			-- (surface2) para que las líneas fuera de foco recedan sin desaparecer.
-			dim = { fg = "#585b70" },
+			dim = { fg = "#5b6078" },
 			-- Rastrea el símbolo en TODO el archivo, no solo en la función
 			-- que contiene el cursor. Así funciona igual con variables que
 			-- con funciones (sus llamadas viven en otras funciones del buffer).

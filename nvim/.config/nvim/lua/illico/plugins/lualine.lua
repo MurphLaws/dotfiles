@@ -12,8 +12,8 @@ return {
 		local sky = a.sky or "#74a5af"
 		local mauve = a.mauve or "#9780b2"
 		local fg_dim = a.fg_dim or "#6e6863"
-		local fg_text = "#cdd6f4"
-		local bg_dark = "#1e1e2e"
+		local fg_text = "#cad3f5"
+		local bg_dark = "#24273a"
 
 		local function set_buftab_hl()
 			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = amber, bold = true })
