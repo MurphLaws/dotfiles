@@ -101,6 +101,7 @@ pub fn start_game(terminal: &mut Terminal, grid: Grid) {
 
             match state {
                 State::Solved(duration) => {
+                    record_time(&builder, duration);
                     solved_screen(terminal, &builder, duration, false);
                 }
                 State::Exit(_) => {}
@@ -257,6 +258,34 @@ pub fn set_cursor_for_bottom_text(
 }
 
 /// One hour in seconds.
+/// Append the solve time to `~/.local/share/yayagram/times.csv`
+/// (same record style as the other games: date,size,seconds)
+fn record_time(builder: &Builder, duration: Duration) {
+    let dir = std::env::var_os("XDG_DATA_HOME")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            let home = std::env::var_os("HOME").unwrap_or_default();
+            std::path::PathBuf::from(home).join(".local/share")
+        })
+        .join("yayagram");
+    let _ = std::fs::create_dir_all(&dir);
+    let line = format!(
+        "{},{}x{},{}\n",
+        chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+        builder.grid.size.width,
+        builder.grid.size.height,
+        duration.as_secs(),
+    );
+    use std::io::Write as _;
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dir.join("times.csv"))
+    {
+        let _ = f.write_all(line.as_bytes());
+    }
+}
+
 const HOUR: u64 = 60 * 60;
 
 /// The screen that appears when the grid was solved.

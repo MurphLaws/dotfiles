@@ -3,8 +3,11 @@
 #include <libgen.h>
 #include <locale.h>
 #include <ncurses.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #include "common.h"
 #include "game.h"
@@ -21,6 +24,7 @@ void version(void);
 void usage(const char *);
 void draw_greeting(void);
 static void centered_mvprintw(int y, const char *str);
+static void record_time(long secs);
 
 int main(int argc, char *argv[]) {
   int option;
@@ -116,15 +120,50 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  time_t started = 0;
   do {
-    keyboard_event(getch());
+    key = getch();
+    if (started == 0)
+      started = time(NULL); /* the clock starts on the first move */
+    keyboard_event(key);
   } while (!game_won());
+
+  long secs = started ? (long)(time(NULL) - started) : 0;
+  record_time(secs);
 
   endwin();
   game_end();
-  printf("You won.\n");
+  printf("You won in %ld:%02ld.\n", secs / 60, secs % 60);
 
   return (0);
+}
+
+/* Append the solve time to ~/.local/share/solitaire/times.csv
+ * (same record style as the other games: date,seconds) */
+static void record_time(long secs) {
+  char dir[1024];
+  char path[1200];
+  char date[32];
+  const char *xdg = getenv("XDG_DATA_HOME");
+  const char *home = getenv("HOME");
+  FILE *f;
+  time_t now = time(NULL);
+
+  if (xdg != NULL && *xdg != '\0')
+    snprintf(dir, sizeof(dir), "%s/solitaire", xdg);
+  else if (home != NULL)
+    snprintf(dir, sizeof(dir), "%s/.local/share/solitaire", home);
+  else
+    return;
+  mkdir(dir, 0755); /* best effort; parents normally exist */
+
+  snprintf(path, sizeof(path), "%s/times.csv", dir);
+  f = fopen(path, "a");
+  if (f == NULL)
+    return;
+  strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", localtime(&now));
+  fprintf(f, "%s,%ld\n", date, secs);
+  fclose(f);
 }
 
 static void centered_mvprintw(int y, const char *str) {
