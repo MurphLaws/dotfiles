@@ -449,7 +449,45 @@ fn render(frame: &mut Frame, app: &App) {
     );
 }
 
+fn print_times() {
+    match std::fs::read_to_string(times_file()) {
+        Ok(content) if !content.trim().is_empty() => {
+            println!(
+                "{:<19}  {:<6}  {:<20}  {:>5}  {:>6}",
+                "date", "mode", "seed", "moves", "time"
+            );
+            let mut best: Option<u64> = None;
+            for line in content.lines() {
+                let f: Vec<&str> = line.split(',').collect();
+                if f.len() == 5 {
+                    let secs = f[4].parse::<u64>().unwrap_or(0);
+                    best = Some(best.map_or(secs, |b| b.min(secs)));
+                    println!(
+                        "{:<19}  {:<6}  {:<20}  {:>5}  {:>6}",
+                        f[0],
+                        f[1],
+                        f[2],
+                        f[3],
+                        fmt_duration(std::time::Duration::from_secs(secs))
+                    );
+                }
+            }
+            if let Some(b) = best {
+                println!(
+                    "\nbest: {}",
+                    fmt_duration(std::time::Duration::from_secs(b))
+                );
+            }
+        }
+        _ => println!("No recorded times yet."),
+    }
+}
+
 fn main() -> io::Result<()> {
+    if std::env::args().any(|a| a == "--times" || a == "-times" || a == "-t") {
+        print_times();
+        return Ok(());
+    }
     let daily = std::env::args().any(|a| a == "--daily" || a == "-d");
     let seed = if daily {
         today_seed()

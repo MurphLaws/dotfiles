@@ -36,6 +36,11 @@ fn main() {
 }
 
 fn run() -> Result<(), Cow<'static, str>> {
+    if std::env::args().any(|a| a == "--times" || a == "-times" || a == "-t") {
+        print_times();
+        return Ok(());
+    }
+
     let arg = args::parse();
 
     let grid = match arg {
@@ -258,16 +263,43 @@ pub fn set_cursor_for_bottom_text(
 }
 
 /// One hour in seconds.
-/// Append the solve time to `~/.local/share/yayagram/times.csv`
-/// (same record style as the other games: date,size,seconds)
-fn record_time(builder: &Builder, duration: Duration) {
-    let dir = std::env::var_os("XDG_DATA_HOME")
+/// Print all recorded solve times (`--times` flag)
+fn print_times() {
+    let path = times_dir().join("times.csv");
+    match std::fs::read_to_string(path) {
+        Ok(content) if !content.trim().is_empty() => {
+            println!("{:<19}  {:<7}  {:>6}", "date", "size", "time");
+            let mut best: Option<u64> = None;
+            for line in content.lines() {
+                let f: Vec<&str> = line.split(',').collect();
+                if f.len() == 3 {
+                    let secs = f[2].parse::<u64>().unwrap_or(0);
+                    best = Some(best.map_or(secs, |b| b.min(secs)));
+                    println!("{:<19}  {:<7}  {:>3}:{:02}", f[0], f[1], secs / 60, secs % 60);
+                }
+            }
+            if let Some(b) = best {
+                println!("\nbest: {}:{:02}", b / 60, b % 60);
+            }
+        }
+        _ => println!("No recorded times yet."),
+    }
+}
+
+fn times_dir() -> std::path::PathBuf {
+    std::env::var_os("XDG_DATA_HOME")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
             let home = std::env::var_os("HOME").unwrap_or_default();
             std::path::PathBuf::from(home).join(".local/share")
         })
-        .join("yayagram");
+        .join("yayagram")
+}
+
+/// Append the solve time to `~/.local/share/yayagram/times.csv`
+/// (same record style as the other games: date,size,seconds)
+fn record_time(builder: &Builder, duration: Duration) {
+    let dir = times_dir();
     let _ = std::fs::create_dir_all(&dir);
     let line = format!(
         "{},{}x{},{}\n",

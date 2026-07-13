@@ -25,6 +25,8 @@ void usage(const char *);
 void draw_greeting(void);
 static void centered_mvprintw(int y, const char *str);
 static void record_time(long secs);
+static void times_path(char *path, size_t size);
+static void print_times(void);
 
 int main(int argc, char *argv[]) {
   int option;
@@ -39,6 +41,14 @@ int main(int argc, char *argv[]) {
       {0, 0, 0, 0}};
 
   program_name = basename(argv[0]);
+
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "--times") == 0 || strcmp(argv[i], "-times") == 0 ||
+        strcmp(argv[i], "-t") == 0) {
+      print_times();
+      return (0);
+    }
+  }
 
   while ((option = getopt_long(argc, argv, "hvp:", options, &option_index)) !=
          -1) {
@@ -140,24 +150,60 @@ int main(int argc, char *argv[]) {
 
 /* Append the solve time to ~/.local/share/solitaire/times.csv
  * (same record style as the other games: date,seconds) */
-static void record_time(long secs) {
-  char dir[1024];
-  char path[1200];
-  char date[32];
+static void times_path(char *path, size_t size) {
   const char *xdg = getenv("XDG_DATA_HOME");
   const char *home = getenv("HOME");
-  FILE *f;
-  time_t now = time(NULL);
+  char dir[1024];
 
   if (xdg != NULL && *xdg != '\0')
     snprintf(dir, sizeof(dir), "%s/solitaire", xdg);
   else if (home != NULL)
     snprintf(dir, sizeof(dir), "%s/.local/share/solitaire", home);
-  else
+  else {
+    path[0] = '\0';
     return;
+  }
   mkdir(dir, 0755); /* best effort; parents normally exist */
+  snprintf(path, size, "%s/times.csv", dir);
+}
 
-  snprintf(path, sizeof(path), "%s/times.csv", dir);
+/* Print all recorded times (--times flag) */
+static void print_times(void) {
+  char path[1200];
+  char line[256];
+  long best = -1;
+  FILE *f;
+
+  times_path(path, sizeof(path));
+  f = path[0] != '\0' ? fopen(path, "r") : NULL;
+  if (f == NULL) {
+    printf("No recorded times yet.\n");
+    return;
+  }
+  printf("%-19s  %6s\n", "date", "time");
+  while (fgets(line, sizeof(line), f) != NULL) {
+    char date[32];
+    long secs;
+    if (sscanf(line, "%31[^,],%ld", date, &secs) == 2) {
+      if (best < 0 || secs < best)
+        best = secs;
+      printf("%-19s  %3ld:%02ld\n", date, secs / 60, secs % 60);
+    }
+  }
+  fclose(f);
+  if (best >= 0)
+    printf("\nbest: %ld:%02ld\n", best / 60, best % 60);
+}
+
+static void record_time(long secs) {
+  char path[1200];
+  char date[32];
+  FILE *f;
+  time_t now = time(NULL);
+
+  times_path(path, sizeof(path));
+  if (path[0] == '\0')
+    return;
   f = fopen(path, "a");
   if (f == NULL)
     return;
