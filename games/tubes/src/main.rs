@@ -245,16 +245,22 @@ impl App {
                     self.won = true;
                     let elapsed = self.elapsed();
                     self.solve_time = Some(elapsed);
-                    let best = record_time(self.seed, self.daily, self.moves, elapsed);
+                    let (seed_best, overall_best) =
+                        record_time(self.seed, self.daily, self.moves, elapsed);
+                    // a per-seed comparison only means something when this seed
+                    // was played before; otherwise compare against all solves
+                    let verdict = match (seed_best, overall_best) {
+                        (Some(b), _) if elapsed < b => " New best for this seed!".to_string(),
+                        (Some(b), _) => format!(" (best for this seed: {})", fmt_duration(b)),
+                        (None, Some(b)) if elapsed < b => " New overall best!".to_string(),
+                        (None, Some(b)) => format!(" (overall best: {})", fmt_duration(b)),
+                        (None, None) => String::new(),
+                    };
                     self.message = format!(
                         "Solved in {} moves, {}!{} [n]ew puzzle",
                         self.moves,
                         fmt_duration(elapsed),
-                        match best {
-                            Some(b) if b < elapsed =>
-                                format!(" (best for this seed: {})", fmt_duration(b)),
-                            _ => " New best time!".to_string(),
-                        }
+                        verdict
                     );
                 }
             }
@@ -288,24 +294,25 @@ fn record_time(
     daily: bool,
     moves: u32,
     time: std::time::Duration,
-) -> Option<std::time::Duration> {
+) -> (Option<std::time::Duration>, Option<std::time::Duration>) {
     let path = times_file();
-    let prev_best = std::fs::read_to_string(&path)
-        .ok()
-        .and_then(|content| {
-            content
-                .lines()
-                .filter_map(|l| {
-                    let mut f = l.split(',');
-                    let (_date, _mode, s, _moves, secs) =
-                        (f.next()?, f.next()?, f.next()?, f.next()?, f.next()?);
-                    (s.parse::<u64>().ok()? == seed)
-                        .then(|| secs.parse::<u64>().ok())
-                        .flatten()
-                })
-                .min()
-        })
-        .map(std::time::Duration::from_secs);
+    let mut seed_best: Option<u64> = None;
+    let mut overall_best: Option<u64> = None;
+    if let Ok(content) = std::fs::read_to_string(&path) {
+        for l in content.lines() {
+            let mut f = l.split(',');
+            let (Some(_date), Some(_mode), Some(s), Some(_moves), Some(secs)) =
+                (f.next(), f.next(), f.next(), f.next(), f.next())
+            else {
+                continue;
+            };
+            let Ok(secs) = secs.parse::<u64>() else { continue };
+            overall_best = Some(overall_best.map_or(secs, |b| b.min(secs)));
+            if s.parse::<u64>().ok() == Some(seed) {
+                seed_best = Some(seed_best.map_or(secs, |b| b.min(secs)));
+            }
+        }
+    }
     let line = format!(
         "{},{},{},{},{}\n",
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
@@ -322,7 +329,10 @@ fn record_time(
     {
         let _ = f.write_all(line.as_bytes());
     }
-    prev_best
+    (
+        seed_best.map(std::time::Duration::from_secs),
+        overall_best.map(std::time::Duration::from_secs),
+    )
 }
 
 fn today_seed() -> u64 {
