@@ -159,6 +159,7 @@ struct App {
     selected: Option<usize>,
     history: Vec<(usize, usize, usize)>,
     moves: u32,
+    undos: u32,
     seed: u64,
     daily: bool,
     /// number of colors in play — the difficulty level
@@ -183,6 +184,7 @@ impl App {
             selected: None,
             history: Vec::new(),
             moves: 0,
+            undos: 0,
             seed,
             daily,
             colors,
@@ -198,6 +200,7 @@ impl App {
         self.selected = None;
         self.history.clear();
         self.moves = 0;
+        self.undos = 0;
         self.won = false;
         self.message.clear();
         self.started_at = None;
@@ -216,6 +219,7 @@ impl App {
         if let Some((src, dst, n)) = self.history.pop() {
             apply_pour(&mut self.tubes, dst, src, n);
             self.moves = self.moves.saturating_sub(1);
+            self.undos += 1;
             self.won = false;
             self.message.clear();
         }
@@ -257,27 +261,42 @@ impl App {
                     self.won = true;
                     let elapsed = self.elapsed();
                     self.solve_time = Some(elapsed);
-                    let (seed_best, overall_best) =
-                        record_time(self.seed, self.daily, self.colors, self.moves, elapsed);
+                    let my_score = score(elapsed.as_secs(), self.moves, self.undos);
+                    let (seed_best, overall_best) = record_time(
+                        self.seed,
+                        self.daily,
+                        self.colors,
+                        self.moves,
+                        self.undos,
+                        elapsed,
+                    );
                     // a per-seed comparison only means something when this seed
                     // was played before; otherwise compare against all solves
                     let verdict = match (seed_best, overall_best) {
-                        (Some(b), _) if elapsed < b => " New best for this seed!".to_string(),
-                        (Some(b), _) => format!(" (best for this seed: {})", fmt_duration(b)),
-                        (None, Some(b)) if elapsed < b => " New overall best!".to_string(),
-                        (None, Some(b)) => format!(" (overall best: {})", fmt_duration(b)),
+                        (Some(b), _) if my_score < b => " New best for this seed!".to_string(),
+                        (Some(b), _) => format!(" (best score for this seed: {b})"),
+                        (None, Some(b)) if my_score < b => " New overall best!".to_string(),
+                        (None, Some(b)) => format!(" (overall best score: {b})"),
                         (None, None) => String::new(),
                     };
                     self.message = format!(
-                        "Solved in {} moves, {}!{} [n]ew puzzle",
+                        "Solved in {} moves ({} undos), {} — score {}!{} [n]ew puzzle",
                         self.moves,
+                        self.undos,
                         fmt_duration(elapsed),
+                        my_score,
                         verdict
                     );
                 }
             }
         }
     }
+}
+
+/// Composite score: lower is better. Time matters, efficiency matters more,
+/// undos are expensive.
+fn score(secs: u64, moves: u32, undos: u32) -> u64 {
+    secs + 3 * u64::from(moves) + 15 * u64::from(undos)
 }
 
 fn fmt_duration(d: std::time::Duration) -> String {
@@ -301,63 +320,73 @@ fn dirs_data_dir() -> std::path::PathBuf {
 }
 
 /// Append a solve record and return the previous best time for this seed, if any
-/// One row of the times file. Older rows have no level column: they were
-/// all played at the default level.
-fn parse_row(line: &str) -> Option<(String, String, u64, usize, u32, u64)> {
+/// One row of the times file: (date, mode, seed, level, moves, undos, secs).
+/// Older rows are missing the level and/or undos columns.
+fn parse_row(line: &str) -> Option<(String, String, u64, usize, u32, u32, u64)> {
     let f: Vec<&str> = line.split(',').collect();
+    let (date, mode) = (f.first()?.to_string(), f.get(1)?.to_string());
+    let seed = f.get(2)?.parse().ok()?;
     match f.len() {
-        5 => Some((
-            f[0].to_string(),
-            f[1].to_string(),
-            f[2].parse().ok()?,
-            DEFAULT_COLORS,
+        5 => Some((date, mode, seed, DEFAULT_COLORS, f[3].parse().ok()?, 0, f[4].parse().ok()?)),
+        6 => Some((
+            date,
+            mode,
+            seed,
             f[3].parse().ok()?,
             f[4].parse().ok()?,
+            0,
+            f[5].parse().ok()?,
         )),
-        6 => Some((
-            f[0].to_string(),
-            f[1].to_string(),
-            f[2].parse().ok()?,
+        7 => Some((
+            date,
+            mode,
+            seed,
             f[3].parse().ok()?,
             f[4].parse().ok()?,
             f[5].parse().ok()?,
+            f[6].parse().ok()?,
         )),
         _ => None,
     }
 }
 
+/// Append a solve record; returns the previous best SCORES (per-seed, overall)
+/// within the same difficulty level
 fn record_time(
     seed: u64,
     daily: bool,
     colors: usize,
     moves: u32,
+    undos: u32,
     time: std::time::Duration,
-) -> (Option<std::time::Duration>, Option<std::time::Duration>) {
+) -> (Option<u64>, Option<u64>) {
     let path = times_file();
     let mut seed_best: Option<u64> = None;
     let mut overall_best: Option<u64> = None;
     if let Ok(content) = std::fs::read_to_string(&path) {
         for l in content.lines() {
-            let Some((_date, _mode, s, lvl, _moves, secs)) = parse_row(l) else {
+            let Some((_date, _mode, s, lvl, mv, ud, secs)) = parse_row(l) else {
                 continue;
             };
             // bests only mean something within the same difficulty level
             if lvl != colors {
                 continue;
             }
-            overall_best = Some(overall_best.map_or(secs, |b| b.min(secs)));
+            let sc = score(secs, mv, ud);
+            overall_best = Some(overall_best.map_or(sc, |b| b.min(sc)));
             if s == seed {
-                seed_best = Some(seed_best.map_or(secs, |b| b.min(secs)));
+                seed_best = Some(seed_best.map_or(sc, |b| b.min(sc)));
             }
         }
     }
     let line = format!(
-        "{},{},{},{},{},{}\n",
+        "{},{},{},{},{},{},{}\n",
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
         if daily { "daily" } else { "random" },
         seed,
         colors,
         moves,
+        undos,
         time.as_secs(),
     );
     use std::io::Write as _;
@@ -368,10 +397,7 @@ fn record_time(
     {
         let _ = f.write_all(line.as_bytes());
     }
-    (
-        seed_best.map(std::time::Duration::from_secs),
-        overall_best.map(std::time::Duration::from_secs),
-    )
+    (seed_best, overall_best)
 }
 
 fn today_seed() -> u64 {
@@ -399,8 +425,8 @@ fn render(frame: &mut Frame, app: &App) {
         String::new()
     };
     let header = format!(
-        " tubes • {} #{} • lvl {} • moves: {}{} ",
-        mode, app.seed, app.colors, app.moves, timer
+        " tubes • {} #{} • lvl {} • moves: {} • undos: {}{} ",
+        mode, app.seed, app.colors, app.moves, app.undos, timer
     );
     frame.render_widget(
         Paragraph::new(header)
@@ -502,29 +528,29 @@ fn print_times() {
     match std::fs::read_to_string(times_file()) {
         Ok(content) if !content.trim().is_empty() => {
             println!(
-                "{:<19}  {:<6}  {:<20}  {:>3}  {:>5}  {:>6}",
-                "date", "mode", "seed", "lvl", "moves", "time"
+                "{:<19}  {:<6}  {:<20}  {:>3}  {:>5}  {:>5}  {:>6}  {:>5}",
+                "date", "mode", "seed", "lvl", "moves", "undos", "time", "score"
             );
             let mut best: Option<u64> = None;
             for line in content.lines() {
-                if let Some((date, mode, seed, lvl, moves, secs)) = parse_row(line) {
-                    best = Some(best.map_or(secs, |b| b.min(secs)));
+                if let Some((date, mode, seed, lvl, moves, undos, secs)) = parse_row(line) {
+                    let sc = score(secs, moves, undos);
+                    best = Some(best.map_or(sc, |b| b.min(sc)));
                     println!(
-                        "{:<19}  {:<6}  {:<20}  {:>3}  {:>5}  {:>6}",
+                        "{:<19}  {:<6}  {:<20}  {:>3}  {:>5}  {:>5}  {:>6}  {:>5}",
                         date,
                         mode,
                         seed,
                         lvl,
                         moves,
-                        fmt_duration(std::time::Duration::from_secs(secs))
+                        undos,
+                        fmt_duration(std::time::Duration::from_secs(secs)),
+                        sc
                     );
                 }
             }
             if let Some(b) = best {
-                println!(
-                    "\nbest: {}",
-                    fmt_duration(std::time::Duration::from_secs(b))
-                );
+                println!("\nbest score: {b}");
             }
         }
         _ => println!("No recorded times yet."),
