@@ -15,7 +15,11 @@ const H_GAP: usize = 2;
 const SLOT_H: usize = 1; // rows per slot
 const V_GAP: usize = 2;
 
-const PALETTE: [Color; 10] = [
+const DEFAULT_COLORS: usize = 10;
+const MIN_COLORS: usize = 4;
+const MAX_COLORS: usize = 14;
+
+const PALETTE: [Color; 14] = [
     Color::Rgb(235, 60, 60),   // red
     Color::Rgb(255, 150, 40),  // orange
     Color::Rgb(255, 225, 60),  // yellow
@@ -26,6 +30,10 @@ const PALETTE: [Color; 10] = [
     Color::Rgb(255, 105, 200), // pink
     Color::Rgb(230, 230, 230), // white
     Color::Rgb(150, 95, 45),   // brown
+    Color::Rgb(25, 130, 55),   // dark green
+    Color::Rgb(140, 145, 155), // gray
+    Color::Rgb(185, 160, 255), // lavender
+    Color::Rgb(140, 25, 45),   // maroon
 ];
 
 type Tubes = Vec<Vec<u8>>;
@@ -153,6 +161,8 @@ struct App {
     moves: u32,
     seed: u64,
     daily: bool,
+    /// number of colors in play — the difficulty level
+    colors: usize,
     won: bool,
     message: String,
     /// set on the first pour of the puzzle
@@ -162,9 +172,10 @@ struct App {
 }
 
 impl App {
-    fn new(seed: u64, daily: bool) -> Self {
+    fn new(seed: u64, daily: bool, colors: usize) -> Self {
+        let colors = colors.clamp(MIN_COLORS, MAX_COLORS);
         let mut rng = StdRng::seed_from_u64(seed);
-        let tubes = gen_puzzle(10, 2, &mut rng);
+        let tubes = gen_puzzle(colors, 2, &mut rng);
         Self {
             initial: tubes.clone(),
             tubes,
@@ -174,6 +185,7 @@ impl App {
             moves: 0,
             seed,
             daily,
+            colors,
             won: false,
             message: String::new(),
             started_at: None,
@@ -246,7 +258,7 @@ impl App {
                     let elapsed = self.elapsed();
                     self.solve_time = Some(elapsed);
                     let (seed_best, overall_best) =
-                        record_time(self.seed, self.daily, self.moves, elapsed);
+                        record_time(self.seed, self.daily, self.colors, self.moves, elapsed);
                     // a per-seed comparison only means something when this seed
                     // was played before; otherwise compare against all solves
                     let verdict = match (seed_best, overall_best) {
@@ -289,9 +301,35 @@ fn dirs_data_dir() -> std::path::PathBuf {
 }
 
 /// Append a solve record and return the previous best time for this seed, if any
+/// One row of the times file. Older rows have no level column: they were
+/// all played at the default level.
+fn parse_row(line: &str) -> Option<(String, String, u64, usize, u32, u64)> {
+    let f: Vec<&str> = line.split(',').collect();
+    match f.len() {
+        5 => Some((
+            f[0].to_string(),
+            f[1].to_string(),
+            f[2].parse().ok()?,
+            DEFAULT_COLORS,
+            f[3].parse().ok()?,
+            f[4].parse().ok()?,
+        )),
+        6 => Some((
+            f[0].to_string(),
+            f[1].to_string(),
+            f[2].parse().ok()?,
+            f[3].parse().ok()?,
+            f[4].parse().ok()?,
+            f[5].parse().ok()?,
+        )),
+        _ => None,
+    }
+}
+
 fn record_time(
     seed: u64,
     daily: bool,
+    colors: usize,
     moves: u32,
     time: std::time::Duration,
 ) -> (Option<std::time::Duration>, Option<std::time::Duration>) {
@@ -300,24 +338,25 @@ fn record_time(
     let mut overall_best: Option<u64> = None;
     if let Ok(content) = std::fs::read_to_string(&path) {
         for l in content.lines() {
-            let mut f = l.split(',');
-            let (Some(_date), Some(_mode), Some(s), Some(_moves), Some(secs)) =
-                (f.next(), f.next(), f.next(), f.next(), f.next())
-            else {
+            let Some((_date, _mode, s, lvl, _moves, secs)) = parse_row(l) else {
                 continue;
             };
-            let Ok(secs) = secs.parse::<u64>() else { continue };
+            // bests only mean something within the same difficulty level
+            if lvl != colors {
+                continue;
+            }
             overall_best = Some(overall_best.map_or(secs, |b| b.min(secs)));
-            if s.parse::<u64>().ok() == Some(seed) {
+            if s == seed {
                 seed_best = Some(seed_best.map_or(secs, |b| b.min(secs)));
             }
         }
     }
     let line = format!(
-        "{},{},{},{},{}\n",
+        "{},{},{},{},{},{}\n",
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
         if daily { "daily" } else { "random" },
         seed,
+        colors,
         moves,
         time.as_secs(),
     );
@@ -360,8 +399,8 @@ fn render(frame: &mut Frame, app: &App) {
         String::new()
     };
     let header = format!(
-        " tubes • {} #{} • moves: {}{} ",
-        mode, app.seed, app.moves, timer
+        " tubes • {} #{} • lvl {} • moves: {}{} ",
+        mode, app.seed, app.colors, app.moves, timer
     );
     frame.render_widget(
         Paragraph::new(header)
@@ -463,21 +502,20 @@ fn print_times() {
     match std::fs::read_to_string(times_file()) {
         Ok(content) if !content.trim().is_empty() => {
             println!(
-                "{:<19}  {:<6}  {:<20}  {:>5}  {:>6}",
-                "date", "mode", "seed", "moves", "time"
+                "{:<19}  {:<6}  {:<20}  {:>3}  {:>5}  {:>6}",
+                "date", "mode", "seed", "lvl", "moves", "time"
             );
             let mut best: Option<u64> = None;
             for line in content.lines() {
-                let f: Vec<&str> = line.split(',').collect();
-                if f.len() == 5 {
-                    let secs = f[4].parse::<u64>().unwrap_or(0);
+                if let Some((date, mode, seed, lvl, moves, secs)) = parse_row(line) {
                     best = Some(best.map_or(secs, |b| b.min(secs)));
                     println!(
-                        "{:<19}  {:<6}  {:<20}  {:>5}  {:>6}",
-                        f[0],
-                        f[1],
-                        f[2],
-                        f[3],
+                        "{:<19}  {:<6}  {:<20}  {:>3}  {:>5}  {:>6}",
+                        date,
+                        mode,
+                        seed,
+                        lvl,
+                        moves,
                         fmt_duration(std::time::Duration::from_secs(secs))
                     );
                 }
@@ -499,12 +537,18 @@ fn main() -> io::Result<()> {
         return Ok(());
     }
     let daily = std::env::args().any(|a| a == "--daily" || a == "-d");
+    // difficulty level: a bare number argument = how many colors are in play
+    let colors = std::env::args()
+        .skip(1)
+        .find_map(|a| a.parse::<usize>().ok())
+        .unwrap_or(DEFAULT_COLORS)
+        .clamp(MIN_COLORS, MAX_COLORS);
     let seed = if daily {
         today_seed()
     } else {
         rand::thread_rng().gen()
     };
-    let mut app = App::new(seed, daily);
+    let mut app = App::new(seed, daily, colors);
 
     let mut terminal = ratatui::init();
     let result = run(&mut terminal, &mut app);
@@ -535,8 +579,8 @@ fn run(terminal: &mut ratatui::DefaultTerminal, app: &mut App) -> io::Result<()>
             KeyCode::Enter | KeyCode::Char(' ') => app.choose(),
             KeyCode::Char('u') => app.undo(),
             KeyCode::Char('r') => app.reset(),
-            KeyCode::Char('n') => *app = App::new(rand::thread_rng().gen(), false),
-            KeyCode::Char('d') => *app = App::new(today_seed(), true),
+            KeyCode::Char('n') => *app = App::new(rand::thread_rng().gen(), false, app.colors),
+            KeyCode::Char('d') => *app = App::new(today_seed(), true, app.colors),
             KeyCode::Char(c) if c.is_ascii_digit() => {
                 let d = c.to_digit(10).unwrap() as usize;
                 let idx = if d == 0 { 9 } else { d - 1 };
