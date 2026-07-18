@@ -19,20 +19,22 @@ Total: 52 piezas = Voyager completo.
 | `2x-pulgar-chico.stl` | 2 | Thumb 1U | Tecla interior del pulgar |
 | `2x-pulgar-grande.stl` | 2 | 1.5U Thumb V | Tecla exterior grande del pulgar |
 
-## Alternativa: placas de Production (varias teclas unidas por archivo)
+## Opción barata: `bundles/` — placas listas para subir
 
-Útiles si el servicio cobra tarifa mínima por archivo. Generan sobrantes.
+Cada placa une varias teclas en una sola pieza → se paga el cargo mínimo por
+parte muchas menos veces. El prefijo del nombre = copias a pedir. Genera
+sobrantes (sirven de repuesto). Total a subir: 7 archivos, 10 partes.
 
 | Archivo | Copias | Aporta |
 |---|---|---|
-| `Choc_Stem_MX_Size_Normal_Part_1.zip` | 1 | 6 Normal Tilted + 3 Normal |
-| `Choc_Stem_MX_Size_Normal_Part_3.zip` | 1 | 9 Normal Tilted |
-| `Choc_Stem_MX_Size_Saddle_Part_1.zip` | 1 | 6 Saddle Tilted + 3 Saddle |
-| `Choc_Stem_MX_Size_Saddle_Part_2.zip` | 2 | 8 Saddle Tilted + 8 Saddle + 2 Saddle Homing |
-| `Choc_Stem_MX_Size_Saddle_Part_3.zip` | 2 | 18 Saddle Tilted |
-| `Choc_Stem_MX_Size_Thumbs.zip` | 1 | 9 Thumb |
+| `bundles/1x-placa-normal-1.stl` | 1 | 6 Normal Tilted + 3 Normal |
+| `bundles/1x-placa-normal-3.stl` | 1 | 9 Normal Tilted |
+| `bundles/1x-placa-saddle-1.stl` | 1 | 6 Saddle Tilted + 3 Saddle |
+| `bundles/2x-placa-saddle-2.stl` | 2 | 8 Saddle Tilted + 8 Saddle + 2 Saddle Homing |
+| `bundles/2x-placa-saddle-3.stl` | 2 | 18 Saddle Tilted |
+| `bundles/1x-placa-pulgares.stl` | 1 | 9 Thumb |
+| `bundles/2x-pulgar-grande.stl` | 2 | Tecla exterior grande del pulgar (no hay placa) |
 
-Con las placas, la tecla grande del pulgar (`2x-pulgar-grande.stl`) se sube
-aparte igual: no existe versión en placa.
+Las teclas vienen unidas por puentes: separar con alicate y lijar el punto de unión.
 
 Consejo: pedir 2-3 repuestos de las que más se usan por si algún stem sale defectuoso.
