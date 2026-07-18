@@ -1,14 +1,27 @@
 # Keycaps KLP Lamé para ZSA Voyager
 
-Archivos de producción listos para mandar a un servicio de impresión (JLC3DP, PCBWay, etc.).
 Config: stem **Choc** (switches del Voyager) + tapa tamaño **MX**, perfiles Saddle.
 Recomendado: resina SLA o nylon MJF (el autor recomienda SLA sobre FDM).
 
 Modelos de [braindefender/KLP-Lame-Keycaps](https://github.com/braindefender/KLP-Lame-Keycaps) — dar crédito al autor al redistribuir.
 
-Cada ZIP es una placa con varias teclas unidas (más barato en servicios que cobran por archivo). Las de 1.5U no vienen en placas, van sueltas.
+## STL sueltos (nombre corto = cantidad + uso)
 
-## Qué pedir
+El nombre de cada archivo ya dice cuántas copias pedir y para qué fila van.
+Total: 52 piezas = Voyager completo.
+
+| Archivo | Copias | Perfil original | Uso |
+|---|---|---|---|
+| `12x-fila-numeros.stl` | 12 | Normal Tilted | Fila 1 (números) |
+| `24x-filas-2-y-4.stl` | 24 | Saddle Tilted | Filas 2 y 4 |
+| `10x-home.stl` | 10 | Saddle | Fila 3 (home), excepto índices |
+| `2x-home-FJ.stl` | 2 | Saddle Homing | F y J (bajo cada índice) |
+| `2x-pulgar-chico.stl` | 2 | Thumb 1U | Tecla interior del pulgar |
+| `2x-pulgar-grande.stl` | 2 | 1.5U Thumb V | Tecla exterior grande del pulgar |
+
+## Alternativa: placas de Production (varias teclas unidas por archivo)
+
+Útiles si el servicio cobra tarifa mínima por archivo. Generan sobrantes.
 
 | Archivo | Copias | Aporta |
 |---|---|---|
@@ -18,19 +31,8 @@ Cada ZIP es una placa con varias teclas unidas (más barato en servicios que cob
 | `Choc_Stem_MX_Size_Saddle_Part_2.zip` | 2 | 8 Saddle Tilted + 8 Saddle + 2 Saddle Homing |
 | `Choc_Stem_MX_Size_Saddle_Part_3.zip` | 2 | 18 Saddle Tilted |
 | `Choc_Stem_MX_Size_Thumbs.zip` | 1 | 9 Thumb |
-| `Choc_Stem_MX_Size_1.5U_Thumb_V.stl` | 2 | Tecla exterior grande del pulgar |
 
-## Lo que necesita el Voyager (52 teclas)
+Con las placas, la tecla grande del pulgar (`2x-pulgar-grande.stl`) se sube
+aparte igual: no existe versión en placa.
 
-| Perfil | Necesarias | Obtenidas | Uso |
-|---|---|---|---|
-| Normal Tilted | 12 | 15 | Fila 1 (números) |
-| Saddle Tilted | 24 | 32 | Filas 2 y 4 |
-| Saddle | 10 | 11 | Fila 3 (home), excepto índices |
-| Saddle Homing | 2 | 2 | F y J (bajo cada índice) |
-| Thumb 1U | 2 | 9 | Tecla interior del pulgar |
-| Thumb 1.5U V | 2 | 2 | Tecla exterior grande del pulgar |
-
-Los sobrantes vienen de que las placas traen mezclas fijas; el limitante es el
-Saddle Homing (1 por copia de Saddle Part 2) y de ahí se arrastra el resto.
-Sirven de repuesto si algún stem sale defectuoso.
+Consejo: pedir 2-3 repuestos de las que más se usan por si algún stem sale defectuoso.
