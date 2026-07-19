@@ -18,6 +18,7 @@ Total: 52 piezas = Voyager completo.
 | `2x-home-FJ.stl` | 2 | Saddle Homing | F y J (bajo cada índice) |
 | `3x-homingnormal.stl` | 3 | Normal Homing | Extra: homing perfil Normal |
 | `3x-homingsaddle.stl` | 3 | Saddle Homing | Extra: homing perfil Saddle |
+| `3x-homing-fila-numeros.stl` | 3 | Normal Tilted + 3 puntos homing (custom) | Extra: homing para la fila de números |
 | `2x-pulgar-chico.stl` | 2 | Thumb 1U | Tecla interior del pulgar |
 | `2x-pulgar-grande.stl` | 2 | 1.5U Thumb V | Tecla exterior grande del pulgar |
 
