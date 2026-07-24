@@ -15,6 +15,10 @@
 - Never add Co-Authored-By lines to commit messages. Only the user is the author.
 - Always commit changes after completing work, unless explicitly told not to.
 
+## marimo
+- Al trabajar con notebooks de marimo, inicia el servidor siempre con `--watch` (`marimo edit notebook.py --watch`) para que el navegador recargue los cambios que hagas en el archivo `.py`.
+- Para validar sin navegador: `marimo run notebook.py` o `marimo export script`.
+
 ## Comentarios CriticMarkup en archivos markdown
 - En archivos `.md`/`.qmd` el usuario y su equipo dejan comentarios y sugerencias con sintaxis CriticMarkup:
   - `{>>comentario<<}` comentario al margen
