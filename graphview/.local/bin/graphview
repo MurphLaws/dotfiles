@@ -41,11 +41,11 @@ DEFAULT_CONFIG = {
     "default_color": "#9deaf6",
     "phantom_color": "#545452",
     "forces": {
-        "repulsion": 1200,
-        "attraction": 0.06,
-        "link_distance": 90,
-        "center": 0.03,
-        "damping": 0.85,
+        "repulsion": 300,
+        "attraction": 1.0,
+        "link_distance": 60,
+        "center": 0.05,
+        "velocity_decay": 0.4,
         "node_scale": 1.0,
     },
 }
@@ -62,9 +62,14 @@ def load_config():
         return dict(DEFAULT_CONFIG)
     cfg = dict(DEFAULT_CONFIG)
     try:
-        cfg.update(json.loads(CONFIG_PATH.read_text()))
+        user = json.loads(CONFIG_PATH.read_text())
     except json.JSONDecodeError as e:
         sys.exit(f"graphview: config inválida en {CONFIG_PATH}: {e}")
+    cfg.update(user)
+    # merge profundo de forces: claves faltantes toman el default
+    forces = dict(DEFAULT_CONFIG["forces"])
+    forces.update({k: v for k, v in user.get("forces", {}).items() if k in forces})
+    cfg["forces"] = forces
     return cfg
 
 
@@ -254,12 +259,12 @@ let drag = null, hover = null, panning = null, query = '';
 let downAt = null;
 
 const SLIDERS = [
-  ['repulsion',     'repulsión',    0,    5000, 10 ],
-  ['attraction',    'atracción',    0,    0.3,  0.005],
-  ['link_distance', 'distancia',    10,   300,  5  ],
-  ['center',        'centro',       0,    0.2,  0.005],
-  ['damping',       'fricción',     0.5,  0.99, 0.01],
-  ['node_scale',    'tamaño nodos', 0.3,  3,    0.1],
+  ['repulsion',      'repulsión',    0,    2000, 10 ],
+  ['attraction',     'atracción',    0,    2,    0.05],
+  ['link_distance',  'distancia',    10,   300,  5  ],
+  ['center',         'centro',       0,    0.3,  0.01],
+  ['velocity_decay', 'fricción',     0.1,  0.9,  0.05],
+  ['node_scale',     'tamaño nodos', 0.3,  3,    0.1],
 ];
 
 function buildPanel() {
@@ -275,8 +280,8 @@ function buildPanel() {
     inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = F[key];
     inp.oninput = () => {
       F[key] = +inp.value; val.textContent = inp.value;
-      localStorage.setItem('graphview.forces', JSON.stringify(F));
-      heat = Math.max(heat, .5);
+      localStorage.setItem('graphview.forces.v2', JSON.stringify(F));
+      reheat();
     };
     el.appendChild(lab); el.appendChild(inp);
   }
@@ -286,7 +291,7 @@ document.getElementById('search').oninput = e => { query = e.target.value.toLowe
 
 async function load() {
   const g = await (await fetch('/graph')).json();
-  F = Object.assign({}, g.forces, JSON.parse(localStorage.getItem('graphview.forces') || '{}'));
+  F = Object.assign({}, g.forces, JSON.parse(localStorage.getItem('graphview.forces.v2') || '{}'));
   const old = byId;
   byId = {};
   nodes = g.nodes.map(n => {
@@ -298,44 +303,78 @@ async function load() {
     return node;
   });
   edges = g.edges.map(e => ({ s: byId[e.source], t: byId[e.target] }));
+  for (const a of nodes) a.deg = 0;
+  for (const e of edges) { e.s.deg++; e.t.deg++; }
+  for (const e of edges) {
+    // d3-force: los links de hubs tiran menos, y el nodo más conectado se
+    // mueve menos (bias) — esto es lo que evita que todo se agrume
+    e.strength = 1 / Math.min(Math.max(e.s.deg, 1), Math.max(e.t.deg, 1));
+    e.bias = Math.max(e.s.deg, 1) / (Math.max(e.s.deg, 1) + Math.max(e.t.deg, 1));
+  }
   document.getElementById('stats').textContent =
     g.root + ' — ' + nodes.length + ' notas, ' + edges.length + ' links';
   buildPanel();
-  heat = 1;
+  // recalienta solo si el grafo cambió (no en cada recarga periódica)
+  const sig = nodes.map(n => n.id).join('|') + '#' + g.edges.map(e => e.source + '>' + e.target).join('|');
+  if (sig !== lastSig) { alpha = 1; lastSig = sig; }
 }
+let lastSig = null;
 
-let heat = 1;
+// Simulación con la semántica de d3-force (lo que usa Obsidian):
+// alpha que se enfría, fuerzas escaladas por alpha, velocityDecay.
+let alpha = 1, alphaTarget = 0;
+const ALPHA_MIN = 0.001, ALPHA_DECAY = 1 - Math.pow(ALPHA_MIN, 1 / 300);
+function reheat(target) {
+  alphaTarget = target ?? 0;
+  alpha = Math.max(alpha, target ?? 0.3);
+}
+function jiggle() { return (Math.random() - 0.5) * 1e-6; }
+
 function step() {
   const n = nodes.length;
-  if (!n) return;
-  // repulsión O(n²) — bien hasta unos ~2000 nodos
+  if (!n || (alpha < ALPHA_MIN && !alphaTarget)) return;
+  alpha += (alphaTarget - alpha) * ALPHA_DECAY;
+
+  // many-body (carga negativa), O(n²) — bien hasta ~2000 nodos
+  const charge = -F.repulsion;
   for (let i = 0; i < n; i++) {
     const a = nodes[i];
     for (let j = i + 1; j < n; j++) {
       const b = nodes[j];
-      let dx = a.x - b.x, dy = a.y - b.y;
+      let dx = b.x - a.x, dy = b.y - a.y;
       let d2 = dx * dx + dy * dy;
-      if (d2 < 1) { dx = Math.random() - .5; dy = Math.random() - .5; d2 = 1; }
-      if (d2 > 250000) continue;
-      const f = F.repulsion / d2;
-      const d = Math.sqrt(d2);
-      dx = dx / d * f; dy = dy / d * f;
-      a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
+      if (d2 === 0) { dx = jiggle(); dy = jiggle(); d2 = dx * dx + dy * dy; }
+      if (d2 > 640000) continue;
+      if (d2 < 100) d2 = Math.sqrt(100 * d2);
+      const w = charge * alpha / d2;
+      a.vx += dx * w; a.vy += dy * w;
+      b.vx -= dx * w; b.vy -= dy * w;
     }
   }
+
+  // links estilo d3: normalizados por grado, con bias hacia el nodo menos conectado
   for (const e of edges) {
-    const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
-    const d = Math.sqrt(dx * dx + dy * dy) || 1;
-    const f = F.attraction * (d - F.link_distance) / d;
-    e.s.vx += dx * f; e.s.vy += dy * f;
-    e.t.vx -= dx * f; e.t.vy -= dy * f;
+    let dx = e.t.x + e.t.vx - e.s.x - e.s.vx || jiggle();
+    let dy = e.t.y + e.t.vy - e.s.y - e.s.vy || jiggle();
+    const d = Math.sqrt(dx * dx + dy * dy);
+    const l = (d - F.link_distance) / d * alpha * e.strength * F.attraction;
+    dx *= l; dy *= l;
+    e.t.vx -= dx * e.bias; e.t.vy -= dy * e.bias;
+    e.s.vx += dx * (1 - e.bias); e.s.vy += dy * (1 - e.bias);
   }
+
+  // centrado suave (forceX/forceY hacia el origen)
   for (const a of nodes) {
-    a.vx -= a.x * F.center; a.vy -= a.y * F.center;
-    a.vx *= F.damping; a.vy *= F.damping;
-    if (a !== (drag && drag.node)) { a.x += a.vx * heat; a.y += a.vy * heat; }
+    a.vx += (0 - a.x) * F.center * alpha;
+    a.vy += (0 - a.y) * F.center * alpha;
   }
-  heat = Math.max(0.05, heat * 0.999);
+
+  const decay = 1 - F.velocity_decay;
+  for (const a of nodes) {
+    a.vx *= decay; a.vy *= decay;
+    if (a !== (drag && drag.node)) { a.x += a.vx; a.y += a.vy; }
+    else { a.vx = a.vy = 0; }
+  }
 }
 
 function radius(node) {
@@ -401,7 +440,7 @@ function pick(px, py) {
 canvas.onmousedown = e => {
   downAt = { x: e.clientX, y: e.clientY };
   const node = pick(e.clientX, e.clientY);
-  if (node) drag = { node };
+  if (node) { drag = { node }; reheat(0.3); }
   else panning = { x: e.clientX - cam.x, y: e.clientY - cam.y };
 };
 canvas.onmousemove = e => {
@@ -409,7 +448,6 @@ canvas.onmousemove = e => {
     const w = world(e.clientX, e.clientY);
     drag.node.x = w.x; drag.node.y = w.y;
     drag.node.vx = drag.node.vy = 0;
-    heat = Math.max(heat, .3);
   } else if (panning) {
     cam.x = e.clientX - panning.x; cam.y = e.clientY - panning.y;
   } else {
@@ -424,6 +462,7 @@ addEventListener('mouseup', e => {
       fetch('/open?id=' + encodeURIComponent(drag.node.id));
     }
   }
+  if (drag) alphaTarget = 0;
   drag = panning = downAt = null;
 });
 canvas.onwheel = e => {
