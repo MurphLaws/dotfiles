@@ -149,6 +149,9 @@ function M.start()
 	vim.bo[bufnr].filetype = "norg"
 	vim.bo[bufnr].swapfile = false
 	vim.bo[bufnr].bufhidden = "hide"
+	-- scratch de verdad: no cuenta como "sin guardar", así :q/:qa salen
+	-- sin pelear (guardar es siempre vía :JotSave/<leader>ns, no :w)
+	vim.bo[bufnr].buftype = "nofile"
 	vim.b[bufnr].jot = true
 
 	vim.keymap.set("n", "<leader>ns", M.save, {
