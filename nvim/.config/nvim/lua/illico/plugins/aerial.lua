@@ -35,9 +35,8 @@ return {
 			max_width = { 80, 0.5 },
 		},
 		float = {
-			-- Borde redondeado para delimitar el menú; interior transparente
-			-- (NormalFloat/FloatBorder con bg=NONE por la config global).
-			border = "rounded",
+			-- Sin borde: el bloque de fondo (NormalFloat) delimita el menú.
+			border = "none",
 			relative = "editor",
 			max_height = 0.8,
 			min_height = 0.4,

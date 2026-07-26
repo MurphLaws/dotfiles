@@ -36,9 +36,8 @@ return {
 						{ { a = 1 }, { a = 1 }, { foreground = "#58FFD6", background = "#24273a" } }
 					),
 				},
-				-- 'single', 'double', 'rounded' or 'solid'
-				-- can also be a list of 8 characters, see :h wilder#popupmenu_border_theme() for more details
-				border = "single",
+				-- 'solid' = borde de espacios: sin líneas, el bloque de color delimita
+				border = "solid",
 			}))
 		)
 	end,

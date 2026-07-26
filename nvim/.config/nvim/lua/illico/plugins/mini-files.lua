@@ -38,7 +38,7 @@ return {
 				local win_id = args.data.win_id
 				vim.api.nvim_win_set_config(win_id, {
 					zindex = 100,
-					border = "rounded",
+					border = "none",
 				})
 			end,
 		})

@@ -38,6 +38,41 @@ return {
 				fg_dim = "#6e738d", -- overlay0 (comment)
 			}
 
+			-- Borderless "block" menus (estilo oxocarbon): sin bordes, cada menú
+			-- se diferencia por un fondo plano distinto. Tonos base de Macchiato.
+			local crust = "#181926"
+			local mantle = "#1e2030"
+			local surface0 = "#363a4f"
+			local surface1 = "#494d64"
+			local text = "#cad3f5"
+
+			-- Floats genéricos (LSP hover, diagnósticos, which-key, etc.)
+			vim.api.nvim_set_hl(0, "NormalFloat", { fg = text, bg = mantle })
+			vim.api.nvim_set_hl(0, "FloatBorder", { fg = mantle, bg = mantle })
+			vim.api.nvim_set_hl(0, "FloatTitle", { fg = crust, bg = p.mauve, bold = true })
+
+			-- Menú de completado (pmenu + ventanas de nvim-cmp)
+			vim.api.nvim_set_hl(0, "Pmenu", { fg = text, bg = surface0 })
+			vim.api.nvim_set_hl(0, "PmenuSel", { fg = crust, bg = p.peach, bold = true })
+			vim.api.nvim_set_hl(0, "PmenuSbar", { bg = surface0 })
+			vim.api.nvim_set_hl(0, "PmenuThumb", { bg = surface1 })
+			vim.api.nvim_set_hl(0, "CmpNormal", { fg = text, bg = surface0 })
+			vim.api.nvim_set_hl(0, "CmpDoc", { fg = text, bg = mantle })
+
+			-- Telescope: bloques de color, títulos como "chips" de acento
+			vim.api.nvim_set_hl(0, "TelescopeNormal", { fg = text, bg = mantle })
+			vim.api.nvim_set_hl(0, "TelescopeBorder", { fg = mantle, bg = mantle })
+			vim.api.nvim_set_hl(0, "TelescopePromptNormal", { fg = text, bg = surface0 })
+			vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = surface0, bg = surface0 })
+			vim.api.nvim_set_hl(0, "TelescopePromptTitle", { fg = crust, bg = p.peach, bold = true })
+			vim.api.nvim_set_hl(0, "TelescopePreviewTitle", { fg = crust, bg = p.green, bold = true })
+			vim.api.nvim_set_hl(0, "TelescopeResultsTitle", { fg = mantle, bg = mantle })
+			vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = text, bg = surface1, bold = true })
+
+			-- Which-key como bloque sólido
+			vim.api.nvim_set_hl(0, "WhichKeyNormal", { fg = text, bg = mantle })
+			vim.api.nvim_set_hl(0, "WhichKeyBorder", { fg = mantle, bg = mantle })
+
 			-- Orgmode
 			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = p.coral, bg = "NONE", bold = true })
 			vim.api.nvim_set_hl(0, "@org.keyword.done", { fg = p.green, bg = "NONE", bold = true })
