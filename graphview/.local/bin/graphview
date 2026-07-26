@@ -53,6 +53,7 @@ DEFAULT_CONFIG = {
 WIKILINK = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
 MDLINK = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
 NORGLINK = re.compile(r"\{:\s*([^:}]+?)\s*:\}")
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
 
 
 def load_config():
@@ -87,15 +88,23 @@ def color_for(rel: Path, groups, default):
 
 def scan(root: Path, cfg):
     exts = set(cfg["extensions"])
-    files = sorted(
-        p for p in root.rglob("*")
-        if p.suffix in exts and p.is_file() and not any(
+
+    def visible(p):
+        return p.is_file() and not any(
             part.startswith(".") for part in p.relative_to(root).parts
         )
+
+    files = sorted(p for p in root.rglob("*") if p.suffix in exts and visible(p))
+    images = sorted(
+        p for p in root.rglob("*") if p.suffix.lower() in IMAGE_EXTS and visible(p)
     )
     by_stem = {}
     for p in files:
         by_stem.setdefault(p.stem.lower(), p)
+    img_by_stem = {}
+    for p in images:
+        img_by_stem.setdefault(p.stem.lower(), p)
+        img_by_stem.setdefault(p.name.lower(), p)
 
     nodes, edges = {}, set()
 
@@ -110,6 +119,21 @@ def scan(root: Path, cfg):
                 "id": node_id(rel),
                 "label": p.stem,
                 "color": color_for(rel, cfg["groups"], cfg["default_color"]),
+                "kind": "note",
+                "phantom": False,
+                "links": 0,
+            },
+        )
+
+    for p in images:
+        rel = p.relative_to(root)
+        nodes.setdefault(
+            node_id(rel),
+            {
+                "id": node_id(rel),
+                "label": p.name,
+                "color": color_for(rel, cfg["groups"], cfg["default_color"]),
+                "kind": "image",
                 "phantom": False,
                 "links": 0,
             },
@@ -138,7 +162,10 @@ def scan(root: Path, cfg):
             if not t:
                 continue
             stem = Path(t).stem.lower()
-            target_path = by_stem.get(stem)
+            if Path(t).suffix.lower() in IMAGE_EXTS:
+                target_path = img_by_stem.get(Path(t).name.lower()) or img_by_stem.get(stem)
+            else:
+                target_path = by_stem.get(stem)
             if target_path is not None:
                 tid = node_id(target_path.relative_to(root))
             else:
@@ -149,6 +176,7 @@ def scan(root: Path, cfg):
                         "id": tid,
                         "label": Path(t).stem,
                         "color": cfg["phantom_color"],
+                        "kind": "note",
                         "phantom": True,
                         "links": 0,
                     },
@@ -156,6 +184,50 @@ def scan(root: Path, cfg):
             sid = node_id(rel)
             if sid != tid:
                 edges.add((sid, tid))
+
+    # nodos de carpeta: cada archivo/imagen cuelga de su carpeta, y las
+    # carpetas anidadas cuelgan de su padre
+    folders = set()
+    for p in files + images:
+        rel = p.relative_to(root)
+        parent = rel.parent
+        while str(parent) != ".":
+            folders.add(parent)
+            parent = parent.parent
+
+    for f in sorted(folders):
+        fid = "folder:" + str(f)
+        nodes[fid] = {
+            "id": fid,
+            "label": f.name,
+            "color": None,  # se resuelve abajo (regla o herencia)
+            "kind": "folder",
+            "phantom": False,
+            "links": 0,
+        }
+    for p in files + images:
+        rel = p.relative_to(root)
+        if str(rel.parent) != ".":
+            edges.add(("folder:" + str(rel.parent), node_id(rel)))
+    for f in folders:
+        if str(f.parent) != ".":
+            edges.add(("folder:" + str(f.parent), "folder:" + str(f)))
+
+    # color de carpeta: regla explícita si la hay; si no, el color más común
+    # entre sus hijos directos (de abajo hacia arriba para que suba en cascada)
+    for f in sorted(folders, key=lambda f: len(f.parts), reverse=True):
+        fid = "folder:" + str(f)
+        explicit = color_for(f / "_", cfg["groups"], None)
+        if explicit:
+            nodes[fid]["color"] = explicit
+            continue
+        counts = {}
+        for s, t in edges:
+            if s == fid and nodes[t].get("color"):
+                counts[nodes[t]["color"]] = counts.get(nodes[t]["color"], 0) + 1
+        nodes[fid]["color"] = (
+            max(counts, key=counts.get) if counts else cfg["default_color"]
+        )
 
     for s, t in edges:
         nodes[s]["links"] += 1
@@ -405,17 +477,30 @@ function draw() {
     const r = radius(a);
     const dim = (hover && !neigh.has(a)) || (query && !a.label.toLowerCase().includes(query));
     ctx.globalAlpha = dim ? 0.15 : (a.phantom ? 0.55 : 1);
-    ctx.fillStyle = a.color;
-    ctx.beginPath(); ctx.arc(a.x, a.y, r, 0, 7); ctx.fill();
-    if (a === hover) {
-      ctx.strokeStyle = '#fcfcfa'; ctx.lineWidth = 1.5 / cam.k; ctx.stroke();
+    if (a.kind === 'folder') {
+      // carpeta: anillo hueco del color heredado de sus hijos
+      ctx.strokeStyle = a.color; ctx.lineWidth = Math.max(1.5, r * 0.35) / Math.sqrt(cam.k);
+      ctx.beginPath(); ctx.arc(a.x, a.y, r, 0, 7); ctx.stroke();
+    } else if (a.kind === 'image') {
+      // imagen: cuadrado
+      ctx.fillStyle = a.color;
+      ctx.fillRect(a.x - r * 0.9, a.y - r * 0.9, r * 1.8, r * 1.8);
+    } else {
+      ctx.fillStyle = a.color;
+      ctx.beginPath(); ctx.arc(a.x, a.y, r, 0, 7); ctx.fill();
     }
-    // etiqueta solo del nodo bajo el cursor (o de los matches al buscar)
+    if (a === hover) {
+      ctx.strokeStyle = '#fcfcfa'; ctx.lineWidth = 1.5 / cam.k;
+      ctx.beginPath(); ctx.arc(a.x, a.y, r + 1.5 / cam.k, 0, 7); ctx.stroke();
+    }
+    // etiqueta solo del nodo bajo el cursor (o de los matches al buscar),
+    // ARRIBA del nodo para que el cursor no la tape
     if (a === hover || (query && !dim)) {
       ctx.fillStyle = a === hover ? '#fcfcfa' : 'rgba(252,252,250,0.6)';
       ctx.font = (11 / cam.k) + 'px -apple-system, Menlo';
-      ctx.textAlign = 'center';
-      ctx.fillText(a.label, a.x, a.y + r + 12 / cam.k);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(a.label, a.x, a.y - r - 6 / cam.k);
+      ctx.textBaseline = 'alphabetic';
     }
     ctx.globalAlpha = 1;
   }
