@@ -38,10 +38,11 @@ return {
 
 			-- Menús "block" sin bordes: cada menú se diferencia por un fondo plano
 			-- distinto. Tonos base de oxocarbon.
-			local crust = "#161616" -- base00
-			local mantle = "#262626" -- base01
-			local surface0 = "#393939" -- base02
-			local surface1 = "#525252" -- base03
+			-- Más oscuros que el fondo (#262427) para que los menús se despeguen
+			local crust = "#0b0b0b"
+			local mantle = "#141414" -- floats / telescope
+			local surface0 = "#1e1e1e" -- pmenu / cmp / prompt
+			local surface1 = "#333333" -- selección / scrollbar
 			local text = "#f2f4f8" -- base05
 
 			-- Floats genéricos (LSP hover, diagnósticos, which-key, etc.)
