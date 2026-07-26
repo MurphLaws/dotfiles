@@ -229,7 +229,14 @@ HTML = r"""<!doctype html>
   canvas { display:block; }
   #panel { position:fixed; top:12px; right:12px; width:220px; background:#141414;
     border-radius:10px; padding:12px 14px; opacity:.95; }
-  #panel h1 { font-size:12px; margin:0 0 8px; color:#9deaf6; font-weight:600; }
+  #panel h1 { font-size:12px; margin:0; color:#9deaf6; font-weight:600;
+    cursor:pointer; user-select:none; }
+  #panel h1 .arrow { display:inline-block; width:1em; color:#8a8887; }
+  #panelBody { margin-top:8px; }
+  #panelBody.hidden { display:none; }
+  #panel .toggle { display:flex; align-items:center; gap:6px; margin-top:8px;
+    color:#8a8887; cursor:pointer; user-select:none; }
+  #panel .toggle input { accent-color:#9deaf6; margin:0; }
   #panel label { display:block; margin-top:8px; color:#8a8887; }
   #panel input[type=range] { width:100%; accent-color:#9deaf6; }
   #panel .val { float:right; color:#fcfcfa; }
@@ -239,9 +246,12 @@ HTML = r"""<!doctype html>
 </style>
 <canvas id="c"></canvas>
 <div id="panel">
-  <h1>graphview</h1>
-  <input id="search" placeholder="buscar…">
-  <div id="sliders"></div>
+  <h1 id="panelToggle"><span class="arrow">▾</span>graphview</h1>
+  <div id="panelBody">
+    <input id="search" placeholder="buscar…">
+    <label class="toggle"><input type="checkbox" id="linksToggle" checked>conexiones</label>
+    <div id="sliders"></div>
+  </div>
 </div>
 <div id="stats"></div>
 <script>
@@ -290,6 +300,24 @@ function buildPanel() {
 }
 
 document.getElementById('search').oninput = e => { query = e.target.value.toLowerCase(); };
+
+// menú plegable + toggle de conexiones (ambos persistentes)
+let showLinks = localStorage.getItem('graphview.links') !== '0';
+const linksToggle = document.getElementById('linksToggle');
+linksToggle.checked = showLinks;
+linksToggle.onchange = () => {
+  showLinks = linksToggle.checked;
+  localStorage.setItem('graphview.links', showLinks ? '1' : '0');
+};
+const panelBody = document.getElementById('panelBody');
+const panelToggle = document.getElementById('panelToggle');
+function setFolded(folded) {
+  panelBody.classList.toggle('hidden', folded);
+  panelToggle.querySelector('.arrow').textContent = folded ? '▸' : '▾';
+  localStorage.setItem('graphview.folded', folded ? '1' : '0');
+}
+panelToggle.onclick = () => setFolded(!panelBody.classList.contains('hidden'));
+setFolded(localStorage.getItem('graphview.folded') === '1');
 
 async function load() {
   const g = await (await fetch('/graph')).json();
@@ -400,6 +428,7 @@ function draw() {
 
   for (const e of edges) {
     const active = hover && (e.s === hover || e.t === hover);
+    if (!showLinks && !active) continue; // con el toggle apagado, solo las del hover
     ctx.strokeStyle = active ? '#9deaf6' : 'rgba(252,252,250,0.13)';
     ctx.lineWidth = (active ? 1.4 : 0.7) / cam.k;
     ctx.beginPath(); ctx.moveTo(e.s.x, e.s.y); ctx.lineTo(e.t.x, e.t.y); ctx.stroke();
