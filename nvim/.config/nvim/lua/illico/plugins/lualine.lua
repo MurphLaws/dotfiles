@@ -4,16 +4,21 @@ return {
 		"nvim-tree/nvim-web-devicons",
 	},
 	config = function()
-		local a = _G.superset_accents or {}
-		local coral = a.coral or "#d1734a"
-		local peach = a.peach or "#d18960"
-		local green = a.green or "#67a367"
-		local amber = a.amber or "#d1a72a"
-		local sky = a.sky or "#74a5af"
-		local mauve = a.mauve or "#9780b2"
-		local fg_dim = a.fg_dim or "#6e6863"
-		local fg_text = "#cad3f5"
-		local bg_dark = "#24273a"
+		-- Paleta 0x96f (la misma de ghostty/tmux)
+		local bg_dark = "#262427" -- fondo del terminal
+		local gray1 = "#3a373b" -- franja base de la statusline
+		local gray2 = "#545452" -- chips (branch, filename, filetype, lsp)
+		local fg_text = "#fcfcfa"
+		local fg_dim = "#8a8887"
+		local red = "#ff666d"
+		local green = "#bee55e"
+		local yellow = "#ffc739"
+		local cyan = "#9deaf6" -- chip de modo / location (celeste pálido)
+		local cyan2 = "#1bd5eb"
+		local purple = "#b0a3eb"
+		local cream = "#fcfcfa"
+		local amber = yellow
+		local peach = red
 
 		local function set_buftab_hl()
 			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = amber, bold = true })
@@ -97,49 +102,52 @@ return {
 			return table.concat(parts, "")
 		end
 
+		-- Tema estilo powerline slant: chip de modo de color, franja gris continua
+		local function mode_theme(color)
+			return {
+				a = { fg = bg_dark, bg = color, gui = "bold" },
+				b = { fg = fg_text, bg = gray1 },
+				c = { fg = fg_dim, bg = gray1 },
+				x = { fg = fg_dim, bg = gray1 },
+				y = { fg = bg_dark, bg = cyan },
+				z = { fg = bg_dark, bg = cyan2, gui = "bold" },
+			}
+		end
 		local superset_theme = {
-			normal = {
-				a = { fg = bg_dark, bg = amber, gui = "bold" },
-				b = { fg = fg_text, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
-			},
-			insert = {
-				a = { fg = bg_dark, bg = green, gui = "bold" },
-				b = { fg = fg_text, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
-			},
-			visual = {
-				a = { fg = bg_dark, bg = coral, gui = "bold" },
-				b = { fg = fg_text, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
-			},
-			replace = {
-				a = { fg = bg_dark, bg = mauve, gui = "bold" },
-				b = { fg = fg_text, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
-			},
-			command = {
-				a = { fg = bg_dark, bg = sky, gui = "bold" },
-				b = { fg = fg_text, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
-			},
-			terminal = {
-				a = { fg = bg_dark, bg = peach, gui = "bold" },
-				b = { fg = fg_text, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
-			},
+			normal = mode_theme(cyan),
+			insert = mode_theme(green),
+			visual = mode_theme(yellow),
+			replace = mode_theme(red),
+			command = mode_theme(purple),
+			terminal = mode_theme(purple),
 			inactive = {
-				a = { fg = fg_dim, bg = "NONE" },
-				b = { fg = fg_dim, bg = "NONE" },
-				c = { fg = fg_dim, bg = "NONE" },
+				a = { fg = fg_dim, bg = gray1 },
+				b = { fg = fg_dim, bg = gray1 },
+				c = { fg = fg_dim, bg = gray1 },
 			},
+		}
+
+		-- Nombre del LSP activo del buffer, como "( rust_analyzer)"
+		local function lsp_name()
+			local clients = vim.lsp.get_clients({ bufnr = 0 })
+			if #clients == 0 then
+				return ""
+			end
+			return "( " .. clients[1].name .. ")"
+		end
+
+		-- Chevrones decorativos ❮❮❮ rojo/amarillo/crema (como en la referencia)
+		local chevrons = {
+			{ function() return "" end, color = { fg = red, bg = gray1 }, padding = { left = 1, right = 0 } },
+			{ function() return "" end, color = { fg = yellow, bg = gray1 }, padding = 0 },
+			{ function() return "" end, color = { fg = cream, bg = gray1 }, padding = { left = 0, right = 1 } },
 		}
 
 		require("lualine").setup({
 			options = {
 				theme = superset_theme,
 				icons_enabled = true,
-				component_separators = { left = "│", right = "│" },
+				component_separators = { left = "", right = "" },
 				section_separators = { left = "", right = "" },
 				disabled_filetypes = {
 					statusline = { "dashboard", "alpha", "starter" },
@@ -156,7 +164,7 @@ return {
 			},
 			sections = {
 				lualine_a = {
-					{ "mode", icon = "", separator = { right = "" }, padding = { left = 1, right = 1 } },
+					{ "mode", separator = { right = "" }, padding = { left = 1, right = 1 } },
 				},
 				lualine_b = {
 					{ "branch", icon = "" },
@@ -168,7 +176,9 @@ return {
 				lualine_c = {
 					{
 						"filename",
-						path = 1,
+						path = 0,
+						color = { fg = fg_text, bg = gray2 },
+						separator = { left = "", right = "" },
 						symbols = {
 							modified = " ●",
 							readonly = " ",
@@ -184,26 +194,31 @@ return {
 						symbols = { error = " ", warn = " ", info = " ", hint = " " },
 					},
 					{
-						"encoding",
-						fmt = function(str)
-							return str:upper()
-						end,
+						lsp_name,
+						color = { fg = fg_text, bg = gray2 },
+						separator = { left = "", right = "" },
+					},
+					chevrons[1],
+					chevrons[2],
+					chevrons[3],
+					{
+						"filetype",
+						icon_only = false,
+						fmt = string.upper,
+						color = { fg = fg_text, bg = gray2 },
+						separator = { left = "", right = "" },
 					},
 					{
-						"fileformat",
-						symbols = {
-							unix = "", -- macOS icon
-							dos = "",
-							mac = "",
-						},
+						"encoding",
+						icon = "Δ",
+						color = { fg = fg_text, bg = gray1 },
 					},
-					{ "filetype", icon_only = false },
 				},
 				lualine_y = {
-					{ "progress", separator = { left = "" }, padding = { left = 1, right = 1 } },
+					{ "location", separator = { left = "" }, padding = { left = 1, right = 1 } },
 				},
 				lualine_z = {
-					{ "location", icon = "", separator = { left = "" }, padding = { left = 1, right = 1 } },
+					{ "progress", separator = { left = "" }, padding = { left = 1, right = 1 } },
 				},
 			},
 			inactive_sections = {

@@ -11,6 +11,14 @@ return {
 
 			vim.cmd.colorscheme("oxocarbon")
 
+			-- Fondo igual al de ghostty (tema 0x96f) en vez del #161616 de oxocarbon
+			local ghostty_bg = "#262427"
+			for _, group in ipairs({ "Normal", "NormalNC", "EndOfBuffer", "SignColumn", "LineNr" }) do
+				local hl = vim.api.nvim_get_hl(0, { name = group })
+				hl.bg = ghostty_bg
+				vim.api.nvim_set_hl(0, group, hl)
+			end
+
 			-- Paleta oxocarbon (IBM Carbon), mapeada a las claves de acento que el
 			-- resto de la config ya consume (lualine, mini.icons, org/neorg overrides).
 			-- Los nombres de las claves son históricos — los valores son oxocarbon.
