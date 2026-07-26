@@ -6,44 +6,44 @@ font-style-bold = ExtraBold
 font-size = 20
 font-thicken = true
 
-# Theme — Catppuccin Macchiato
-background = 24273a
-foreground = cad3f5
-cursor-color = f4dbd6
-cursor-text = 24273a
-selection-background = 5b6078
-selection-foreground = cad3f5
+# Theme — 0x96f
+background = 262427
+foreground = fcfcfa
+cursor-color = fcfcfa
+cursor-text = 000000
+selection-background = fcfcfa
+selection-foreground = 262427
 
-# ANSI palette (Catppuccin Macchiato)
-palette = 0=#494d64
-palette = 1=#ed8796
-palette = 2=#a6da95
-palette = 3=#eed49f
-palette = 4=#8aadf4
-palette = 5=#f5bde6
-palette = 6=#8bd5ca
-palette = 7=#b8c0e0
-palette = 8=#5b6078
-palette = 9=#ed8796
-palette = 10=#a6da95
-palette = 11=#eed49f
-palette = 12=#8aadf4
-palette = 13=#f5bde6
-palette = 14=#8bd5ca
-palette = 15=#a5adcb
+# ANSI palette (0x96f)
+palette = 0=#262427
+palette = 1=#ff666d
+palette = 2=#b3e03a
+palette = 3=#ffc739
+palette = 4=#00cde8
+palette = 5=#a392e8
+palette = 6=#9deaf6
+palette = 7=#fcfcfa
+palette = 8=#545452
+palette = 9=#ff7e83
+palette = 10=#bee55e
+palette = 11=#ffd05e
+palette = 12=#1bd5eb
+palette = 13=#b0a3eb
+palette = 14=#acedf8
+palette = 15=#fcfcfa
 
 # Window — fullscreen no-nativo: "pantalla completa" es una ventana maximizada
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
 macos-non-native-fullscreen = true
 
 # Background fully opaque
-#   No transparency, no blur — solid background color matching Catppuccin Macchiato.
+#   No transparency, no blur — solid background color matching 0x96f.
 background-opacity = 1
 
-# Fondo con degradado azul (PNG generado con ImageMagick:
-#   magick -size 1920x1080 gradient:'#10141f'-'#2e3a52' gradient-blue.png)
-# background-image-opacity < 1 lo mezcla con el background 24273a.
-background-image = ~/.config/ghostty/backgrounds/gradient-blue.png
+# Fondo con degradado en tonos 0x96f (PNG generado con ImageMagick:
+#   magick -size 1920x1080 gradient:'#161417'-'#37333a' gradient-0x96f.png)
+# background-image-opacity < 1 lo mezcla con el background 262427.
+background-image = ~/.config/ghostty/backgrounds/gradient-0x96f.png
 background-image-fit = cover
 background-image-opacity = 0.7
 
