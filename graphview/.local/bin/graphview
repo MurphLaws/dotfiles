@@ -230,7 +230,6 @@ HTML = r"""<!doctype html>
   #panel input[type=range] { width:100%; accent-color:#9deaf6; }
   #panel .val { float:right; color:#fcfcfa; }
   #stats { position:fixed; left:12px; bottom:10px; color:#545452; }
-  #hint { position:fixed; left:12px; top:10px; color:#545452; }
   #search { width:100%; box-sizing:border-box; margin-bottom:4px; background:#1e1e1e;
     border:none; border-radius:6px; color:#fcfcfa; padding:5px 8px; outline:none; }
 </style>
@@ -241,7 +240,6 @@ HTML = r"""<!doctype html>
   <div id="sliders"></div>
 </div>
 <div id="stats"></div>
-<div id="hint">arrastra nodos · rueda = zoom · click = abrir en nvim</div>
 <script>
 const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
 let W, H, DPR = window.devicePixelRatio || 1;
@@ -412,7 +410,8 @@ function draw() {
     if (a === hover) {
       ctx.strokeStyle = '#fcfcfa'; ctx.lineWidth = 1.5 / cam.k; ctx.stroke();
     }
-    if (cam.k > 0.6 || a === hover || (query && !dim)) {
+    // etiqueta solo del nodo bajo el cursor (o de los matches al buscar)
+    if (a === hover || (query && !dim)) {
       ctx.fillStyle = a === hover ? '#fcfcfa' : 'rgba(252,252,250,0.6)';
       ctx.font = (11 / cam.k) + 'px -apple-system, Menlo';
       ctx.textAlign = 'center';
