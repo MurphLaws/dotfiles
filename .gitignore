@@ -4,3 +4,4 @@ __pycache__/
 # Secretos: nunca versionar. El real vive solo en ~/.config/zsh/conf.d/secrets.zsh
 secrets.zsh
 *.local.zsh
+graphview-test/
