@@ -1,50 +1,40 @@
 return {
 	{
-		"catppuccin/nvim",
-		name = "catppuccin",
+		"nyoom-engineering/oxocarbon.nvim",
 		lazy = false,
 		priority = 1000,
-		opts = {
-			flavour = "macchiato",
-			transparent_background = false,
-			term_colors = true,
-			styles = {
-				comments = { "italic" },
-				keywords = {},
-			},
-		},
-		config = function(_, opts)
-			require("catppuccin").setup(opts)
+		config = function()
+			vim.opt.background = "dark"
 
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			vim.cmd.colorscheme("catppuccin-macchiato")
+			vim.cmd.colorscheme("oxocarbon")
 
-			-- Catppuccin Macchiato palette, mapped onto the accent keys the rest of
-			-- the config already consumes (lualine, mini.icons, org/neorg overrides).
-			-- Key names are historical handles — the values are pure Catppuccin Macchiato.
+			-- Paleta oxocarbon (IBM Carbon), mapeada a las claves de acento que el
+			-- resto de la config ya consume (lualine, mini.icons, org/neorg overrides).
+			-- Los nombres de las claves son históricos — los valores son oxocarbon.
 			local p = {
-				coral = "#f5a97f", -- peach
-				peach = "#f5a97f", -- peach
-				green = "#a6da95",
-				amber = "#eed49f", -- yellow
-				gold = "#eed49f", -- yellow
-				sky = "#91d7e3", -- sky
-				blue = "#8aadf4",
-				mauve = "#c6a0f6", -- mauve
-				purple = "#b7bdf8", -- lavender
-				red = "#ed8796",
-				fg_dim = "#6e738d", -- overlay0 (comment)
+				coral = "#ff7eb6", -- pink (base12)
+				peach = "#ff7eb6", -- pink (base12)
+				green = "#42be65", -- base13
+				amber = "#3ddbd9", -- teal claro (base08) — oxocarbon no tiene amarillo
+				gold = "#3ddbd9", -- teal claro (base08)
+				sky = "#82cffa", -- base15
+				blue = "#78a9ff", -- base09
+				mauve = "#be95ff", -- base14
+				purple = "#be95ff", -- base14
+				red = "#ee5396", -- base10
+				fg_dim = "#525252", -- base03 (comment)
 			}
 
-			-- Borderless "block" menus (estilo oxocarbon): sin bordes, cada menú
-			-- se diferencia por un fondo plano distinto. Tonos base de Macchiato.
-			local crust = "#181926"
-			local mantle = "#1e2030"
-			local surface0 = "#363a4f"
-			local surface1 = "#494d64"
-			local text = "#cad3f5"
+			-- Menús "block" sin bordes: cada menú se diferencia por un fondo plano
+			-- distinto. Tonos base de oxocarbon.
+			local crust = "#161616" -- base00
+			local mantle = "#262626" -- base01
+			local surface0 = "#393939" -- base02
+			local surface1 = "#525252" -- base03
+			local text = "#f2f4f8" -- base05
 
 			-- Floats genéricos (LSP hover, diagnósticos, which-key, etc.)
 			vim.api.nvim_set_hl(0, "NormalFloat", { fg = text, bg = mantle })
@@ -93,7 +83,7 @@ return {
 			end
 
 			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
-			-- Global names kept for back-compat; values are Catppuccin Macchiato.
+			-- Global names kept for back-compat; values are oxocarbon.
 			_G.superset_palette = p
 			_G.superset_accents = p
 			_G.tokyonight_accents = {
