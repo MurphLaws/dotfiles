@@ -1,0 +1,473 @@
+#!/usr/bin/env python3
+"""graphview — vista de grafo estilo Obsidian para una carpeta de notas.
+
+Uso:
+    graphview [carpeta] [--port N] [--no-open]
+
+Escanea .md y .norg, extrae wikilinks ([[...]]), links markdown a archivos
+locales y links norg ({:...:}), y sirve un grafo de fuerzas interactivo en el
+navegador. Sin dependencias: física propia en canvas.
+
+Config de colores y fuerzas: ~/.config/graphview/config.json (se genera con
+defaults la primera vez). Reglas de color:
+    {"match": "prefix:daily-", "color": "#ff666d"}   → archivos daily-*
+    {"match": "folder:projects", "color": "#bee55e"} → carpeta projects/
+Los sliders de fuerzas del navegador se guardan en localStorage.
+Click en un nodo → abre el archivo en nvim (tmux new-window si hay tmux,
+si no `open`).
+"""
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+import webbrowser
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
+
+CONFIG_DIR = Path.home() / ".config" / "graphview"
+CONFIG_PATH = CONFIG_DIR / "config.json"
+
+DEFAULT_CONFIG = {
+    "extensions": [".md", ".norg"],
+    "groups": [
+        {"match": "prefix:daily-", "color": "#ffc739"},
+        {"match": "folder:projects", "color": "#bee55e"},
+    ],
+    "default_color": "#9deaf6",
+    "phantom_color": "#545452",
+    "forces": {
+        "repulsion": 1200,
+        "attraction": 0.06,
+        "link_distance": 90,
+        "center": 0.03,
+        "damping": 0.85,
+        "node_scale": 1.0,
+    },
+}
+
+WIKILINK = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
+MDLINK = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)")
+NORGLINK = re.compile(r"\{:\s*([^:}]+?)\s*:\}")
+
+
+def load_config():
+    if not CONFIG_PATH.exists():
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        CONFIG_PATH.write_text(json.dumps(DEFAULT_CONFIG, indent=2) + "\n")
+        return dict(DEFAULT_CONFIG)
+    cfg = dict(DEFAULT_CONFIG)
+    try:
+        cfg.update(json.loads(CONFIG_PATH.read_text()))
+    except json.JSONDecodeError as e:
+        sys.exit(f"graphview: config inválida en {CONFIG_PATH}: {e}")
+    return cfg
+
+
+def color_for(rel: Path, groups, default):
+    for g in groups:
+        match, color = g.get("match", ""), g.get("color", default)
+        if match.startswith("prefix:") and rel.stem.startswith(match[7:]):
+            return color
+        if match.startswith("folder:"):
+            folder = match[7:].strip("/")
+            if folder in rel.parent.parts:
+                return color
+    return default
+
+
+def scan(root: Path, cfg):
+    exts = set(cfg["extensions"])
+    files = sorted(
+        p for p in root.rglob("*")
+        if p.suffix in exts and p.is_file() and not any(
+            part.startswith(".") for part in p.relative_to(root).parts
+        )
+    )
+    by_stem = {}
+    for p in files:
+        by_stem.setdefault(p.stem.lower(), p)
+
+    nodes, edges = {}, set()
+
+    def node_id(rel):
+        return str(rel)
+
+    for p in files:
+        rel = p.relative_to(root)
+        nodes.setdefault(
+            node_id(rel),
+            {
+                "id": node_id(rel),
+                "label": p.stem,
+                "color": color_for(rel, cfg["groups"], cfg["default_color"]),
+                "phantom": False,
+                "links": 0,
+            },
+        )
+
+    for p in files:
+        rel = p.relative_to(root)
+        try:
+            text = p.read_text(errors="ignore")
+        except OSError:
+            continue
+        targets = []
+        for m in WIKILINK.finditer(text):
+            targets.append(m.group(1).strip())
+        for m in MDLINK.finditer(text):
+            t = m.group(1)
+            if not t.startswith(("http://", "https://", "mailto:")):
+                targets.append(t)
+        for m in NORGLINK.finditer(text):
+            t = m.group(1)
+            if not t.startswith("$"):
+                targets.append(t)
+
+        for t in targets:
+            t = t.strip().strip("/")
+            if not t:
+                continue
+            stem = Path(t).stem.lower()
+            target_path = by_stem.get(stem)
+            if target_path is not None:
+                tid = node_id(target_path.relative_to(root))
+            else:
+                tid = "phantom:" + stem
+                nodes.setdefault(
+                    tid,
+                    {
+                        "id": tid,
+                        "label": Path(t).stem,
+                        "color": cfg["phantom_color"],
+                        "phantom": True,
+                        "links": 0,
+                    },
+                )
+            sid = node_id(rel)
+            if sid != tid:
+                edges.add((sid, tid))
+
+    for s, t in edges:
+        nodes[s]["links"] += 1
+        nodes[t]["links"] += 1
+
+    return {
+        "root": str(root),
+        "nodes": list(nodes.values()),
+        "edges": [{"source": s, "target": t} for s, t in sorted(edges)],
+        "forces": cfg["forces"],
+    }
+
+
+def open_in_editor(root: Path, node_id: str) -> bool:
+    if node_id.startswith("phantom:"):
+        return False
+    path = (root / node_id).resolve()
+    if not str(path).startswith(str(root.resolve())) or not path.exists():
+        return False
+    if os.environ.get("TMUX") or subprocess.run(
+        ["tmux", "has-session"], capture_output=True
+    ).returncode == 0:
+        r = subprocess.run(
+            ["tmux", "new-window", "-c", str(root), f"nvim {json.dumps(str(path))}"],
+            capture_output=True,
+        )
+        if r.returncode == 0:
+            return True
+    return subprocess.run(["open", str(path)], capture_output=True).returncode == 0
+
+
+def make_handler(root: Path, cfg):
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def _send(self, body, ctype="text/html; charset=utf-8", code=200):
+            data = body.encode() if isinstance(body, str) else body
+            self.send_response(code)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def do_GET(self):
+            url = urlparse(self.path)
+            if url.path == "/":
+                self._send(HTML)
+            elif url.path == "/graph":
+                self._send(json.dumps(scan(root, load_config())), "application/json")
+            elif url.path == "/open":
+                nid = parse_qs(url.query).get("id", [""])[0]
+                ok = open_in_editor(root, nid)
+                self._send(json.dumps({"ok": ok}), "application/json")
+            else:
+                self._send("not found", code=404)
+
+    return Handler
+
+
+HTML = r"""<!doctype html>
+<meta charset="utf-8">
+<title>graphview</title>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#161616;
+    font:12px/1.4 -apple-system, "SF Mono", Menlo, monospace; color:#fcfcfa; }
+  canvas { display:block; }
+  #panel { position:fixed; top:12px; right:12px; width:220px; background:#141414;
+    border-radius:10px; padding:12px 14px; opacity:.95; }
+  #panel h1 { font-size:12px; margin:0 0 8px; color:#9deaf6; font-weight:600; }
+  #panel label { display:block; margin-top:8px; color:#8a8887; }
+  #panel input[type=range] { width:100%; accent-color:#9deaf6; }
+  #panel .val { float:right; color:#fcfcfa; }
+  #stats { position:fixed; left:12px; bottom:10px; color:#545452; }
+  #hint { position:fixed; left:12px; top:10px; color:#545452; }
+  #search { width:100%; box-sizing:border-box; margin-bottom:4px; background:#1e1e1e;
+    border:none; border-radius:6px; color:#fcfcfa; padding:5px 8px; outline:none; }
+</style>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>graphview</h1>
+  <input id="search" placeholder="buscar…">
+  <div id="sliders"></div>
+</div>
+<div id="stats"></div>
+<div id="hint">arrastra nodos · rueda = zoom · click = abrir en nvim</div>
+<script>
+const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+let W, H, DPR = window.devicePixelRatio || 1;
+function resize() {
+  W = innerWidth; H = innerHeight;
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+addEventListener('resize', resize); resize();
+
+let nodes = [], edges = [], byId = {}, F = {};
+let cam = { x: 0, y: 0, k: 1 };
+let drag = null, hover = null, panning = null, query = '';
+let downAt = null;
+
+const SLIDERS = [
+  ['repulsion',     'repulsión',    0,    5000, 10 ],
+  ['attraction',    'atracción',    0,    0.3,  0.005],
+  ['link_distance', 'distancia',    10,   300,  5  ],
+  ['center',        'centro',       0,    0.2,  0.005],
+  ['damping',       'fricción',     0.5,  0.99, 0.01],
+  ['node_scale',    'tamaño nodos', 0.3,  3,    0.1],
+];
+
+function buildPanel() {
+  const el = document.getElementById('sliders');
+  el.innerHTML = '';
+  for (const [key, name, min, max, step] of SLIDERS) {
+    const lab = document.createElement('label');
+    lab.textContent = name;
+    const val = document.createElement('span');
+    val.className = 'val'; val.textContent = F[key];
+    lab.appendChild(val);
+    const inp = document.createElement('input');
+    inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = F[key];
+    inp.oninput = () => {
+      F[key] = +inp.value; val.textContent = inp.value;
+      localStorage.setItem('graphview.forces', JSON.stringify(F));
+      heat = Math.max(heat, .5);
+    };
+    el.appendChild(lab); el.appendChild(inp);
+  }
+}
+
+document.getElementById('search').oninput = e => { query = e.target.value.toLowerCase(); };
+
+async function load() {
+  const g = await (await fetch('/graph')).json();
+  F = Object.assign({}, g.forces, JSON.parse(localStorage.getItem('graphview.forces') || '{}'));
+  const old = byId;
+  byId = {};
+  nodes = g.nodes.map(n => {
+    const prev = old[n.id];
+    const node = Object.assign(n, prev
+      ? { x: prev.x, y: prev.y, vx: prev.vx, vy: prev.vy }
+      : { x: (Math.random() - .5) * 600, y: (Math.random() - .5) * 600, vx: 0, vy: 0 });
+    byId[n.id] = node;
+    return node;
+  });
+  edges = g.edges.map(e => ({ s: byId[e.source], t: byId[e.target] }));
+  document.getElementById('stats').textContent =
+    g.root + ' — ' + nodes.length + ' notas, ' + edges.length + ' links';
+  buildPanel();
+  heat = 1;
+}
+
+let heat = 1;
+function step() {
+  const n = nodes.length;
+  if (!n) return;
+  // repulsión O(n²) — bien hasta unos ~2000 nodos
+  for (let i = 0; i < n; i++) {
+    const a = nodes[i];
+    for (let j = i + 1; j < n; j++) {
+      const b = nodes[j];
+      let dx = a.x - b.x, dy = a.y - b.y;
+      let d2 = dx * dx + dy * dy;
+      if (d2 < 1) { dx = Math.random() - .5; dy = Math.random() - .5; d2 = 1; }
+      if (d2 > 250000) continue;
+      const f = F.repulsion / d2;
+      const d = Math.sqrt(d2);
+      dx = dx / d * f; dy = dy / d * f;
+      a.vx += dx; a.vy += dy; b.vx -= dx; b.vy -= dy;
+    }
+  }
+  for (const e of edges) {
+    const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    const f = F.attraction * (d - F.link_distance) / d;
+    e.s.vx += dx * f; e.s.vy += dy * f;
+    e.t.vx -= dx * f; e.t.vy -= dy * f;
+  }
+  for (const a of nodes) {
+    a.vx -= a.x * F.center; a.vy -= a.y * F.center;
+    a.vx *= F.damping; a.vy *= F.damping;
+    if (a !== (drag && drag.node)) { a.x += a.vx * heat; a.y += a.vy * heat; }
+  }
+  heat = Math.max(0.05, heat * 0.999);
+}
+
+function radius(node) {
+  return (3 + Math.sqrt(node.links) * 2.2) * F.node_scale;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W / 2 + cam.x, H / 2 + cam.y);
+  ctx.scale(cam.k, cam.k);
+
+  const neigh = new Set();
+  if (hover) {
+    neigh.add(hover);
+    for (const e of edges) {
+      if (e.s === hover) neigh.add(e.t);
+      if (e.t === hover) neigh.add(e.s);
+    }
+  }
+
+  for (const e of edges) {
+    const active = hover && (e.s === hover || e.t === hover);
+    ctx.strokeStyle = active ? '#9deaf6' : 'rgba(252,252,250,0.13)';
+    ctx.lineWidth = (active ? 1.4 : 0.7) / cam.k;
+    ctx.beginPath(); ctx.moveTo(e.s.x, e.s.y); ctx.lineTo(e.t.x, e.t.y); ctx.stroke();
+  }
+
+  for (const a of nodes) {
+    const r = radius(a);
+    const dim = (hover && !neigh.has(a)) || (query && !a.label.toLowerCase().includes(query));
+    ctx.globalAlpha = dim ? 0.15 : (a.phantom ? 0.55 : 1);
+    ctx.fillStyle = a.color;
+    ctx.beginPath(); ctx.arc(a.x, a.y, r, 0, 7); ctx.fill();
+    if (a === hover) {
+      ctx.strokeStyle = '#fcfcfa'; ctx.lineWidth = 1.5 / cam.k; ctx.stroke();
+    }
+    if (cam.k > 0.6 || a === hover || (query && !dim)) {
+      ctx.fillStyle = a === hover ? '#fcfcfa' : 'rgba(252,252,250,0.6)';
+      ctx.font = (11 / cam.k) + 'px -apple-system, Menlo';
+      ctx.textAlign = 'center';
+      ctx.fillText(a.label, a.x, a.y + r + 12 / cam.k);
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+function world(px, py) {
+  return { x: (px - W / 2 - cam.x) / cam.k, y: (py - H / 2 - cam.y) / cam.k };
+}
+function pick(px, py) {
+  const w = world(px, py);
+  let best = null, bd = 1e9;
+  for (const a of nodes) {
+    const dx = a.x - w.x, dy = a.y - w.y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < Math.max(radius(a) + 4, 8) && d < bd) { best = a; bd = d; }
+  }
+  return best;
+}
+
+canvas.onmousedown = e => {
+  downAt = { x: e.clientX, y: e.clientY };
+  const node = pick(e.clientX, e.clientY);
+  if (node) drag = { node };
+  else panning = { x: e.clientX - cam.x, y: e.clientY - cam.y };
+};
+canvas.onmousemove = e => {
+  if (drag) {
+    const w = world(e.clientX, e.clientY);
+    drag.node.x = w.x; drag.node.y = w.y;
+    drag.node.vx = drag.node.vy = 0;
+    heat = Math.max(heat, .3);
+  } else if (panning) {
+    cam.x = e.clientX - panning.x; cam.y = e.clientY - panning.y;
+  } else {
+    hover = pick(e.clientX, e.clientY);
+    canvas.style.cursor = hover ? 'pointer' : 'default';
+  }
+};
+addEventListener('mouseup', e => {
+  if (drag && downAt) {
+    const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+    if (moved < 4 && !drag.node.phantom) {
+      fetch('/open?id=' + encodeURIComponent(drag.node.id));
+    }
+  }
+  drag = panning = downAt = null;
+});
+canvas.onwheel = e => {
+  e.preventDefault();
+  const k = Math.min(6, Math.max(0.1, cam.k * Math.exp(-e.deltaY * 0.002)));
+  const w = world(e.clientX, e.clientY);
+  cam.x = e.clientX - W / 2 - w.x * k;
+  cam.y = e.clientY - H / 2 - w.y * k;
+  cam.k = k;
+};
+
+(function loop() { step(); draw(); requestAnimationFrame(loop); })();
+load();
+setInterval(load, 4000); // recarga el grafo (nuevas notas/links) sin perder posiciones
+</script>
+"""
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Vista de grafo estilo Obsidian")
+    ap.add_argument("folder", nargs="?", default=".")
+    ap.add_argument("--port", type=int, default=8722)
+    ap.add_argument("--no-open", action="store_true")
+    args = ap.parse_args()
+
+    root = Path(args.folder).expanduser().resolve()
+    if not root.is_dir():
+        sys.exit(f"graphview: {root} no es una carpeta")
+
+    cfg = load_config()
+    g = scan(root, cfg)
+    print(f"graphview: {len(g['nodes'])} notas, {len(g['edges'])} links en {root}")
+    print(f"config: {CONFIG_PATH}")
+
+    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(root, cfg))
+    url = f"http://127.0.0.1:{args.port}"
+    print(f"sirviendo en {url}  (Ctrl-C para salir)")
+    if not args.no_open:
+        threading.Timer(0.3, lambda: webbrowser.open(url)).start()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print()
+
+
+if __name__ == "__main__":
+    main()
