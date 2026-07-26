@@ -494,7 +494,13 @@ def main():
     ap.add_argument("--no-open", action="store_true")
     args = ap.parse_args()
 
-    root = Path(args.folder).expanduser().resolve()
+    try:
+        root = Path(args.folder).expanduser().resolve()
+    except FileNotFoundError:
+        sys.exit(
+            "graphview: el directorio actual ya no existe "
+            "(¿fue borrado y recreado?) — haz `cd` a la carpeta de nuevo"
+        )
     if not root.is_dir():
         sys.exit(f"graphview: {root} no es una carpeta")
 
