@@ -67,6 +67,15 @@
             "command": "bash \"/Users/illico/.claude/hooks/gsd-session-state.sh\""
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/illico/.claude/hooks/ccmux-session-start.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -160,6 +169,15 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "idle_prompt|permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/illico/.claude/hooks/ccmux-state-notify.sh"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -190,6 +208,15 @@
             "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
             "timeout": 10,
             "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/illico/.claude/hooks/ccmux-session-end.sh"
           }
         ]
       }
