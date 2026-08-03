@@ -39,6 +39,20 @@ teclado), `Brewfile`.
 
 ## Restaurar en un Mac nuevo
 
+Todo en un solo comando:
+
+```sh
+git clone https://github.com/MurphLaws/dotfiles ~/dotfiles && ~/dotfiles/install.sh
+```
+
+`install.sh` es idempotente (re-ejecutable) e instala/aplica todo: Homebrew + Brewfile,
+Oh My Zsh + Powerlevel10k, stow de todos los paquetes, tpm, plantillas de secretos,
+plugins de Neovim, wallpaper y los forks TUI parcheados (`--no-forks` para saltarlos).
+Al final imprime los pendientes manuales (API keys, client_id de Spotify, prefix+I
+en tmux, rsync del estado de Claude).
+
+Los pasos equivalentes a mano, por referencia:
+
 ```sh
 # 1. Homebrew + todos los paquetes (formulae, casks, taps)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
