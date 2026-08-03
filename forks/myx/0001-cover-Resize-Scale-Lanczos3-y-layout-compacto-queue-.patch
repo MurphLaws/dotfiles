@@ -1,0 +1,321 @@
+From 6706c1003ca513e45ca380b16a06ecbe2c232e6a Mon Sep 17 00:00:00 2001
+From: MurphLaws <nicolaslassojr@gmail.com>
+Date: Sun, 26 Jul 2026 22:08:43 -0500
+Subject: [PATCH] cover: Resize::Scale(Lanczos3) y layout compacto; queue strip
+ persistente bajo la library en todas las vistas
+
+---
+ examples/scaletest.rs |  15 ++++
+ src/cover.rs          |  29 +++++++-
+ src/main.rs           | 163 ++++++++++++++++++++++++++++++++++--------
+ 3 files changed, 175 insertions(+), 32 deletions(-)
+ create mode 100644 examples/scaletest.rs
+
+diff --git a/examples/scaletest.rs b/examples/scaletest.rs
+new file mode 100644
+index 0000000..006aec3
+--- /dev/null
++++ b/examples/scaletest.rs
+@@ -0,0 +1,15 @@
++use image::DynamicImage;
++use ratatui::layout::Size;
++use ratatui_image::picker::{Picker, ProtocolType};
++use ratatui_image::Resize;
++use image::imageops::FilterType;
++
++fn main() {
++    let img = DynamicImage::ImageRgb8(image::RgbImage::from_pixel(640, 640, image::Rgb([10, 200, 30])));
++    let mut picker = Picker::from_fontsize(ratatui_image::FontSize::new(24, 53));
++    picker.set_protocol_type(ProtocolType::Kitty);
++    for resize in [Resize::Fit(None), Resize::Scale(Some(FilterType::Lanczos3))] {
++        let p = picker.new_protocol(img.clone(), Size::new(76, 38), resize.clone()).unwrap();
++        println!("{:?} -> rendered cells {:?}", resize, p.size());
++    }
++}
+diff --git a/src/cover.rs b/src/cover.rs
+index 81af7bd..d2ed382 100644
+--- a/src/cover.rs
++++ b/src/cover.rs
+@@ -5,6 +5,7 @@
+ //! The encoded protocol is cached per render area — re-encoding only happens when
+ //! the cover box changes size, keeping the render loop cheap.
+ 
++use image::imageops::FilterType;
+ use image::DynamicImage;
+ use ratatui::layout::{Rect, Size};
+ use ratatui::Frame;
+@@ -86,9 +87,33 @@ impl Cover {
+         if needs_encode {
+             match self
+                 .picker
+-                .new_protocol(self.img.clone(), Size::new(area.width, area.height), Resize::Fit(None))
++                .new_protocol(
++                    self.img.clone(),
++                    Size::new(area.width, area.height),
++                    Resize::Scale(Some(FilterType::Lanczos3)),
++                )
+             {
+-                Ok(protocol) => self.cached = Some((area, protocol)),
++                Ok(protocol) => {
++                    if std::env::var("MYX_DEBUG").is_ok() {
++                        use std::io::Write;
++                        if let Ok(mut f) = std::fs::OpenOptions::new()
++                            .create(true)
++                            .append(true)
++                            .open("/tmp/myx-debug.log")
++                        {
++                            let _ = writeln!(
++                                f,
++                                "cover: area={area:?} proto={:?} font={:?} encoded={:?} img={}x{}",
++                                self.picker.protocol_type(),
++                                self.picker.font_size(),
++                                protocol.size(),
++                                self.img.width(),
++                                self.img.height(),
++                            );
++                        }
++                    }
++                    self.cached = Some((area, protocol));
++                }
+                 Err(_) => return,
+             }
+         }
+diff --git a/src/main.rs b/src/main.rs
+index 088382a..87787c0 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1081,7 +1081,10 @@ async fn run_ui(
+             q = queue_rx.recv_async() => {
+                 // Don't let an empty live queue (e.g. a bare resumed track) wipe
+                 // the restored/last-known snapshot.
+-                if let Ok(q) = q {
++                if let Ok(mut q) = q {
++                    // Spotify's queue endpoint sometimes repeats the next
++                    // track back-to-back; collapse consecutive duplicates.
++                    q.dedup_by(|a, b| a.1 == b.1);
+                     if !q.is_empty() {
+                         app.queue = q.iter().map(|(d, _)| d.clone()).collect();
+                         app.queue_uris = q.into_iter().map(|(_, u)| u).collect();
+@@ -2997,7 +3000,79 @@ fn render(f: &mut Frame, app: &mut App) {
+         .spacing(3)
+         .split(rows[2]);
+ 
+-    render_library(f, app, theme, body[0]);
++    // Left column: library on top, a persistent queue strip below it in every
++    // view, and (in the Lyrics view) the album art at the bottom at the full
++    // panel width.
++    let full = body[0];
++    let lyrics_art = matches!(app.view, RightView::Lyrics)
++        && app.now.as_ref().is_some_and(|n| n.cover.is_some());
++    let (lib_area, queue_area, art_area) = if lyrics_art {
++        // No library here: just the queue strip on top and the album cover
++        // below, both at the full panel width.
++        let font = app.picker.font_size();
++        let fw = font.width.max(1) as u32;
++        let fh = font.height.max(1) as u32;
++        // Rows needed for a square cover spanning the whole column width.
++        let want_h = ((full.width as u32 * fw + fh - 1) / fh) as u16;
++        let art_h = want_h.min(full.height.saturating_sub(4));
++        let queue_h = full.height.saturating_sub(art_h + 1).max(3);
++        let parts = Layout::vertical([
++            Constraint::Length(queue_h), // queue strip
++            Constraint::Length(1),       // gap
++            Constraint::Length(art_h),   // album art
++        ])
++        .split(full);
++        (None, Some(parts[0]), Some(parts[2]))
++    } else if matches!(app.view, RightView::Queue) {
++        // The right side already shows the full queue — no strip here.
++        (Some(full), None, None)
++    } else {
++        let queue_h: u16 = if full.height >= 24 { 8 } else { 5 };
++        let parts = Layout::vertical([
++            Constraint::Min(6),          // library
++            Constraint::Length(1),       // gap
++            Constraint::Length(queue_h), // queue strip
++        ])
++        .split(full);
++        (Some(parts[0]), Some(parts[2]), None)
++    };
++
++    if let Some(la) = lib_area {
++        render_library(f, app, theme, la);
++    }
++    if let Some(qa) = queue_area {
++        render_queue_strip(f, app, theme, qa);
++    }
++
++    if let Some(slot) = art_area {
++        let font = app.picker.font_size();
++        let fw = font.width.max(1) as u32;
++        let fh = font.height.max(1) as u32;
++        // Exactly as wide as the panel; only narrower if the height cap bit.
++        let uncapped = ((slot.width as u32 * fw + fh - 1) / fh) as u16 <= slot.height;
++        let art_w = if uncapped {
++            slot.width
++        } else {
++            (((slot.height as u32 * fh + fw - 1) / fw) as u16).min(slot.width)
++        };
++        dbglog(&format!(
++            "lyrics art: slot={slot:?} art={art_w}x{} font={fw}x{fh}",
++            slot.height
++        ));
++        if art_w > 0 && slot.height > 0 {
++            // Left-aligned so it lines up with the library panel above.
++            let art_rect = Rect {
++                x: slot.x,
++                y: slot.y,
++                width: art_w,
++                height: slot.height,
++            };
++            if let Some(cover) = app.now.as_mut().and_then(|n| n.cover.as_mut()) {
++                cover.render(f, art_rect);
++            }
++        }
++    }
++
+     match app.view {
+         RightView::NowPlaying => render_nowplaying_view(f, app, theme, body[1]),
+         RightView::Lyrics => render_lyrics(f, app, theme, body[1]),
+@@ -3031,6 +3106,51 @@ fn view_tabs<'a>(app: &App, theme: Theme) -> Vec<Span<'a>> {
+     spans
+ }
+ 
++/// Append a line to a debug log when MYX_DEBUG is set. Layout diagnostics only.
++fn dbglog(msg: &str) {
++    if std::env::var("MYX_DEBUG").is_err() {
++        return;
++    }
++    use std::io::Write;
++    if let Ok(mut f) = std::fs::OpenOptions::new()
++        .create(true)
++        .append(true)
++        .open("/tmp/myx-debug.log")
++    {
++        let _ = writeln!(f, "{msg}");
++    }
++}
++
++/// Compact, always-visible queue strip under the library panel.
++fn render_queue_strip(f: &mut Frame, app: &App, theme: Theme, area: Rect) {
++    f.render_widget(Block::default().style(theme.panel()), area);
++    let inner = area.inner(Margin::new(2, 1));
++    if inner.height < 2 {
++        return;
++    }
++    let max = inner.width as usize;
++    let mut lines: Vec<Line> = vec![Line::from(Span::styled("UP NEXT", theme.heading()))];
++    if app.queue.is_empty() {
++        lines.push(Line::from(Span::styled("queue is empty", theme.muted())));
++    } else {
++        for (i, q) in app
++            .queue
++            .iter()
++            .take(inner.height.saturating_sub(1) as usize)
++            .enumerate()
++        {
++            lines.push(Line::from(vec![
++                Span::styled(format!("{:>2}  ", i + 1), theme.muted()),
++                Span::styled(
++                    truncate(q, max.saturating_sub(4)),
++                    Style::default().fg(theme.text.into()),
++                ),
++            ]));
++        }
++    }
++    f.render_widget(Paragraph::new(lines), inner);
++}
++
+ fn render_library(f: &mut Frame, app: &mut App, theme: Theme, area: Rect) {
+     f.render_widget(Block::default().style(theme.panel()), area);
+     let inner = area.inner(Margin::new(2, 1));
+@@ -3266,23 +3386,9 @@ fn render_nowplaying_view(f: &mut Frame, app: &mut App, theme: Theme, area: Rect
+         return;
+     }
+ 
+-    // Split: album art + track info on top, a compact spectrum below, lifted a
+-    // little off the bottom.
+-    let chunks = Layout::vertical([
+-        Constraint::Min(6),    // art + text
+-        Constraint::Length(7), // spectrum
+-        Constraint::Length(2), // breathing room (lifts the spectrum up)
+-    ])
+-    .split(area);
+-    let top = chunks[0];
+-    // Push the art + info group down a little from the top.
+-    let top = Rect {
+-        x: top.x,
+-        y: top.y + 3,
+-        width: top.width,
+-        height: top.height.saturating_sub(3),
+-    };
+-    let viz_area = chunks[1];
++    // The whole panel goes to art + track info; no spectrum here so the
++    // cover gets every row available.
++    let top = area;
+ 
+     // Derive the cover's cell footprint from the terminal's font aspect so a
+     // square image renders square (and our centering math is exact).
+@@ -3290,9 +3396,9 @@ fn render_nowplaying_view(f: &mut Frame, app: &mut App, theme: Theme, area: Rect
+     let fw = font.width.max(1) as u32;
+     let fh = font.height.max(1) as u32;
+ 
+-    // Reserve 3 rows for text (+1 gap). Cap the art so the group stays compact.
+-    let avail_h = top.height.saturating_sub(4);
+-    let mut art_h = avail_h.clamp(3, 14);
++    // Reserve 2 rows for text (+1 gap); the art takes everything else.
++    let avail_h = top.height.saturating_sub(3);
++    let mut art_h = avail_h.max(3);
+     // Square image width in cells for this height: w = h * fh / fw.
+     let mut art_w = (art_h as u32 * fh / fw) as u16;
+     if art_w > top.width {
+@@ -3300,7 +3406,7 @@ fn render_nowplaying_view(f: &mut Frame, app: &mut App, theme: Theme, area: Rect
+         art_h = (art_w as u32 * fw / fh) as u16;
+     }
+ 
+-    let group_h = art_h + 4; // art + gap + title + artist + album
++    let group_h = art_h + 3; // art + gap + title + artist
+     let art_y = top.y + top.height.saturating_sub(group_h) / 2;
+     let art_x = top.x + top.width.saturating_sub(art_w) / 2;
+     let art_rect = Rect {
+@@ -3310,6 +3416,9 @@ fn render_nowplaying_view(f: &mut Frame, app: &mut App, theme: Theme, area: Rect
+         height: art_h,
+     };
+ 
++    dbglog(&format!(
++        "nowplaying art: top={top:?} avail_h={avail_h} art_rect={art_rect:?} font={fw}x{fh}"
++    ));
+     if let Some(cover) = app.now.as_mut().and_then(|n| n.cover.as_mut()) {
+         cover.render(f, art_rect);
+     }
+@@ -3319,7 +3428,7 @@ fn render_nowplaying_view(f: &mut Frame, app: &mut App, theme: Theme, area: Rect
+             x: top.x,
+             y: art_rect.y + art_h + 1,
+             width: top.width,
+-            height: 3,
++            height: 2,
+         };
+         let lines = vec![
+             Line::from(Span::styled(
+@@ -3332,18 +3441,12 @@ fn render_nowplaying_view(f: &mut Frame, app: &mut App, theme: Theme, area: Rect
+                 truncate(&n.artist, top.width as usize),
+                 Style::default().fg(theme.primary.into()),
+             )),
+-            Line::from(Span::styled(
+-                truncate(&n.album, top.width as usize),
+-                theme.muted(),
+-            )),
+         ];
+         f.render_widget(
+             Paragraph::new(lines).alignment(Alignment::Center),
+             text_rect,
+         );
+     }
+-
+-    render_visualizer(f, app, theme, viz_area);
+ }
+ 
+ /// Vertically center a `height`-row rect inside `area`.
+-- 
+2.55.0
+

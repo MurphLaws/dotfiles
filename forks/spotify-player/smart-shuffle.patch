@@ -1,0 +1,584 @@
+diff --git a/spotify_player/src/client/handlers.rs b/spotify_player/src/client/handlers.rs
+index 7a993d8..e86eec1 100644
+--- a/spotify_player/src/client/handlers.rs
++++ b/spotify_player/src/client/handlers.rs
+@@ -96,6 +96,34 @@ fn handle_playback_change_event(
+     } else {
+         client_pub.send(ClientRequest::GetCurrentUserQueue)?;
+     }
++    drop(player);
++
++    // smart shuffle: inject a radio recommendation into the queue every few track changes
++    {
++        let current_uri = id.uri();
++        let mut player = state.player.write();
++        if let Some(smart) = player.smart_shuffle.as_mut() {
++            if smart.last_track_uri.as_deref() != Some(current_uri.as_str()) {
++                // only count a change when a track had already been observed
++                if smart.last_track_uri.is_some() {
++                    smart.tracks_since_injection += 1;
++                }
++                smart.last_track_uri = Some(current_uri);
++
++                let recently_injected = smart
++                    .last_injection_at
++                    .is_some_and(|t| t.elapsed() < Duration::from_secs(30));
++                if smart.tracks_since_injection >= 3 && !smart.pool.is_empty() && !recently_injected
++                {
++                    let next = smart.pool.remove(0);
++                    smart.injected.insert(next.uri());
++                    smart.tracks_since_injection = 0;
++                    smart.last_injection_at = Some(Instant::now());
++                    client_pub.send(ClientRequest::AddPlayableToQueue(next))?;
++                }
++            }
++        }
++    }
+ 
+     Ok(())
+ }
+diff --git a/spotify_player/src/client/mod.rs b/spotify_player/src/client/mod.rs
+index ce5fcb8..ec000ca 100644
+--- a/spotify_player/src/client/mod.rs
++++ b/spotify_player/src/client/mod.rs
+@@ -462,10 +462,80 @@ impl AppClient {
+                 state.data.write().user_data.user = Some(user);
+             }
+             ClientRequest::Player(request) => {
+-                let playback = state.player.read().buffered_playback.clone();
+-                let playback = self.handle_player_request(request, playback).await?;
+-                state.player.write().buffered_playback = playback;
+-                self.update_playback(state);
++                // the shuffle command cycles through three modes:
++                // off -> shuffle -> smart shuffle -> off
++                let toggling_shuffle = matches!(request, PlayerRequest::Shuffle);
++                let (is_shuffled, is_smart) = {
++                    let player = state.player.read();
++                    (
++                        player
++                            .buffered_playback
++                            .as_ref()
++                            .is_some_and(|p| p.shuffle_state),
++                        player.smart_shuffle.is_some(),
++                    )
++                };
++
++                if toggling_shuffle && is_shuffled && !is_smart {
++                    // shuffle -> smart shuffle: keep shuffle on and start injecting
++                    // radio recommendations (seeded by the currently playing track)
++                    // into the playback queue
++                    let seed_uri = match state.player.read().currently_playing() {
++                        Some(rspotify::model::PlayableItem::Track(track)) => {
++                            track.id.as_ref().map(|id| id.uri())
++                        }
++                        _ => None,
++                    };
++                    let radio_tracks = match seed_uri {
++                        Some(uri) => self.radio_tracks(uri).await.unwrap_or_default(),
++                        None => Vec::new(),
++                    };
++                    let mut pool = radio_tracks
++                        .into_iter()
++                        .map(|t| PlayableId::Track(t.id))
++                        .collect::<Vec<_>>();
++                    let mut injected = std::collections::HashSet::new();
++
++                    // inject the first recommendation right away so the mode has
++                    // an immediately visible effect in the queue
++                    if let Some(first) = pool.first().cloned() {
++                        if self.add_item_to_queue(first.clone(), None).await.is_ok() {
++                            injected.insert(first.uri());
++                            pool.remove(0);
++                        }
++                    }
++                    tracing::info!(
++                        "Enabled smart shuffle: {} radio tracks in the pool, {} injected",
++                        pool.len(),
++                        injected.len()
++                    );
++                    state.player.write().smart_shuffle =
++                        Some(crate::state::SmartShuffleState {
++                            pool,
++                            injected,
++                            last_track_uri: None,
++                            tracks_since_injection: 0,
++                            last_injection_at: Some(std::time::Instant::now()),
++                        });
++                    // refresh the queue so the injected track shows up in the UI;
++                    // Spotify's queue endpoint lags a bit behind the add call
++                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
++                    let queue = self.current_user_queue().await?;
++                    state.player.write().queue = Some(queue);
++                    self.update_playback(state);
++                } else {
++                    // off -> shuffle, smart shuffle -> off, or any non-shuffle request
++                    let playback = state.player.read().buffered_playback.clone();
++                    let playback = self.handle_player_request(request, playback).await?;
++                    {
++                        let mut player = state.player.write();
++                        player.buffered_playback = playback;
++                        if toggling_shuffle {
++                            player.smart_shuffle = None;
++                        }
++                    }
++                    self.update_playback(state);
++                }
+             }
+             ClientRequest::GetCurrentPlayback => {
+                 self.retrieve_current_playback(state, true).await?;
+@@ -621,6 +691,11 @@ impl AppClient {
+ 
+             ClientRequest::AddPlayableToQueue(playable_id) => {
+                 self.add_item_to_queue(playable_id, None).await?;
++                // refresh the queue state so the UI reflects the newly added item;
++                // Spotify's queue endpoint lags a bit behind the add call
++                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
++                let queue = self.current_user_queue().await?;
++                state.player.write().queue = Some(queue);
+             }
+             ClientRequest::AddPlayableToPlaylist(playlist_id, playable_id) => {
+                 self.add_item_to_playlist(state, playlist_id, playable_id)
+diff --git a/spotify_player/src/state/player.rs b/spotify_player/src/state/player.rs
+index 981baf3..c710929 100644
+--- a/spotify_player/src/state/player.rs
++++ b/spotify_player/src/state/player.rs
+@@ -1,8 +1,27 @@
+ use super::model::{
+-    AlbumId, ArtistId, ContextId, Device, PlaybackMetadata, PlaylistId, ShowId, TracksId,
++    AlbumId, ArtistId, ContextId, Device, PlaybackMetadata, PlayableId, PlaylistId, ShowId,
++    TracksId,
+ };
+ use super::queue::CustomQueue;
+ 
++/// State of the smart-shuffle mode: a pool of radio recommendations
++/// (seeded by the track that was playing when the mode was enabled) that
++/// get injected into the playback queue every few track changes.
++#[derive(Debug)]
++pub struct SmartShuffleState {
++    /// Radio tracks not yet injected into the queue
++    pub pool: Vec<PlayableId<'static>>,
++    /// URIs of the already-injected tracks, used to mark them in the UI
++    pub injected: std::collections::HashSet<String>,
++    /// URI of the last observed playing track, used to detect track changes
++    pub last_track_uri: Option<String>,
++    /// Number of track changes since the last injection
++    pub tracks_since_injection: usize,
++    /// When the last injection happened; rate-limits injections so that
++    /// rapidly skipping tracks doesn't flood the queue with radio tracks
++    pub last_injection_at: Option<std::time::Instant>,
++}
++
+ /// Player state
+ #[derive(Default, Debug)]
+ pub struct PlayerState {
+@@ -23,6 +42,9 @@ pub struct PlayerState {
+     /// Active when the integrated librespot player is streaming and the user
+     /// started playback from a track-table context.
+     pub custom_queue: Option<CustomQueue>,
++
++    /// Smart-shuffle state; `Some` while the smart shuffle mode is active
++    pub smart_shuffle: Option<SmartShuffleState>,
+ }
+ 
+ impl PlayerState {
+diff --git a/spotify_player/src/state/ui/mod.rs b/spotify_player/src/state/ui/mod.rs
+index e1e80a3..7fd9c46 100644
+--- a/spotify_player/src/state/ui/mod.rs
++++ b/spotify_player/src/state/ui/mod.rs
+@@ -58,6 +58,11 @@ pub struct UIState {
+     #[cfg(feature = "image")]
+     pub last_cover_image_render_info: ImageRenderInfo,
+ 
++    /// Cover image rendered inside the lyrics page (kept separate from the playback
++    /// window's cover so the two render areas don't invalidate each other's cache)
++    #[cfg(feature = "image")]
++    pub lyrics_cover_image_render_info: ImageRenderInfo,
++
+     #[cfg(feature = "image")]
+     pub picker: Picker,
+ }
+@@ -135,6 +140,9 @@ impl Default for UIState {
+             #[cfg(feature = "image")]
+             last_cover_image_render_info: ImageRenderInfo::default(),
+ 
++            #[cfg(feature = "image")]
++            lyrics_cover_image_render_info: ImageRenderInfo::default(),
++
+             // Will be reinitialize later in ui/mod.rs after init_ui()
+             #[cfg(feature = "image")]
+             picker: Picker::halfblocks(),
+diff --git a/spotify_player/src/streaming.rs b/spotify_player/src/streaming.rs
+index 7ce6099..95a3b65 100644
+--- a/spotify_player/src/streaming.rs
++++ b/spotify_player/src/streaming.rs
+@@ -232,7 +232,28 @@ pub async fn new_connection(
+         let mut channel = player.get_player_event_channel();
+         async move {
+             let mut pause_armed = pause_on_startup;
++            // circuit breaker for consecutive track-load failures (typically
++            // Spotify's audio-key rate limiting): auto-skipping through them
++            // requests more keys and makes the rate limit worse
++            let mut unavailable_count = 0_usize;
++            let mut last_unavailable = std::time::Instant::now();
+             while let Some(event) = channel.recv().await {
++                if let player::PlayerEvent::Unavailable { .. } = &event {
++                    let now = std::time::Instant::now();
++                    if now.duration_since(last_unavailable) > std::time::Duration::from_secs(30) {
++                        unavailable_count = 0;
++                    }
++                    unavailable_count += 1;
++                    last_unavailable = now;
++                    if unavailable_count >= 3 {
++                        tracing::warn!(
++                            "{unavailable_count} track load failures in a row (likely audio-key \
++                             rate limiting); pausing playback to let the rate limit cool down"
++                        );
++                        client.pause_streaming_on_startup();
++                        unavailable_count = 0;
++                    }
++                }
+                 // Suppress Spotify's auto-resume of the previous session on
+                 // startup. The `librespot` connect transfer finalizes the
+                 // play state asynchronously, so a single reactive pause is not
+diff --git a/spotify_player/src/ui/page.rs b/spotify_player/src/ui/page.rs
+index f640f60..bf0b85d 100644
+--- a/spotify_player/src/ui/page.rs
++++ b/spotify_player/src/ui/page.rs
+@@ -634,7 +634,6 @@ pub fn render_lyrics_page(
+ 
+     // 2. Construct the page's layout
+     let rect = construct_and_render_block("Lyrics", &ui.theme, Borders::ALL, frame, rect);
+-    let chunks = Layout::vertical([Constraint::Length(2), Constraint::Fill(0)]).split(rect);
+ 
+     // 3. Construct the page's widgets
+     let Some(progress) = state.player.read().playback_progress() else {
+@@ -642,36 +641,104 @@ pub fn render_lyrics_page(
+         return;
+     };
+ 
+-    let PageState::Lyrics {
+-        track_uri,
+-        track,
+-        artists,
+-    } = ui.current_page_mut()
+-    else {
++    let PageState::Lyrics { track_uri, .. } = ui.current_page_mut() else {
+         return;
+     };
+ 
+-    let lyrics = match data.caches.lyrics.get(track_uri) {
+-        None => {
+-            frame.render_widget(Paragraph::new("Loading..."), rect);
+-            return;
++    // the cover image is rendered even when no lyrics are available,
++    // so only resolve the cache entry here and handle the empty cases
++    // after the page's layout is constructed
++    let cached_lyrics = data.caches.lyrics.get(track_uri);
++
++    // 4. Render the page's widgets
++    // render the currently playing track's cover image on the left half of the page
++    // and keep the right half for the lyric text
++    #[cfg(feature = "image")]
++    let rect = {
++        let chunks = Layout::horizontal([
++            Constraint::Percentage(45),
++            Constraint::Length(2),
++            Constraint::Fill(0),
++        ])
++        .split(rect);
++        // center a square cover area inside the left chunk, using the terminal's
++        // actual font size so the cell box matches the (square) cover's aspect ratio
++        let cover_rect = {
++            let chunk = chunks[0];
++            let font = ui.picker.font_size();
++            let (fw, fh) = (u32::from(font.width).max(1), u32::from(font.height).max(1));
++            // a square image spanning the full chunk width needs `width * fw / fh` rows
++            let rows = std::cmp::min(
++                u32::from(chunk.height),
++                u32::from(chunk.width) * fw / fh,
++            ) as u16;
++            let cols = (u32::from(rows) * fh / fw) as u16;
++            ratatui::layout::Rect {
++                x: chunk.x + (chunk.width.saturating_sub(cols)) / 2,
++                y: chunk.y + (chunk.height.saturating_sub(rows)) / 2,
++                width: cols.min(chunk.width),
++                height: rows,
++            }
++        };
++
++        let player = state.player.read();
++        let url = match player.currently_playing() {
++            Some(rspotify::model::PlayableItem::Track(track)) => {
++                crate::utils::get_track_album_image_url(track).map(String::from)
++            }
++            Some(rspotify::model::PlayableItem::Episode(episode)) => {
++                crate::utils::get_episode_show_image_url(episode).map(String::from)
++            }
++            _ => None,
++        };
++        if let Some(url) = url {
++            if let Some(img) = data.caches.images.get(&url) {
++                if ui.lyrics_cover_image_render_info.url != url
++                    || ui.lyrics_cover_image_render_info.render_area != cover_rect
++                {
++                    let cover = match crate::ui::cover_image::CoverImage::new(
++                        &ui.picker, img, cover_rect,
++                    ) {
++                        Ok(cover) => Some(cover),
++                        Err(err) => {
++                            tracing::error!("Failed to encode lyrics cover image: {err:#}");
++                            None
++                        }
++                    };
++                    ui.lyrics_cover_image_render_info = crate::state::ImageRenderInfo {
++                        url,
++                        render_area: cover_rect,
++                        state: cover,
++                    };
++                }
++                let area = ui.lyrics_cover_image_render_info.render_area;
++                if let Some(cover) = ui.lyrics_cover_image_render_info.state.as_mut() {
++                    cover.render(frame, area);
++                }
++            }
+         }
+-        Some(None) => {
+-            frame.render_widget(Paragraph::new("Lyrics not found"), rect);
++        chunks[2]
++    };
++
++    let lyrics = match cached_lyrics {
++        Some(Some(lyrics)) => lyrics,
++        // loading or not found: show a vertically-centered placeholder next to the cover
++        other => {
++            let placeholder = if other.is_none() { "Loading..." } else { "..." };
++            let vchunks = Layout::vertical([
++                Constraint::Fill(1),
++                Constraint::Length(1),
++                Constraint::Fill(1),
++            ])
++            .split(rect);
++            frame.render_widget(
++                Paragraph::new(placeholder).alignment(Alignment::Center),
++                vchunks[1],
++            );
+             return;
+         }
+-        Some(Some(lyrics)) => lyrics,
+     };
+ 
+-    // 4. Render the page's widgets
+-    // render lyric page description text
+-    let bidi_track = to_bidi_string(track);
+-    let bidi_artists = to_bidi_string(artists);
+-    frame.render_widget(
+-        Paragraph::new(format!("{bidi_track} by {bidi_artists}")).style(ui.theme.page_desc()),
+-        chunks[0],
+-    );
+-
+     // render lyric text
+ 
+     // the last played line id (1-based)
+@@ -687,20 +754,28 @@ pub fn render_lyrics_page(
+         .iter()
+         .enumerate()
+         .map(|(id, (_, line))| match (id + 1).cmp(&last_played_line_id) {
+-            std::cmp::Ordering::Less => Line::styled(line, ui.theme.lyrics_played()),
++            std::cmp::Ordering::Less => Line::styled(
++                line,
++                ui.theme
++                    .lyrics_played()
++                    .add_modifier(ratatui::style::Modifier::DIM),
++            ),
+             std::cmp::Ordering::Equal => Line::styled(line, ui.theme.lyrics_playing()),
+-            std::cmp::Ordering::Greater => Line::raw(line),
++            std::cmp::Ordering::Greater => Line::styled(
++                line,
++                Style::default().add_modifier(ratatui::style::Modifier::DIM),
++            ),
+         })
+         .collect::<Vec<_>>();
+ 
+-    let mut paragraph = Paragraph::new(lines);
++    let mut paragraph = Paragraph::new(lines).alignment(Alignment::Center);
+     // keep the currently playing line in the center if
+     // the line goes pass the lower half of lyrics section
+-    let half_height = (chunks[1].height / 2) as usize;
++    let half_height = (rect.height / 2) as usize;
+     if let Some(offset) = last_played_line_id.checked_sub(half_height) {
+         paragraph = paragraph.scroll((offset as u16, 0));
+     }
+-    frame.render_widget(paragraph, chunks[1]);
++    frame.render_widget(paragraph, rect);
+ }
+ 
+ pub fn render_commands_help_page(frame: &mut Frame, ui: &mut UIStateGuard, rect: Rect) {
+diff --git a/spotify_player/src/ui/playback.rs b/spotify_player/src/ui/playback.rs
+index ccdbfd1..e720959 100644
+--- a/spotify_player/src/ui/playback.rs
++++ b/spotify_player/src/ui/playback.rs
+@@ -6,7 +6,7 @@ use super::{
+ #[cfg(feature = "image")]
+ use crate::state::ImageRenderInfo;
+ use crate::{
+-    state::Track,
++    state::{PageState, PlayerState, Track},
+     ui::utils::{format_genres, to_bidi_string},
+ };
+ use rspotify::model::Id;
+@@ -22,7 +22,9 @@ pub fn render_playback_window(
+     ui: &mut UIStateGuard,
+     rect: Rect,
+ ) -> Rect {
+-    let (rect, other_rect) = split_rect_for_playback_window(state, rect);
++    // on the lyrics page, the playback window is compact: no cover image
++    let compact = matches!(ui.current_page(), PageState::Lyrics { .. });
++    let (rect, other_rect) = split_rect_for_playback_window(state, rect, compact);
+     let rect = construct_and_render_block("Playback", &ui.theme, Borders::ALL, frame, rect);
+ 
+     let player = state.player.read();
+@@ -51,6 +53,11 @@ pub fn render_playback_window(
+                 // Render the track's cover image if `image` feature is enabled
+                 #[cfg(feature = "image")]
+                 {
++                    if compact {
++                        ui.last_cover_image_render_info = ImageRenderInfo::default();
++                        let chunks = split_rect_for_progress_bar(rect);
++                        (chunks.0, chunks.1)
++                    } else {
+                     let configs = config::get_config();
+                     // Split the allocated rectangle into `metadata_rect`, `cover_img_rect` and `progress_bar_rect`
+                     let (metadata_rect, cover_img_rect, progress_bar_rect) =
+@@ -106,6 +113,7 @@ pub fn render_playback_window(
+                         }
+                     }
+                     (metadata_rect, progress_bar_rect)
++                    }
+                 }
+ 
+                 #[cfg(not(feature = "image"))]
+@@ -116,9 +124,20 @@ pub fn render_playback_window(
+             };
+ 
+             if let Some(ref playback) = player.buffered_playback {
+-                let playback_text = construct_playback_text(ui, state, item, playback);
+-                let playback_desc = Paragraph::new(playback_text);
+-                frame.render_widget(playback_desc, metadata_rect);
++                let shuffle_display = if !playback.shuffle_state {
++                    "off"
++                } else if player.smart_shuffle.is_some() {
++                    "smart"
++                } else {
++                    "on"
++                };
++                let playback_text =
++                    construct_playback_text(ui, state, item, playback, shuffle_display);
++                // playback text on top, upcoming queue tracks below
++                let chunks = Layout::vertical([Constraint::Length(4), Constraint::Fill(0)])
++                    .split(metadata_rect);
++                frame.render_widget(Paragraph::new(playback_text), chunks[0]);
++                render_up_next(frame, ui, &player, chunks[1]);
+             }
+ 
+             let duration = match item {
+@@ -185,6 +204,58 @@ pub fn render_playback_window(
+     other_rect
+ }
+ 
++/// Render the next few tracks of the user's queue inside the playback window
++fn render_up_next(frame: &mut Frame, ui: &UIStateGuard, player: &PlayerState, rect: Rect) {
++    use rspotify::model::PlayableItem;
++    if rect.height < 2 {
++        return;
++    }
++    let Some(queue) = player.queue.as_ref() else {
++        return;
++    };
++    let mut lines = vec![
++        Line::default(),
++        Line::styled("Up next:", Style::default().add_modifier(Modifier::BOLD)),
++    ];
++    for item in queue.queue.iter().take(5) {
++        let (name, artists) = match item {
++            PlayableItem::Track(track) => (
++                track.name.as_str(),
++                track
++                    .artists
++                    .iter()
++                    .map(|a| a.name.as_str())
++                    .collect::<Vec<_>>()
++                    .join(", "),
++            ),
++            PlayableItem::Episode(episode) => {
++                (episode.name.as_str(), episode.show.publisher.clone())
++            }
++            PlayableItem::Unknown(_) => continue,
++        };
++        // mark tracks injected by smart shuffle as radio recommendations
++        let is_radio = match (player.smart_shuffle.as_ref(), item) {
++            (Some(smart), PlayableItem::Track(track)) => track
++                .id
++                .as_ref()
++                .is_some_and(|id| smart.injected.contains(&id.uri())),
++            _ => false,
++        };
++        if is_radio {
++            lines.push(Line::styled(
++                format!("  {} • {artists} ✦ radio", to_bidi_string(name)),
++                ui.theme.page_desc(),
++            ));
++        } else {
++            lines.push(Line::styled(
++                format!("  {} • {artists}", to_bidi_string(name)),
++                ui.theme.playback_metadata(),
++            ));
++        }
++    }
++    frame.render_widget(Paragraph::new(lines), rect);
++}
++
+ fn split_rect_for_progress_bar(rect: Rect) -> (Rect, Rect) {
+     let chunks = Layout::vertical([Constraint::Fill(0), Constraint::Length(1)]).split(rect);
+     (chunks[0], chunks[1])
+@@ -226,6 +297,7 @@ fn construct_playback_text(
+     state: &SharedState,
+     playable: &rspotify::model::PlayableItem,
+     playback: &PlaybackMetadata,
++    shuffle_display: &str,
+ ) -> Text<'static> {
+     // Construct a "styled" text (`playback_text`) from playback's data
+     // based on a user-configurable format string (app_config.playback_format)
+@@ -368,7 +440,7 @@ fn construct_playback_text(
+                 for field in &configs.app_config.playback_metadata_fields {
+                     match field.as_str() {
+                         "repeat" => parts.push(format!("repeat: {repeat_value}")),
+-                        "shuffle" => parts.push(format!("shuffle: {}", playback.shuffle_state)),
++                        "shuffle" => parts.push(format!("shuffle: {shuffle_display}")),
+                         "volume" => parts.push(format!("volume: {volume_value}")),
+                         "device" => parts.push(format!("device: {}", playback.device_name)),
+                         _ => {}
+@@ -443,7 +515,7 @@ fn render_playback_progress_bar(
+ /// Split the given area into two, the first one for the playback window
+ /// and the second one for the main application's layout (popup, page, etc).
+ #[allow(unused_variables)]
+-fn split_rect_for_playback_window(state: &SharedState, rect: Rect) -> (Rect, Rect) {
++fn split_rect_for_playback_window(state: &SharedState, rect: Rect, compact: bool) -> (Rect, Rect) {
+     let configs = config::get_config();
+     let playback_width = configs.app_config.layout.playback_window_height;
+     // the playback window's width should not be smaller than the cover image's width + 1
+@@ -467,7 +539,14 @@ fn split_rect_for_playback_window(state: &SharedState, rect: Rect) -> (Rect, Rec
+         config::ProgressBarPosition::Bottom => 2,
+         config::ProgressBarPosition::Right => 1,
+     };
+-    let playback_width = (playback_width + num_lines) as u16;
++    let playback_width = if compact {
++        // compact playback window (lyrics page): no cover image, but leave room
++        // for the text, the "Up next" queue preview (7 rows) and the progress bar
++        (configs.app_config.layout.playback_window_height + 7 + num_lines) as u16
++    } else {
++        // otherwise, the playback window takes at least half of the screen's height
++        std::cmp::max((playback_width + num_lines) as u16, rect.height / 2)
++    };
+ 
+     match configs.app_config.layout.playback_window_position {
+         config::Position::Top => {

@@ -1,0 +1,3 @@
+[[keymaps]]
+command = "Queue"
+key_sequence = "g q"

@@ -22,27 +22,98 @@ Cada carpeta de primer nivel es un paquete stow (refleja el árbol de `$HOME`).
 | `tmux` | `~/.tmux.conf` y scripts |
 | `zsh` | `~/.zshrc`, `~/.p10k.zsh`, `~/.zprofile`, `~/.zshenv` |
 | `taskwarrior` | `~/.taskrc`, hooks y aliases |
-| `claude` | Config de Claude Code (`~/.claude`, módulos zsh) |
+| `timewarrior` | `~/.config/timewarrior` |
+| `claude` | Config de Claude Code (`~/.claude`: CLAUDE.md, settings.json, skills, hooks) |
+| `zellij` | `~/.config/zellij` |
+| `htop` | `~/.config/htop` |
+| `fish` | `~/.config/fish` |
+| `mpv` | `~/.config/mpv` (yt-dlp con impersonación para zigoku) |
+| `git` | `~/.config/git/ignore` (gitignore global) |
+| `spotify-player` | `~/.config/spotify-player` (keymap + `app.toml.example`) |
+| `myx` | `~/.config/myx` (`client_id.example`) |
+| `graphview` | CLI graph view tipo Obsidian (`~/.local/bin/graphview`) |
 
-## Restaurar en un equipo nuevo
+Directorios que **no** son paquetes stow: `forks/` (parches de binarios TUI, ver abajo),
+`games/` (código fuente y saves de juegos de terminal), `voyager-keycaps/` (STLs del
+teclado), `Brewfile`.
+
+## Restaurar en un Mac nuevo
 
 ```sh
-# 1. Requisitos
-brew install stow
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$ZSH/custom/themes/powerlevel10k"
+# 1. Homebrew + todos los paquetes (formulae, casks, taps)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+git clone https://github.com/MurphLaws/dotfiles ~/dotfiles && cd ~/dotfiles
+brew bundle --file=Brewfile
 
-# 2. Clonar y enlazar
-git clone <este-repo> ~/dotfiles && cd ~/dotfiles
-stow nvim ghostty tmux zsh taskwarrior claude
+# 2. Shell: Oh My Zsh + Powerlevel10k
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH:-$HOME/.oh-my-zsh}/custom/themes/powerlevel10k"
+rm -f ~/.zshrc   # el install de omz crea uno; lo reemplaza el stow
 
-# 3. Secretos (NO están en el repo)
-cp ~/.config/zsh/conf.d/secrets.zsh.example ~/.config/zsh/conf.d/secrets.zsh
+# 3. Enlazar toda la config
+stow nvim ghostty tmux zsh taskwarrior timewarrior claude zellij htop fish mpv git spotify-player myx graphview
+
+# 4. tmux: gestor de plugins (luego prefix+I dentro de tmux)
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+# 5. Secretos (NO están en el repo)
+cp ~/dotfiles/zsh/.config/zsh/conf.d/secrets.zsh.example ~/.config/zsh/conf.d/secrets.zsh
 $EDITOR ~/.config/zsh/conf.d/secrets.zsh   # pega tus API keys reales
+# Spotify (client_id de tu app en developer.spotify.com):
+cp ~/.config/myx/client_id.example ~/.config/myx/client_id
+cp ~/.config/spotify-player/app.toml.example ~/.config/spotify-player/app.toml
+$EDITOR ~/.config/myx/client_id ~/.config/spotify-player/app.toml
+
+# 6. Neovim: abre nvim y lazy.nvim instala todo solo
+nvim --headless "+Lazy! sync" +qa
 ```
 
 > Las API keys viven solo en `~/.config/zsh/conf.d/secrets.zsh` (gitignored).
 > La plantilla con los nombres de cada variable está en `zsh/.config/zsh/conf.d/secrets.zsh.example`.
+
+### Claude Code — copiar el estado del Mac viejo
+
+Lo versionado (CLAUDE.md, settings.json, skills, hooks) llega solo con `stow claude`.
+El estado que NO va al repo (memoria por proyecto, historial, plugins, settings.local.json)
+se copia directo del Mac viejo. En el **Mac viejo**:
+
+```sh
+rsync -av --exclude 'cache' --exclude 'shell-snapshots' --exclude 'debug' \
+      --exclude 'file-history' --exclude 'daemon*' --exclude 'telemetry' \
+      ~/.claude/projects ~/.claude/plugins ~/.claude/settings.local.json \
+      ~/.claude/history.jsonl \
+      nuevo-mac:~/.claude/
+```
+
+(o el equivalente con AirDrop / disco externo: lo importante son `~/.claude/projects/`
+— ahí vive la memoria persistente — `plugins/` y `settings.local.json`).
+Los agentes `gsd-*` en `~/.claude/agents` los instala GSD (get-shit-done), no el repo.
+
+### Forks TUI parcheados (`forks/`)
+
+Binarios de `~/.local/bin` que son forks locales con parches propios. Los parches
+están en `forks/<proyecto>/`:
+
+**myx** (Spotify TUI, cover grande + queue strip):
+
+```sh
+git clone https://github.com/HaseebKhalid1507/Myx ~/.local/src/myx && cd ~/.local/src/myx
+git checkout 25fdc5d   # base de los parches (v0.2.5)
+git am ~/dotfiles/forks/myx/*.patch
+cargo build --release && cp target/release/myx ~/.local/bin/
+```
+
+**spotify_player** (smart shuffle):
+
+```sh
+git clone https://github.com/aome510/spotify-player ~/.local/src/spotify-player && cd ~/.local/src/spotify-player
+git checkout 9b81aaa   # base del parche (v0.24.0)
+git apply ~/dotfiles/forks/spotify-player/smart-shuffle.patch
+cargo build --release && cp target/release/spotify_player ~/.local/bin/
+```
+
+`~/.local/bin` va antes que homebrew en el PATH (lo configura el `.zshrc`), así los
+binarios parcheados shadowan a los de brew.
 
 ## Plugins de Neovim
 
