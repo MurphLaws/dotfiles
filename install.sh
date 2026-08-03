@@ -20,8 +20,35 @@ if ! command -v brew >/dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
-step "brew bundle (formulae, casks, taps)"
-brew bundle --file="$DOTFILES/Brewfile"
+step "Instalando paquetes del Brewfile"
+# brew bundle no muestra progreso (baja todo en paralelo y queda mudo varios
+# minutos), así que instalamos uno por uno con barra [n/total].
+grep -E '^tap ' "$DOTFILES/Brewfile" | cut -d'"' -f2 | while read -r t; do brew tap "$t"; done
+FORMULAE=($(grep -E '^brew ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
+CASKS=($(grep -E '^cask ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
+INSTALLED_F="$(brew list --formula -1 2>/dev/null)"
+INSTALLED_C="$(brew list --cask -1 2>/dev/null)"
+TOTAL=$(( ${#FORMULAE[@]} + ${#CASKS[@]} )); N=0; FAILED=""
+progress() {  # progress <n> <total> <nombre>
+  local pct=$(( $1 * 100 / $2 )) w=30
+  local filled=$(( pct * w / 100 ))
+  printf '\r\033[K[%-*s] %3d%% (%d/%d) %s' "$w" "$(printf '#%.0s' $(seq 1 $((filled==0?1:filled))))" "$pct" "$1" "$2" "$3"
+}
+for f in "${FORMULAE[@]}"; do
+  N=$((N+1)); progress "$N" "$TOTAL" "$f"
+  grep -qx "${f##*/}" <<<"$INSTALLED_F" && continue
+  brew install --quiet "$f" >/dev/null 2>&1 || FAILED="$FAILED $f"
+done
+for c in "${CASKS[@]}"; do
+  N=$((N+1)); progress "$N" "$TOTAL" "$c"
+  grep -qx "$c" <<<"$INSTALLED_C" && continue
+  brew install --cask --quiet "$c" >/dev/null 2>&1 || FAILED="$FAILED cask:$c"
+done
+printf '\r\033[K'
+if [[ -n "$FAILED" ]]; then
+  printf '\033[1;31mFallaron:\033[0m%s\n' "$FAILED"
+  printf 'Reintenta con: brew bundle --file=%s/Brewfile\n' "$DOTFILES"
+fi
 
 # 2. Oh My Zsh + Powerlevel10k
 if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
