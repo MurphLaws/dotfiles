@@ -20,10 +20,23 @@ if ! command -v brew >/dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
+# Algunos casks (xquartz, etc.) piden sudo; lo pedimos UNA vez aquí y lo
+# mantenemos vivo, para que el prompt no quede enterrado bajo la barra.
+step "Se necesita tu contraseña (casks que instalan con sudo)"
+sudo -v
+( while true; do sudo -n true; sleep 50; done ) &
+SUDO_PID=$!
+trap 'kill $SUDO_PID 2>/dev/null' EXIT
+
 step "Instalando paquetes del Brewfile"
 # brew bundle no muestra progreso (baja todo en paralelo y queda mudo varios
 # minutos), así que instalamos uno por uno con barra [n/total].
-grep -E '^tap ' "$DOTFILES/Brewfile" | cut -d'"' -f2 | while read -r t; do brew tap "$t"; done
+grep -E '^tap ' "$DOTFILES/Brewfile" | cut -d'"' -f2 | while read -r t; do
+  brew tap "$t" || echo "tap $t falló, sigo"
+  # brew >= 6 salta taps de terceros no confiables ("Skipping X because it is
+  # not trusted"); sin el trust, sus formulae/casks fallan como desconocidos.
+  brew trust "$t" 2>/dev/null || true
+done
 FORMULAE=($(grep -E '^brew ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
 CASKS=($(grep -E '^cask ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
 INSTALLED_F="$(brew list --formula -1 2>/dev/null)"
@@ -61,10 +74,19 @@ if [[ ! -d "$P10K_DIR" ]]; then
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
 fi
 
-# 3. Stow: quitar los archivos que crean los instaladores y enlazar todo
+# 3. Stow. Los instaladores de brew y omz crean archivos reales (.zprofile,
+# .zshrc) que hacen abortar a stow con "cannot stow X over existing target".
+# Respaldamos cualquier archivo en conflicto y enlazamos.
 step "Enlazando config con stow"
-[[ -f "$HOME/.zshrc" && ! -L "$HOME/.zshrc" ]] && rm -f "$HOME/.zshrc"
 cd "$DOTFILES"
+BACKUP="$HOME/.dotfiles-backup-$(date +%Y%m%d%H%M%S)"
+{ stow --no --restow "${STOW_PKGS[@]}" 2>&1 || true; } \
+  | sed -n 's/.*existing target \([^ ]*\) since.*/\1/p' | sort -u \
+  | while read -r f; do
+      mkdir -p "$BACKUP/$(dirname "$f")"
+      mv "$HOME/$f" "$BACKUP/$f"
+      echo "  conflicto: ~/$f respaldado en $BACKUP/$f"
+    done
 stow --restow "${STOW_PKGS[@]}"
 
 # 4. tmux plugin manager (dentro de tmux: prefix+I para instalar plugins)
