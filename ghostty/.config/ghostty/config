@@ -40,23 +40,8 @@ macos-non-native-fullscreen = true
 #   No transparency, no blur — solid background color matching 0x96f.
 background-opacity = 1
 
-# Fondo con degradado en tonos 0x96f (PNG generado con ImageMagick:
-#   magick -size 1920x1080 gradient:'#161417'-'#37333a' gradient-0x96f.png)
-# background-image-opacity < 1 lo mezcla con el background 262427.
-background-image = ~/.config/ghostty/backgrounds/gradient-0x96f.png
-background-image-fit = cover
-background-image-opacity = 0.7
-
-# Shaders (GLSL) — método builtin de Ghostty (custom-shader)
-#   1) CRT retro sutil (scanlines + bloom + viñeta, conserva Catppuccin)
-#   2) animación de cursor tipo "smear" (estilo Neovide)
-# El CRT va PRIMERO; el cursor smear se dibuja encima.
-custom-shader = shaders/retro-crt.glsl
-custom-shader = shaders/cursor-smear.glsl
-# false = los shaders solo se redibujan cuando cambia la pantalla, no en bucle
-# continuo: en reposo la GPU baja a 0 FPS (menos batería/calor). Coste: el
-# cursor-smear pierde su animación fluida (el CRT estático no se ve afectado).
-custom-shader-animation = false
+# Background image and shader settings removed — no blur/effects.
+# Keeping a single config file and a solid/translucent terminal background.
 
 keybind = shift+enter=text:\x1b\r
 
