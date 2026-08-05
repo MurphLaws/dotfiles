@@ -75,7 +75,6 @@ conda() {
 # <<< conda initialize (lazy) <<<
 
 export SUMO_HOME=/opt/homebrew/Cellar/sumo/1.20.0/share/sumo
-export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 export EDITOR=nvim
