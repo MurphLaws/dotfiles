@@ -25,15 +25,15 @@ return {
 			},
 			views = {
 				cmdline_popup = {
-					position = { row = "50%", col = "50%" },
+					position = { row = 1, col = "50%" },
 					size = { width = 60, height = "auto" },
-					border = { style = "none", padding = { 1, 2 } },
+					border = { style = "none", padding = { 0, 2 } },
 					win_options = {
 						winhighlight = { Normal = "NormalFloat", FloatBorder = "NormalFloat" },
 					},
 				},
 				popupmenu = {
-					position = { row = "55%", col = "50%" }, -- completion menu near the cmdline popup
+					position = { row = 3, col = "50%" }, -- completion menu below cmdline
 					size = { width = 60, height = 10 },
 					border = { style = "none", padding = { 0, 2 } },
 					win_options = {

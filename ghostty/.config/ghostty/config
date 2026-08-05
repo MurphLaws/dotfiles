@@ -36,9 +36,8 @@ palette = 15=#fcfcfa
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
 macos-non-native-fullscreen = true
 
-# Background fully opaque
-#   No transparency, no blur — solid background color matching 0x96f.
-background-opacity = 1
+# Background with subtle transparency
+background-opacity = 0.95
 
 # Background image and shader settings removed — no blur/effects.
 # Keeping a single config file and a solid/translucent terminal background.
