@@ -10,7 +10,7 @@ DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 BUILD_FORKS=1
 [[ "${1:-}" == "--no-forks" ]] && BUILD_FORKS=0
 
-STOW_PKGS=(nvim ghostty tmux zsh taskwarrior timewarrior claude zellij htop fish mpv git spotify-player myx graphview)
+STOW_PKGS=(nvim ghostty tmux zsh timewarrior claude zellij htop fish mpv git spotify-player myx graphview)
 
 step() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 

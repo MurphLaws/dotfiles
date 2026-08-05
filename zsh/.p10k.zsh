@@ -70,7 +70,6 @@
     ram                     # free RAM
     todo                    # todo items
     timewarrior             # timewarrior tracking status
-    taskwarrior             # taskwarrior task count
     per_directory_history   # Oh My Zsh per-directory-history
     cpu_arch                # CPU architecture
   )
@@ -351,7 +350,6 @@
   typeset -g POWERLEVEL9K_TIMEWARRIOR_BACKGROUND=8
   typeset -g POWERLEVEL9K_TIMEWARRIOR_CONTENT_EXPANSION='${P9K_CONTENT:0:24}${${P9K_CONTENT:24}:+..}'
 
-  ##############[ taskwarrior: taskwarrior task count (https://taskwarrior.org/) ]##############
   typeset -g POWERLEVEL9K_TASKWARRIOR_FOREGROUND=0
   typeset -g POWERLEVEL9K_TASKWARRIOR_BACKGROUND=6
 

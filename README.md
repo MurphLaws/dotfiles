@@ -11,7 +11,7 @@ Cada carpeta de primer nivel es un paquete stow (refleja el árbol de `$HOME`).
 - [Ghostty](https://ghostty.org) — terminal
 - [tmux](https://github.com/tmux/tmux) + [tpm](https://github.com/tmux-plugins/tpm) — multiplexor
 - [Zsh](https://www.zsh.org) + [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh) + [Powerlevel10k](https://github.com/romkatv/powerlevel10k) — shell y prompt
-- [Taskwarrior](https://taskwarrior.org) + [Timewarrior](https://timewarrior.net) — tareas y tiempo
+- [Timewarrior](https://timewarrior.net) — tiempo
 
 ## Paquetes (stow)
 
@@ -21,7 +21,7 @@ Cada carpeta de primer nivel es un paquete stow (refleja el árbol de `$HOME`).
 | `ghostty` | Config y shaders de Ghostty (`~/.config/ghostty`) |
 | `tmux` | `~/.tmux.conf` y scripts |
 | `zsh` | `~/.zshrc`, `~/.p10k.zsh`, `~/.zprofile`, `~/.zshenv` |
-| `taskwarrior` | `~/.taskrc`, hooks y aliases |
+| (removed) | (taskwarrior config removed from dotfiles) |
 | `timewarrior` | `~/.config/timewarrior` |
 | `claude` | Config de Claude Code (`~/.claude`: CLAUDE.md, settings.json, skills, hooks) |
 | `zellij` | `~/.config/zellij` |
@@ -65,7 +65,7 @@ git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH:-$HOME/.
 rm -f ~/.zshrc   # el install de omz crea uno; lo reemplaza el stow
 
 # 3. Enlazar toda la config
-stow nvim ghostty tmux zsh taskwarrior timewarrior claude zellij htop fish mpv git spotify-player myx graphview
+stow nvim ghostty tmux zsh timewarrior claude zellij htop fish mpv git spotify-player myx graphview
 
 # 4. tmux: gestor de plugins (luego prefix+I dentro de tmux)
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm

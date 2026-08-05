@@ -147,8 +147,6 @@ brew "switchaudio-osx"
 brew "tailscale"
 # Feature-rich console based todo list manager
 brew "task"
-# Terminal user interface for taskwarrior
-brew "taskwarrior-tui"
 # Modernized, complete, self-contained TeX/LaTeX engine
 brew "tectonic"
 # OCR (Optical Character Recognition) engine
