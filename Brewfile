@@ -1,18 +1,5 @@
-tap "achannarasappa/tap", "https://github.com/achannarasappa/tap.git"
-tap "anomalyco/tap", trusted: true
-tap "armsnyder/tap", trusted: true
-tap "dlr-ts/sumo", trusted: true
-tap "epilande/tap", trusted: true
 tap "gentleman-programming/tap", trusted: true
-tap "gromgit/fuse", trusted: true
-tap "haseebkhalid1507/tap", trusted: true
-tap "hmenzagh/tap", trusted: true
-tap "largemodgames/spotatui", trusted: true
-tap "mongodb/brew", trusted: true
-tap "normen/tap", trusted: true
 tap "peonping/tap", trusted: true
-tap "programmersd21/flow", trusted: true
-tap "supabase/tap", trusted: true
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GitHub command-line tool
