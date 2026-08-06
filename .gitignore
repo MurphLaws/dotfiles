@@ -5,3 +5,6 @@ __pycache__/
 secrets.zsh
 *.local.zsh
 graphview-test/
+
+# Copilot local personal instructions (home-only, never commit)
+.copilot/copilot-instructions.md
