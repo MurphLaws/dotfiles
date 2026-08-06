@@ -2,10 +2,10 @@
 
 macOS dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
-## Security note
+## Setup note
 
-`install.sh` only auto-trusts Homebrew taps explicitly marked as `trusted: true`
-in `Brewfile`. Review third-party taps before adding that flag.
+This repo no longer includes a bootstrap installer script. Setup is manual via
+Stow/Brewfile.
 
 ## Brew packages
 
