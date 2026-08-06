@@ -11,7 +11,7 @@ return {
 
 			vim.cmd.colorscheme("oxocarbon")
 
-			-- Fondo transparente para que use la opacidad del terminal (Ghostty).
+			-- nvim hereda siempre la transparencia de Ghostty.
 			local ghostty_bg = "NONE"
 			for _, group in ipairs({ "Normal", "NormalNC", "EndOfBuffer", "SignColumn", "LineNr" }) do
 				local hl = vim.api.nvim_get_hl(0, { name = group })

@@ -2,6 +2,11 @@
 
 macOS dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
+## Security note
+
+`install.sh` only auto-trusts Homebrew taps explicitly marked as `trusted: true`
+in `Brewfile`. Review third-party taps before adding that flag.
+
 ## Brew packages
 
 ada-url, brotli, c-ares, ca-certificates, fmt, fzf, gettext, hdrhistogram_c, icu4c, json-c, libevent, libffi, libnghttp2, libnghttp3, libngtcp2, libunistring, libuv, llhttp, lpeg, luajit, luv, lz4, merve, nbytes, ncurses, neovim, node, openssl, pcre2, readline, ripgrep, simdjson, simdutf, sqlite, stow, task, tmux, tree, tree-sitter, unibilium, utf8proc, uvwasi, xz, zstd

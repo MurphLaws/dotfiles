@@ -37,7 +37,7 @@ palette = 15=#fcfcfa
 macos-non-native-fullscreen = true
 
 # Background with subtle transparency
-background-opacity = 0.95
+background-opacity = 0.98
 
 # Background image and shader settings removed — no blur/effects.
 # Keeping a single config file and a solid/translucent terminal background.

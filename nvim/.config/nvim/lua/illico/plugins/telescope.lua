@@ -51,7 +51,7 @@ return {
     -- 🔍 Search only within the current buffer (Ivy layout, exact match)
     vim.keymap.set("n", "<leader>pb", function()
       builtin.current_buffer_fuzzy_find(themes.get_ivy({
-        winblend = 10,
+        winblend = 0,
         previewer = false,
         fuzzy = false,                -- exact substring match only
         case_mode = "smart_case",     -- respects case if typed uppercase

@@ -33,9 +33,13 @@ step "Instalando paquetes del Brewfile"
 # minutos), así que instalamos uno por uno con barra [n/total].
 grep -E '^tap ' "$DOTFILES/Brewfile" | cut -d'"' -f2 | while read -r t; do
   brew tap "$t" || echo "tap $t falló, sigo"
-  # brew >= 6 salta taps de terceros no confiables ("Skipping X because it is
-  # not trusted"); sin el trust, sus formulae/casks fallan como desconocidos.
-  brew trust "$t" 2>/dev/null || true
+  # brew >= 6 puede requerir trust explícito para taps de terceros. Solo
+  # auto-confiamos taps marcados en Brewfile con `trusted: true`.
+  if grep -Eq "^tap \"$t\".*, trusted: true" "$DOTFILES/Brewfile"; then
+    brew trust "$t" 2>/dev/null || true
+  else
+    echo "tap $t sin trust automático (no marcado trusted: true en Brewfile)"
+  fi
 done
 FORMULAE=($(grep -E '^brew ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
 CASKS=($(grep -E '^cask ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
