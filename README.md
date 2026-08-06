@@ -54,6 +54,7 @@ ada-url, brotli, c-ares, ca-certificates, fmt, fzf, gettext, hdrhistogram_c, icu
 - [real-icons.nvim](https://github.com/Mirsmog/real-icons.nvim)
 - [nui.nvim](https://github.com/MunifTanjim/nui.nvim)
 - [modes.nvim](https://github.com/mvllow/modes.nvim)
+- [nabla.nvim](https://github.com/jbyuki/nabla.nvim)
 - [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
 - [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 - [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
