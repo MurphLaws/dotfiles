@@ -131,6 +131,8 @@ brew "redis"
 brew "resvg"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Safe, concurrent, practical language
+brew "rust"
 # Intuitive find & replace CLI
 brew "sd"
 # 7-Zip is a file archiver with a high compression ratio

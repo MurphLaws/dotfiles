@@ -62,6 +62,13 @@ if [[ -n "$FAILED" ]]; then
   printf '\033[1;31mFallaron:\033[0m%s\n' "$FAILED"
   printf 'Reintenta con: brew bundle --file=%s/Brewfile\n' "$DOTFILES"
 fi
+if command -v cargo >/dev/null; then
+  step "Instalando paquetes de cargo del Brewfile"
+  CARGO_PKGS=($(grep -E '^cargo ' "$DOTFILES/Brewfile" | cut -d'"' -f2))
+  for p in "${CARGO_PKGS[@]}"; do
+    cargo install --locked "$p" >/dev/null 2>&1 || echo "cargo $p falló, sigo"
+  done
+fi
 
 # 2. Oh My Zsh + Powerlevel10k
 if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
@@ -110,7 +117,21 @@ nvim --headless "+Lazy! sync" +qa || true
 step "Aplicando wallpaper"
 osascript -e "tell application \"System Events\" to set picture of every desktop to \"$DOTFILES/wallpapers/wallpaper.jpg\""
 
-# 8. Forks TUI parcheados (necesitan cargo; brew ya instaló rust)
+# 8. Juegos/forks locales
+if [[ $BUILD_FORKS -eq 1 ]]; then
+  mkdir -p "$HOME/.local/src" "$HOME/.local/bin"
+  if [[ -d "$DOTFILES/games/solitaire" ]]; then
+    step "Instalando solitaire modificado"
+    make -C "$DOTFILES/games/solitaire" clean all
+    make -C "$DOTFILES/games/solitaire" install PREFIX="$HOME/.local"
+  fi
+  if command -v cargo >/dev/null && [[ -d "$DOTFILES/games/yayagram" ]]; then
+    step "Instalando yayagram modificado"
+    cargo install --path "$DOTFILES/games/yayagram" --root "$HOME/.local" --force
+  fi
+fi
+
+# 9. Forks TUI parcheados (necesitan cargo; brew ya instaló rust)
 if [[ $BUILD_FORKS -eq 1 ]] && command -v cargo >/dev/null; then
   mkdir -p "$HOME/.local/src" "$HOME/.local/bin"
   if [[ ! -x "$HOME/.local/bin/myx" ]]; then
