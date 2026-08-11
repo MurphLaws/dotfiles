@@ -20,7 +20,8 @@ Total: 52 piezas = Voyager completo.
 | `3x-homingsaddle.stl` | 3 | Saddle Homing | Extra: homing perfil Saddle |
 | `3x-homing-fila-numeros.stl` | 3 | Normal Tilted + 3 puntos homing (custom) | Extra: homing para la fila de números |
 | `2x-pulgar-chico.stl` | 2 | Thumb 1U | Tecla interior del pulgar |
-| `2x-pulgar-grande.stl` | 2 | 1.5U Thumb V | Tecla exterior grande del pulgar |
+| `2x-pulgar-grande-H.stl` | 2 | 1.5U Thumb H | Tecla exterior grande del pulgar |
+| `2x-pulgar-grande-V-INCORRECTO.stl` | 0 | 1.5U Thumb V | **NO PEDIR** — variante con stem rotado 90°; se imprimió por error en el pedido de 2026-08 y las teclas no calzan en el switch del Voyager |
 
 ## Opción barata: `bundles/` — placas listas para subir
 
@@ -36,7 +37,7 @@ sobrantes (sirven de repuesto). Total a subir: 7 archivos, 10 partes.
 | `bundles/2x-placa-saddle-2.stl` | 2 | 8 Saddle Tilted + 8 Saddle + 2 Saddle Homing |
 | `bundles/2x-placa-saddle-3.stl` | 2 | 18 Saddle Tilted |
 | `bundles/1x-placa-pulgares.stl` | 1 | 9 Thumb |
-| `bundles/2x-pulgar-grande.stl` | 2 | Tecla exterior grande del pulgar (no hay placa) |
+| `bundles/2x-pulgar-grande.stl` | 2 | ⚠️ Variante V incorrecta — usar `../2x-pulgar-grande-H.stl` |
 
 Las teclas vienen unidas por puentes: separar con alicate y lijar el punto de unión.
 
