@@ -1,7 +1,7 @@
 return {
 	{
 		"nvim-neorg/neorg",
-		lazy = false,
+		ft = { "norg" },
 		version = "*",
 
 		-- Neorg's tree-sitter-norg and tree-sitter-norg-meta parsers are

@@ -1,7 +1,6 @@
 return {
 	"iamcco/markdown-preview.nvim",
 	cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-	ft = { "markdown", "norg" }, -- Activar también para Neorg
 	build = function()
 		-- Instala las dependencias del servidor automáticamente
 		vim.fn["mkdp#util#install"]()

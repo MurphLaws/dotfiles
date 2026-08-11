@@ -1,6 +1,6 @@
 return {
 	"hrsh7th/nvim-cmp",
-	event = "VeryLazy", -- was InsertEnter; need cmp available for : cmdline
+	event = { "InsertEnter", "CmdlineEnter" }, -- defer load; CmdlineEnter keeps : completion
 	branch = "main", -- fix for deprecated functions coming in nvim 0.13
 	dependencies = {
 		"hrsh7th/cmp-buffer", -- source for text in buffer

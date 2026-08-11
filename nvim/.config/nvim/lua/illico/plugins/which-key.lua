@@ -36,6 +36,8 @@ return {
 			{ "<leader>g", group = "Git" },
 			{ "<leader>G", group = "Godot" },
 			{ "<leader>l", group = "LSP" },
+			{ "<leader>o", group = "Obsidian" },
+			{ "<leader>O", group = "Org" },
 			{ "<leader>s", group = "Search" },
 			{ "<leader>t", group = "Toggle" },
 			{ "<leader>w", group = "Window" },

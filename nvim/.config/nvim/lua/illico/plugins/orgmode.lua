@@ -63,8 +63,8 @@ return {
 
 			mappings = {
 				global = {
-					org_agenda = "<leader>oa",
-					org_capture = "<leader>oc",
+					org_agenda = "<leader>Oa",
+					org_capture = "<leader>Oc",
 				},
 				org = {
 					-- Remap the checkbox toggle to <leader>cc
@@ -73,7 +73,7 @@ return {
 			},
 		})
 
-		vim.keymap.set("n", "<leader>or", function()
+		vim.keymap.set("n", "<leader>Or", function()
 			vim.cmd.edit(refile_file)
 		end, { desc = "Edit Refile" })
 
