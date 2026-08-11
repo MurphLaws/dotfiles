@@ -1,15 +1,25 @@
 return {
 	{
-		"nyoom-engineering/oxocarbon.nvim",
+		"folke/tokyonight.nvim",
 		lazy = false,
 		priority = 1000,
-		config = function()
+		opts = {
+			style = "storm",
+			transparent = true,
+			styles = {
+				sidebars = "transparent",
+				floats = "transparent",
+			},
+		},
+		config = function(_, opts)
+			require("tokyonight").setup(opts)
+
 			vim.opt.background = "dark"
 
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			vim.cmd.colorscheme("oxocarbon")
+			vim.cmd.colorscheme("tokyonight-storm")
 
 			-- nvim hereda siempre la transparencia de Ghostty.
 			local ghostty_bg = "NONE"
@@ -19,58 +29,22 @@ return {
 				vim.api.nvim_set_hl(0, group, hl)
 			end
 
-			-- Paleta oxocarbon (IBM Carbon), mapeada a las claves de acento que el
-			-- resto de la config ya consume (lualine, mini.icons, org/neorg overrides).
-			-- Los nombres de las claves son históricos — los valores son oxocarbon.
+			-- Paleta tokyonight storm, mapeada a las claves de acento que el resto
+			-- de la config ya consume (lualine, mini.icons, org/neorg overrides).
+			-- Los nombres de las claves son históricos — los valores son tokyonight.
 			local p = {
-				coral = "#ff7eb6", -- pink (base12)
-				peach = "#ff7eb6", -- pink (base12)
-				green = "#42be65", -- base13
-				amber = "#3ddbd9", -- teal claro (base08) — oxocarbon no tiene amarillo
-				gold = "#3ddbd9", -- teal claro (base08)
-				sky = "#82cffa", -- base15
-				blue = "#78a9ff", -- base09
-				mauve = "#be95ff", -- base14
-				purple = "#be95ff", -- base14
-				red = "#ee5396", -- base10
-				fg_dim = "#525252", -- base03 (comment)
+				coral = "#f7768e", -- red/pink
+				peach = "#ff9e64", -- orange
+				green = "#9ece6a", -- green
+				amber = "#e0af68", -- yellow
+				gold = "#e0af68", -- yellow
+				sky = "#7dcfff", -- cyan
+				blue = "#7aa2f7", -- blue
+				mauve = "#bb9af7", -- purple/magenta
+				purple = "#bb9af7", -- purple/magenta
+				red = "#f7768e", -- red
+				fg_dim = "#565f89", -- comment
 			}
-
-			-- Menús "block" sin bordes: cada menú se diferencia por un fondo plano
-			-- distinto. Tonos base de oxocarbon.
-			-- Más oscuros que el fondo (#262427) para que los menús se despeguen
-			local crust = "#0b0b0b"
-			local mantle = "#141414" -- floats / telescope
-			local surface0 = "#1e1e1e" -- pmenu / cmp / prompt
-			local surface1 = "#333333" -- selección / scrollbar
-			local text = "#f2f4f8" -- base05
-
-			-- Floats genéricos (LSP hover, diagnósticos, which-key, etc.)
-			vim.api.nvim_set_hl(0, "NormalFloat", { fg = text, bg = mantle })
-			vim.api.nvim_set_hl(0, "FloatBorder", { fg = mantle, bg = mantle })
-			vim.api.nvim_set_hl(0, "FloatTitle", { fg = crust, bg = p.mauve, bold = true })
-
-			-- Menú de completado (pmenu + ventanas de nvim-cmp)
-			vim.api.nvim_set_hl(0, "Pmenu", { fg = text, bg = surface0 })
-			vim.api.nvim_set_hl(0, "PmenuSel", { fg = crust, bg = p.peach, bold = true })
-			vim.api.nvim_set_hl(0, "PmenuSbar", { bg = surface0 })
-			vim.api.nvim_set_hl(0, "PmenuThumb", { bg = surface1 })
-			vim.api.nvim_set_hl(0, "CmpNormal", { fg = text, bg = surface0 })
-			vim.api.nvim_set_hl(0, "CmpDoc", { fg = text, bg = mantle })
-
-			-- Telescope: bloques de color, títulos como "chips" de acento
-			vim.api.nvim_set_hl(0, "TelescopeNormal", { fg = text, bg = mantle })
-			vim.api.nvim_set_hl(0, "TelescopeBorder", { fg = mantle, bg = mantle })
-			vim.api.nvim_set_hl(0, "TelescopePromptNormal", { fg = text, bg = surface0 })
-			vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = surface0, bg = surface0 })
-			vim.api.nvim_set_hl(0, "TelescopePromptTitle", { fg = crust, bg = p.peach, bold = true })
-			vim.api.nvim_set_hl(0, "TelescopePreviewTitle", { fg = crust, bg = p.green, bold = true })
-			vim.api.nvim_set_hl(0, "TelescopeResultsTitle", { fg = mantle, bg = mantle })
-			vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = text, bg = surface1, bold = true })
-
-			-- Which-key como bloque sólido
-			vim.api.nvim_set_hl(0, "WhichKeyNormal", { fg = text, bg = mantle })
-			vim.api.nvim_set_hl(0, "WhichKeyBorder", { fg = mantle, bg = mantle })
 
 			-- Orgmode
 			vim.api.nvim_set_hl(0, "@org.keyword.todo", { fg = p.coral, bg = "NONE", bold = true })
@@ -92,7 +66,7 @@ return {
 			end
 
 			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
-			-- Global names kept for back-compat; values are oxocarbon.
+			-- Global names kept for back-compat; values are tokyonight storm.
 			_G.superset_palette = p
 			_G.superset_accents = p
 			_G.tokyonight_accents = {

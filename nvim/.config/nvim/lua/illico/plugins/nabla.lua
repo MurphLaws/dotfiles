@@ -1,6 +1,6 @@
 return {
 	"jbyuki/nabla.nvim",
-	ft = { "markdown", "quarto", "norg" },
+	ft = { "markdown", "norg" },
 	keys = {
 		{
 			"<leader>me",
@@ -8,7 +8,7 @@ return {
 				require("nabla").enable_virt()
 			end,
 			mode = "n",
-			ft = { "markdown", "quarto", "norg" },
+			ft = { "markdown", "norg" },
 			desc = "Math: Activar render inline",
 		},
 		{
@@ -17,7 +17,7 @@ return {
 				require("nabla").disable_virt()
 			end,
 			mode = "n",
-			ft = { "markdown", "quarto", "norg" },
+			ft = { "markdown", "norg" },
 			desc = "Math: Desactivar render inline",
 		},
 		{
@@ -26,7 +26,7 @@ return {
 				require("nabla").popup()
 			end,
 			mode = "n",
-			ft = { "markdown", "quarto", "norg" },
+			ft = { "markdown", "norg" },
 			desc = "Math: Vista previa de fórmula",
 		},
 	},

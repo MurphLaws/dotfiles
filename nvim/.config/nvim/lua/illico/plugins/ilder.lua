@@ -36,8 +36,8 @@ return {
 						{ { a = 1 }, { a = 1 }, { foreground = "#58FFD6", background = "#24273a" } }
 					),
 				},
-				-- 'solid' = borde de espacios: sin líneas, el bloque de color delimita
-				border = "solid",
+				-- 'single', 'double', 'rounded' or 'solid'
+				border = "single",
 			}))
 		)
 	end,

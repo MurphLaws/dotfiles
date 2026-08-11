@@ -26,6 +26,8 @@ require("lazy").setup({
 	},
 	-- Configure any other settings here. See the documentation for more details.
 	-- colorscheme that will be used when installing plugins.
-	-- automatically check for plugin updates
-	checker = { enabled = true, notify = false },
+	-- Update checks spawn a git process per plugin. With notify = false you
+	-- never saw the results anyway, so this was pure startup/background cost.
+	-- Run `:Lazy check` manually when you want to look for updates.
+	checker = { enabled = false },
 })

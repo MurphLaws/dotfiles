@@ -86,7 +86,7 @@ return {
 					client.server_capabilities.semanticTokensProvider = nil
 				end,
 			},
-			-- Python (notebook code cells via quarto)
+			-- Python
 			pyright = {
 				settings = {
 					python = {

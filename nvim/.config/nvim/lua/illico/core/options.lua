@@ -84,12 +84,29 @@ vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
 
 -- ===== Default filetype for new buffers =====
--- New unnamed buffers open as markdown by default
-vim.api.nvim_create_autocmd("BufEnter", {
-	pattern = "*",
+-- Empty unnamed buffers you create during a session (:enew) default to markdown.
+-- The autocmd is registered only *after* VimEnter, so the initial startup buffer
+-- is never touched — it stays a plain scratch buffer. This keeps launch fast and
+-- guarantees render-markdown is NOT loaded on start (it would be pulled in by a
+-- markdown filetype). This keeps launch fast.
+vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
-		if vim.bo.buftype == "" and vim.fn.expand("%") == "" and vim.bo.filetype == "" then
-			vim.bo.filetype = "markdown"
-		end
+		vim.api.nvim_create_autocmd("BufEnter", {
+			pattern = "*",
+			callback = function(args)
+				local buf = args.buf
+				vim.schedule(function()
+					if not vim.api.nvim_buf_is_valid(buf) then
+						return
+					end
+					if vim.api.nvim_get_current_buf() ~= buf then
+						return
+					end
+					if vim.bo[buf].buftype == "" and vim.api.nvim_buf_get_name(buf) == "" and vim.bo[buf].filetype == "" then
+						vim.bo[buf].filetype = "markdown"
+					end
+				end)
+			end,
+		})
 	end,
 })

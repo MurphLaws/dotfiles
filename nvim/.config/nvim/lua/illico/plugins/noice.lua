@@ -27,18 +27,12 @@ return {
 				cmdline_popup = {
 					position = { row = 1, col = "50%" },
 					size = { width = 60, height = "auto" },
-					border = { style = "none", padding = { 0, 2 } },
-					win_options = {
-						winhighlight = { Normal = "NormalFloat", FloatBorder = "NormalFloat" },
-					},
+					border = { style = "rounded" },
 				},
 				popupmenu = {
 					position = { row = 3, col = "50%" }, -- completion menu below cmdline
 					size = { width = 60, height = 10 },
-					border = { style = "none", padding = { 0, 2 } },
-					win_options = {
-						winhighlight = { Normal = "Pmenu", FloatBorder = "Pmenu" },
-					},
+					border = { style = "rounded" },
 				},
 			},
 		},

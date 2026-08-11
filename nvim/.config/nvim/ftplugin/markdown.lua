@@ -1,7 +1,6 @@
--- ftplugin para markdown (incl. .qmd). Vanilla: sin folds ni statuscolumn
--- personalizados; el render lo hace render-markdown.nvim. Solo se añaden:
---   1) resaltado + comandos de comentarios CriticMarkup
---   2) el runner de quarto (cuando el plugin está disponible)
+-- ftplugin para markdown. Vanilla: sin folds ni statuscolumn personalizados;
+-- el render lo hace render-markdown.nvim. Solo se añade resaltado + comandos de
+-- comentarios CriticMarkup.
 
 -- ── CriticMarkup ───────────────────────────────────────────────────────────
 -- Comentarios y sugerencias estilo Google Docs, resaltados con matchadd:
@@ -68,22 +67,3 @@ cmap("x", "<leader>mh", vwrap("{==", "==}"), "Critic: resaltar selección")
 cmap("x", "<leader>ma", vwrap("{++", "++}"), "Critic: añadir selección")
 cmap("x", "<leader>md", vwrap("{--", "--}"), "Critic: borrar selección")
 cmap("x", "<leader>mc", vwrap("{==", "==}{>><<}"), "Critic: resaltar + comentar")
-
--- ── Quarto runner ──────────────────────────────────────────────────────────
-local ok_quarto, quarto = pcall(require, "quarto")
-if not ok_quarto then
-  return
-end
-
-quarto.activate()
-
-local map = function(mode, lhs, rhs, desc)
-  vim.keymap.set(mode, lhs, rhs, { buffer = true, silent = true, desc = desc })
-end
-
-local runner = require("quarto.runner")
-map("n", "<localleader>rc", runner.run_cell, "run cell")
-map("n", "<localleader>ra", runner.run_above, "run cell and above")
-map("n", "<localleader>rA", runner.run_all, "run all cells")
-map("n", "<localleader>rl", runner.run_line, "run line")
-map("v", "<localleader>r", runner.run_range, "run visual range")

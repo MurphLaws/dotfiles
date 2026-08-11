@@ -197,17 +197,11 @@ return {
 				completeopt = "menu,menuone,noinsert",
 			},
 			window = {
-				-- Sin bordes: el menú y la doc se diferencian por color de fondo
-				-- (CmpNormal / CmpDoc, definidos en colorscheme.lua)
 				documentation = {
-					border = "none",
-					winhighlight = "Normal:CmpDoc,FloatBorder:CmpDoc,Search:None",
+					border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
 				},
 				completion = {
-					border = "none",
-					winhighlight = "Normal:CmpNormal,FloatBorder:CmpNormal,CursorLine:PmenuSel,Search:None",
-					side_padding = 1,
-					scrollbar = false,
+					border = { "┌", "─", "┐", "│", "┘", "─", "└", "│" },
 				},
 			},
 			snippet = {

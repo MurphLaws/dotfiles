@@ -25,7 +25,7 @@ return {
 		"nvim-tree/nvim-web-devicons",
 	},
 	opts = {
-		-- Para markdown/quarto usa treesitter (headings); LSP donde haya symbols.
+		-- Para markdown usa treesitter (headings); LSP donde haya symbols.
 		backends = { "treesitter", "lsp", "markdown", "man" },
 		layout = {
 			default_direction = "right",
@@ -35,8 +35,8 @@ return {
 			max_width = { 80, 0.5 },
 		},
 		float = {
-			-- Sin borde: el bloque de fondo (NormalFloat) delimita el menú.
-			border = "none",
+			-- Borde redondeado para delimitar el menú.
+			border = "rounded",
 			relative = "editor",
 			max_height = 0.8,
 			min_height = 0.4,

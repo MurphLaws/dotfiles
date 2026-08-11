@@ -1,7 +1,7 @@
 return {
 	"mawkler/modicator.nvim",
 	event = "ModeChanged",
-	dependencies = { "nyoom-engineering/oxocarbon.nvim" }, -- Asegura que cargue después del tema
+	dependencies = { "folke/tokyonight.nvim" }, -- Asegura que cargue después del tema
 	init = function()
 		-- Estas opciones aseguran que el cursorline se comporte bien
 		vim.o.cursorline = true
