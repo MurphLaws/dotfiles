@@ -13,6 +13,28 @@ ada-url, brotli, c-ares, ca-certificates, fmt, fzf, gettext, hdrhistogram_c, icu
 
 **Casks:** codex, copilot-cli
 
+## macOS defaults
+
+Preferences that live outside this repo (in `~/Library/Preferences`, so Stow
+does not manage them). Re-apply them on a fresh machine:
+
+### Ghostty: press-and-hold accent menu (ñ, á, é, …)
+
+Ghostty (like most terminals) disables the macOS press-and-hold accent picker so
+keys auto-repeat. Enable it so holding a key (e.g. `n`) shows the accent menu —
+useful for typing Spanish:
+
+```bash
+defaults write com.mitchellh.ghostty ApplePressAndHoldEnabled -bool true
+```
+
+Then fully quit and reopen Ghostty (Cmd+Q). Tradeoff: held keys no longer
+auto-repeat *in Ghostty*. Revert with:
+
+```bash
+defaults delete com.mitchellh.ghostty ApplePressAndHoldEnabled
+```
+
 ## Neovim plugins
 
 - [image.nvim](https://github.com/3rd/image.nvim)
