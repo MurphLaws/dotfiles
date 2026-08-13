@@ -6,31 +6,31 @@ font-style-bold = ExtraBold
 font-size = 19
 font-thicken = true
 
-# Theme — 0x96f
-background = 262427
-foreground = fcfcfa
-cursor-color = fcfcfa
-cursor-text = 000000
-selection-background = fcfcfa
-selection-foreground = 262427
+# Theme — tokyonight storm (match nvim tokyonight-storm)
+background = 24283b
+foreground = c0caf5
+cursor-color = c0caf5
+cursor-text = 24283b
+selection-background = 2e3c64
+selection-foreground = c0caf5
 
-# ANSI palette (0x96f)
-palette = 0=#262427
-palette = 1=#ff666d
-palette = 2=#b3e03a
-palette = 3=#ffc739
-palette = 4=#00cde8
-palette = 5=#a392e8
-palette = 6=#9deaf6
-palette = 7=#fcfcfa
-palette = 8=#545452
-palette = 9=#ff7e83
-palette = 10=#bee55e
-palette = 11=#ffd05e
-palette = 12=#1bd5eb
-palette = 13=#b0a3eb
-palette = 14=#acedf8
-palette = 15=#fcfcfa
+# ANSI palette (tokyonight storm)
+palette = 0=#1d202f
+palette = 1=#f7768e
+palette = 2=#9ece6a
+palette = 3=#e0af68
+palette = 4=#7aa2f7
+palette = 5=#bb9af7
+palette = 6=#7dcfff
+palette = 7=#a9b1d6
+palette = 8=#414868
+palette = 9=#f7768e
+palette = 10=#9ece6a
+palette = 11=#e0af68
+palette = 12=#7aa2f7
+palette = 13=#bb9af7
+palette = 14=#7dcfff
+palette = 15=#c0caf5
 
 # Window — fullscreen no-nativo: "pantalla completa" es una ventana maximizada
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
@@ -39,7 +39,7 @@ macos-non-native-fullscreen = true
 # Background with transparency (nvim y tmux heredan esto: nvim usa Normal bg=none
 # y en tmux las superficies de chrome usan bg=default, asi que el fondo translucido
 # se ve a traves de todo). El blur mantiene el texto legible sobre el escritorio.
-background-opacity = 0.85
+background-opacity = 0.90
 background-blur = 20
 
 # Background image and shader settings removed — no blur/effects.
