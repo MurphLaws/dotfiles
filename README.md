@@ -18,22 +18,29 @@ ada-url, brotli, c-ares, ca-certificates, fmt, fzf, gettext, hdrhistogram_c, icu
 Preferences that live outside this repo (in `~/Library/Preferences`, so Stow
 does not manage them). Re-apply them on a fresh machine:
 
-### Ghostty: press-and-hold accent menu (ñ, á, é, …)
+### Ghostty: typing Spanish accents (ñ, á, é, …)
 
-Ghostty (like most terminals) disables the macOS press-and-hold accent picker so
-keys auto-repeat. Enable it so holding a key (e.g. `n`) shows the accent menu —
-useful for typing Spanish:
-
-```bash
-defaults write com.mitchellh.ghostty ApplePressAndHoldEnabled -bool true
-```
-
-Then fully quit and reopen Ghostty (Cmd+Q). Tradeoff: held keys no longer
-auto-repeat *in Ghostty*. Revert with:
+Do **not** enable `ApplePressAndHoldEnabled` for Ghostty. Because of an upstream
+bug ([ghostty#13168](https://github.com/ghostty-org/ghostty/issues/13168), still
+open), Ghostty shows the press-and-hold accent menu *and* keeps auto-repeating
+the held key at the same time — so holding `n` pops the menu while spamming
+`nnnnnnnn`. The two behaviors can't coexist correctly, so leave the setting off
+(default) to keep normal key auto-repeat with no spam:
 
 ```bash
+# If you previously enabled it, revert so the spam stops:
 defaults delete com.mitchellh.ghostty ApplePressAndHoldEnabled
 ```
+
+Then fully quit and reopen Ghostty (Cmd+Q).
+
+Type accents with the macOS **Option (dead) keys** instead — these work in
+Ghostty out of the box (the config does not set `macos-option-as-alt`) and don't
+require press-and-hold:
+
+- `ñ` → **Option+n**, then `n`
+- `á é í ó ú` → **Option+e**, then the vowel
+- `ü` → **Option+u**, then `u`
 
 ## Neovim plugins
 
