@@ -38,6 +38,15 @@ return {
 		completion = {
 			min_chars = 2,
 		},
+		-- id = título tal cual lo tipeás (slug con guiones), nada de
+		-- "1786851095-GPXK": el archivo y el id quedan legibles y [[título]]
+		-- resuelve directo sin depender de aliases.
+		note_id_func = function(title)
+			if title and title ~= "" then
+				return title:gsub(" ", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
+			end
+			return tostring(os.time())
+		end,
 		picker = {
 			name = "snacks.pick",
 		},
@@ -45,4 +54,68 @@ return {
 			enable = false,
 		},
 	},
+	config = function(_, opts)
+		require("obsidian").setup(opts)
+
+		-- Historial de saltos por wiki-link: al seguir un [[link]] se apila la
+		-- posición de origen y <BS> vuelve ahí. <BS> NO hace nada si no venís
+		-- de un salto de link (evita cambiar de buffer por un backspace
+		-- accidental). Solo activo en markdown dentro del vault.
+		local link_stack = {}
+
+		local function cursor_on_wikilink()
+			local line = vim.api.nvim_get_current_line()
+			local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+			local from = 1
+			while true do
+				local s, e = line:find("%[%[.-%]%]", from)
+				if not s then
+					return false
+				end
+				if col >= s and col <= e then
+					return true
+				end
+				from = e + 1
+			end
+		end
+
+		local function follow_link()
+			if cursor_on_wikilink() then
+				table.insert(link_stack, {
+					buf = vim.api.nvim_get_current_buf(),
+					pos = vim.api.nvim_win_get_cursor(0),
+				})
+			end
+			vim.cmd("Obsidian follow_link")
+		end
+
+		local function jump_back()
+			local from = table.remove(link_stack)
+			while from and not vim.api.nvim_buf_is_valid(from.buf) do
+				from = table.remove(link_stack)
+			end
+			if not from then
+				return
+			end
+			vim.api.nvim_set_current_buf(from.buf)
+			pcall(vim.api.nvim_win_set_cursor, 0, from.pos)
+		end
+
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "markdown",
+			group = vim.api.nvim_create_augroup("ObsidianLinkHistory", { clear = true }),
+			callback = function(ev)
+				local vault = vim.fn.expand("~/notes")
+				if not vim.startswith(vim.api.nvim_buf_get_name(ev.buf), vault) then
+					return
+				end
+				local o = { buffer = ev.buf }
+				o.desc = "Obsidian: follow link (con historial)"
+				vim.keymap.set("n", "gf", follow_link, o)
+				vim.keymap.set("n", "<leader>of", follow_link, o)
+				o.desc = "Obsidian: volver del último link seguido"
+				vim.keymap.set("n", "<BS>", jump_back, o)
+			end,
+		})
+	end,
 }
