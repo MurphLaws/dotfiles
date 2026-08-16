@@ -87,7 +87,22 @@ return {
 				end,
 			},
 			-- Markdown (code actions: "Create a Table of Contents", diagnósticos de links)
-			marksman = {},
+			marksman = {
+				-- Marksman resuelve wiki-links por nombre de archivo/título y no
+				-- entiende los aliases de Obsidian, así que [[alias]] dispara un
+				-- falso "Link to non-existent document". Se filtra ese diagnóstico;
+				-- obsidian-ls sí resuelve aliases y el resto de marksman queda intacto.
+				handlers = {
+					["textDocument/publishDiagnostics"] = function(err, result, ctx)
+						if result and result.diagnostics then
+							result.diagnostics = vim.tbl_filter(function(d)
+								return not d.message:match("^Link to non%-existent document")
+							end, result.diagnostics)
+						end
+						vim.lsp.handlers["textDocument/publishDiagnostics"](err, result, ctx)
+					end,
+				},
+			},
 			-- Python
 			pyright = {
 				settings = {
