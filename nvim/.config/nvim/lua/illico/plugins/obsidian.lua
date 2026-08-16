@@ -38,6 +38,9 @@ return {
 		completion = {
 			min_chars = 2,
 		},
+		picker = {
+			name = "snacks.pick",
+		},
 		ui = {
 			enable = false,
 		},

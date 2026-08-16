@@ -86,6 +86,8 @@ return {
 					client.server_capabilities.semanticTokensProvider = nil
 				end,
 			},
+			-- Markdown (code actions: "Create a Table of Contents", diagnósticos de links)
+			marksman = {},
 			-- Python
 			pyright = {
 				settings = {
