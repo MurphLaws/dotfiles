@@ -6,16 +6,16 @@ font-style-bold = ExtraBold
 font-size = 19
 font-thicken = true
 
-# Theme — tokyonight storm (match nvim tokyonight-storm)
-background = 24283b
+# Theme — tokyonight night (match nvim tokyonight-night)
+background = 1a1b26
 foreground = c0caf5
 cursor-color = c0caf5
-cursor-text = 24283b
-selection-background = 2e3c64
+cursor-text = 1a1b26
+selection-background = 283457
 selection-foreground = c0caf5
 
-# ANSI palette (tokyonight storm)
-palette = 0=#1d202f
+# ANSI palette (tokyonight night)
+palette = 0=#15161e
 palette = 1=#f7768e
 palette = 2=#9ece6a
 palette = 3=#e0af68
@@ -39,7 +39,7 @@ macos-non-native-fullscreen = true
 # Background with transparency (nvim y tmux heredan esto: nvim usa Normal bg=none
 # y en tmux las superficies de chrome usan bg=default, asi que el fondo translucido
 # se ve a traves de todo). El blur mantiene el texto legible sobre el escritorio.
-background-opacity = 0.97
+background-opacity = 0.95
 background-blur = 20
 
 # Background image and shader settings removed — no blur/effects.

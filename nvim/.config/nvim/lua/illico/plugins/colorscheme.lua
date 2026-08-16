@@ -4,7 +4,7 @@ return {
 		lazy = false,
 		priority = 1000,
 		opts = {
-			style = "storm",
+			style = "night",
 			transparent = true,
 			styles = {
 				sidebars = "transparent",
@@ -19,7 +19,7 @@ return {
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			vim.cmd.colorscheme("tokyonight-storm")
+			vim.cmd.colorscheme("tokyonight-night")
 
 			-- nvim hereda siempre la transparencia de Ghostty.
 			local ghostty_bg = "NONE"

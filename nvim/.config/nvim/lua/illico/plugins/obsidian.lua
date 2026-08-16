@@ -29,8 +29,8 @@ return {
 		legacy_commands = false,
 		workspaces = {
 			{
-				name = "vault",
-				path = vim.fn.expand("~/Documents/vault/vault"),
+				name = "notes",
+				path = vim.fn.expand("~/notes"),
 			},
 		},
 		-- Completion se provee vía el LSP integrado (obsidian-ls); ya no se
