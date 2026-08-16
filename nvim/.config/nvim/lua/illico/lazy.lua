@@ -30,4 +30,6 @@ require("lazy").setup({
 	-- never saw the results anyway, so this was pure startup/background cost.
 	-- Run `:Lazy check` manually when you want to look for updates.
 	checker = { enabled = false },
+	-- Ningún plugin del spec usa rockspecs; sin esto checkhealth exige lua 5.1.
+	rocks = { enabled = false },
 })

@@ -29,8 +29,8 @@ return {
 		legacy_commands = false,
 		workspaces = {
 			{
-				name = "work",
-				path = "/Users/nicolaslasso/Library/CloudStorage/OneDrive-Slalom/Documentos/work",
+				name = "vault",
+				path = vim.fn.expand("~/Documents/vault/vault"),
 			},
 		},
 		-- Completion se provee vía el LSP integrado (obsidian-ls); ya no se
