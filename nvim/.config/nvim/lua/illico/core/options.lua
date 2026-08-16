@@ -16,6 +16,11 @@ vim.opt.guicursor = "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20"
 
 vim.opt.cursorline = true -- Resalta la línea donde está el cursor
 
+-- :q sobre un buffer con cambios pregunta "¿Guardar?" (Y/N/C) en vez de
+-- escupir E37/E162. Los buffers sin cambios (incl. vacíos sin nombre)
+-- cierran sin preguntar nada.
+vim.opt.confirm = true
+
 vim.opt.nu = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = "yes"
