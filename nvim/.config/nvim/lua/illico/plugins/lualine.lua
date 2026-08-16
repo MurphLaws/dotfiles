@@ -4,20 +4,20 @@ return {
 		"nvim-tree/nvim-web-devicons",
 	},
 	config = function()
-		-- Paleta 0x96f (la misma de ghostty/tmux)
-		local bg_dark = "#262427" -- fondo del terminal
-		local gray1 = "#3a373b" -- franja base de la statusline
-		local gray2 = "#545452" -- chips (branch, filename, filetype, lsp)
-		local fg_text = "#fcfcfa"
-		local fg_dim = "#8a8887"
-		local red = "#ff666d"
-		local green = "#bee55e"
-		local yellow = "#ffc739"
-		local cyan = "#9deaf6" -- chip de modo / location (celeste pálido)
-		local cyan2 = "#1bd5eb"
-		local purple = "#b0a3eb"
-		local cream = "#fcfcfa"
-		local orange = "#ff9e64" -- tokyonight orange (filename con cambios sin guardar)
+		-- Paleta onedark darker (la misma de ghostty/tmux)
+		local bg_dark = "#1f2329" -- fondo del terminal
+		local gray1 = "#282c34" -- franja base de la statusline
+		local gray2 = "#30363f" -- chips (branch, filename, filetype, lsp)
+		local fg_text = "#a0a8b7"
+		local fg_dim = "#535965"
+		local red = "#e55561"
+		local green = "#8ebd6b"
+		local yellow = "#e2b86b"
+		local cyan = "#48b0bd" -- chip de modo / location
+		local cyan2 = "#48b0bd"
+		local purple = "#bf68d9"
+		local cream = "#a0a8b7"
+		local orange = "#cc9057" -- onedark orange (filename con cambios sin guardar)
 
 		local function is_empty_noname(buf)
 			if vim.api.nvim_buf_get_name(buf) ~= "" then
