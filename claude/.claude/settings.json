@@ -39,7 +39,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -329,7 +329,7 @@
       }
     }
   },
-  "effortLevel": "low",
+  "effortLevel": "medium",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
