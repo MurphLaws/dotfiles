@@ -1,25 +1,21 @@
 return {
 	{
-		"folke/tokyonight.nvim",
+		"navarasu/onedark.nvim",
 		lazy = false,
 		priority = 1000,
 		opts = {
-			style = "night",
+			style = "darker",
 			transparent = true,
-			styles = {
-				sidebars = "transparent",
-				floats = "transparent",
-			},
 		},
 		config = function(_, opts)
-			require("tokyonight").setup(opts)
+			require("onedark").setup(opts)
 
 			vim.opt.background = "dark"
 
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
-			vim.cmd.colorscheme("tokyonight-night")
+			vim.cmd.colorscheme("onedark")
 
 			-- nvim hereda siempre la transparencia de Ghostty.
 			local ghostty_bg = "NONE"
@@ -29,21 +25,21 @@ return {
 				vim.api.nvim_set_hl(0, group, hl)
 			end
 
-			-- Paleta tokyonight storm, mapeada a las claves de acento que el resto
+			-- Paleta onedark darker, mapeada a las claves de acento que el resto
 			-- de la config ya consume (lualine, mini.icons, org/neorg overrides).
-			-- Los nombres de las claves son históricos — los valores son tokyonight.
+			-- Los nombres de las claves son históricos — los valores son onedark.
 			local p = {
-				coral = "#f7768e", -- red/pink
-				peach = "#ff9e64", -- orange
-				green = "#9ece6a", -- green
-				amber = "#e0af68", -- yellow
-				gold = "#e0af68", -- yellow
-				sky = "#7dcfff", -- cyan
-				blue = "#7aa2f7", -- blue
-				mauve = "#bb9af7", -- purple/magenta
-				purple = "#bb9af7", -- purple/magenta
-				red = "#f7768e", -- red
-				fg_dim = "#565f89", -- comment
+				coral = "#e55561", -- red
+				peach = "#cc9057", -- orange
+				green = "#8ebd6b", -- green
+				amber = "#e2b86b", -- yellow
+				gold = "#e2b86b", -- yellow
+				sky = "#48b0bd", -- cyan
+				blue = "#4fa6ed", -- blue
+				mauve = "#bf68d9", -- purple/magenta
+				purple = "#bf68d9", -- purple/magenta
+				red = "#e55561", -- red
+				fg_dim = "#535965", -- comment/grey
 			}
 
 			-- Orgmode
@@ -66,7 +62,7 @@ return {
 			end
 
 			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
-			-- Global names kept for back-compat; values are tokyonight storm.
+			-- Global names kept for back-compat; values are onedark darker.
 			_G.superset_palette = p
 			_G.superset_accents = p
 			_G.tokyonight_accents = {

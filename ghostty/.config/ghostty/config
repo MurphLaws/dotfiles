@@ -6,31 +6,31 @@ font-style-bold = ExtraBold
 font-size = 19
 font-thicken = true
 
-# Theme — tokyonight night (match nvim tokyonight-night)
-background = 1a1b26
-foreground = c0caf5
-cursor-color = c0caf5
-cursor-text = 1a1b26
-selection-background = 283457
-selection-foreground = c0caf5
+# Theme — onedark darker (match nvim onedark.nvim style=darker)
+background = 1f2329
+foreground = a0a8b7
+cursor-color = a0a8b7
+cursor-text = 1f2329
+selection-background = 30363f
+selection-foreground = a0a8b7
 
-# ANSI palette (tokyonight night)
-palette = 0=#15161e
-palette = 1=#f7768e
-palette = 2=#9ece6a
-palette = 3=#e0af68
-palette = 4=#7aa2f7
-palette = 5=#bb9af7
-palette = 6=#7dcfff
-palette = 7=#a9b1d6
-palette = 8=#414868
-palette = 9=#f7768e
-palette = 10=#9ece6a
-palette = 11=#e0af68
-palette = 12=#7aa2f7
-palette = 13=#bb9af7
-palette = 14=#7dcfff
-palette = 15=#c0caf5
+# ANSI palette (onedark darker)
+palette = 0=#0e1013
+palette = 1=#e55561
+palette = 2=#8ebd6b
+palette = 3=#e2b86b
+palette = 4=#4fa6ed
+palette = 5=#bf68d9
+palette = 6=#48b0bd
+palette = 7=#a0a8b7
+palette = 8=#535965
+palette = 9=#e55561
+palette = 10=#8ebd6b
+palette = 11=#e2b86b
+palette = 12=#4fa6ed
+palette = 13=#bf68d9
+palette = 14=#48b0bd
+palette = 15=#a0a8b7
 
 # Window — fullscreen no-nativo: "pantalla completa" es una ventana maximizada
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.

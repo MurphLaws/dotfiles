@@ -84,15 +84,15 @@ return {
 			pattern = "*",
 			callback = function()
 				-- Headlines (Vibrant Palette: Green, Purple, Cyan, etc.)
-				vim.api.nvim_set_hl(0, "@org.headline.level1", { fg = "#9ece6a", bold = true }) -- Vibrant Green
-				vim.api.nvim_set_hl(0, "@org.headline.level2", { fg = "#bb9af7", bold = true }) -- Vibrant Purple
-				vim.api.nvim_set_hl(0, "@org.headline.level3", { fg = "#7dcfff", bold = true }) -- Vibrant Cyan
-				vim.api.nvim_set_hl(0, "@org.headline.level4", { fg = "#e0af68", bold = true }) -- Vibrant Yellow
-				vim.api.nvim_set_hl(0, "@org.headline.level5", { fg = "#ff9e64", bold = true }) -- Vibrant Orange
-				vim.api.nvim_set_hl(0, "@org.headline.level6", { fg = "#f7768e", bold = true }) -- Vibrant Red
+				vim.api.nvim_set_hl(0, "@org.headline.level1", { fg = "#8ebd6b", bold = true }) -- Vibrant Green
+				vim.api.nvim_set_hl(0, "@org.headline.level2", { fg = "#bf68d9", bold = true }) -- Vibrant Purple
+				vim.api.nvim_set_hl(0, "@org.headline.level3", { fg = "#48b0bd", bold = true }) -- Vibrant Cyan
+				vim.api.nvim_set_hl(0, "@org.headline.level4", { fg = "#e2b86b", bold = true }) -- Vibrant Yellow
+				vim.api.nvim_set_hl(0, "@org.headline.level5", { fg = "#cc9057", bold = true }) -- Vibrant Orange
+				vim.api.nvim_set_hl(0, "@org.headline.level6", { fg = "#e55561", bold = true }) -- Vibrant Red
 
 				-- Links (Italic + Underlined + Pastel Teal)
-				local link_opts = { fg = "#8bd5ca", underline = true, italic = true }
+				local link_opts = { fg = "#48b0bd", underline = true, italic = true }
 				vim.api.nvim_set_hl(0, "@org.hyperlink", link_opts)
 				vim.api.nvim_set_hl(0, "@org.hyperlink.desc", link_opts)
 			end,
