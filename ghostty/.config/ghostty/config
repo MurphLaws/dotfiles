@@ -39,7 +39,7 @@ macos-non-native-fullscreen = true
 # Background with transparency (nvim y tmux heredan esto: nvim usa Normal bg=none
 # y en tmux las superficies de chrome usan bg=default, asi que el fondo translucido
 # se ve a traves de todo). El blur mantiene el texto legible sobre el escritorio.
-background-opacity = 0.90
+background-opacity = 0.97
 background-blur = 20
 
 # Background image and shader settings removed — no blur/effects.
