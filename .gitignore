@@ -8,3 +8,6 @@ graphview-test/
 
 # Copilot local personal instructions (home-only, never commit)
 .copilot/copilot-instructions.md
+
+# Taskwarrior local config: never version (machine-specific)
+.taskrc

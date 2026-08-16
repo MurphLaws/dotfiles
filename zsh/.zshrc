@@ -75,6 +75,10 @@ conda() {
 # <<< conda initialize (lazy) <<<
 
 export SUMO_HOME=/opt/homebrew/Cellar/sumo/1.20.0/share/sumo
+# Avoid startup error when no JDK is installed.
+if /usr/libexec/java_home -v 1.8 >/dev/null 2>&1; then
+  export JAVA_HOME="$('/usr/libexec/java_home' -v 1.8)"
+fi
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 export EDITOR=nvim
