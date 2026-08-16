@@ -12,7 +12,7 @@ return {
 		anti_conceal = { enabled = false },
 		heading = {
 			sign = false,
-			icons = { "① ", "② ", "③ ", "④ ", "⑤ ", "⑥ " },
+			icons = { "❯ ", "❯❯ ", "❯❯❯ ", "❯❯❯❯ ", "❯❯❯❯❯ ", "❯❯❯❯❯❯ " },
 			position = "inline",
 			backgrounds = {},
 		},
@@ -27,4 +27,21 @@ return {
 			},
 		},
 	},
+	config = function(_, opts)
+		require("render-markdown").setup(opts)
+
+		-- Links subrayados (conserva el color del colorscheme y agrega underline)
+		local function underline_links()
+			for _, group in ipairs({ "RenderMarkdownLink", "RenderMarkdownWikiLink" }) do
+				local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+				hl.underline = true
+				vim.api.nvim_set_hl(0, group, hl)
+			end
+		end
+		underline_links()
+		vim.api.nvim_create_autocmd("ColorScheme", {
+			group = vim.api.nvim_create_augroup("RenderMarkdownLinkUnderline", { clear = true }),
+			callback = underline_links,
+		})
+	end,
 }
