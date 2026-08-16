@@ -49,7 +49,8 @@ return {
     vim.keymap.set("n", "<leader>ths", "<cmd>Telescope themes<CR>", { desc = "Theme Switcher" })
 
     -- 🔍 Search only within the current buffer (Ivy layout, exact match)
-    vim.keymap.set("n", "<leader>pb", function()
+    -- pb ahora es el picker de buffers (snacks); esto pasó a pB
+    vim.keymap.set("n", "<leader>pB", function()
       builtin.current_buffer_fuzzy_find(themes.get_ivy({
         winblend = 0,
         previewer = false,

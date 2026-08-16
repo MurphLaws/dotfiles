@@ -96,7 +96,10 @@ return {
 					["textDocument/publishDiagnostics"] = function(err, result, ctx)
 						if result and result.diagnostics then
 							result.diagnostics = vim.tbl_filter(function(d)
-								return not d.message:match("^Link to non%-existent document")
+								return not (
+									d.message:match("^Link to non%-existent document")
+									or d.message:match("^Ambiguous link to document")
+								)
 							end, result.diagnostics)
 						end
 						vim.lsp.handlers["textDocument/publishDiagnostics"](err, result, ctx)

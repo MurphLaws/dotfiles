@@ -90,11 +90,12 @@ return {
 				desc = "Find Org Files",
 			},
 			{
-				-- <leader>pb ya es "buscar dentro del buffer actual" (telescope);
-				-- pB (mayúscula) lista los buffers abiertos.
-				"<leader>pB",
+				-- pb = buffers abiertos; la búsqueda dentro del buffer actual
+				-- (telescope) quedó en pB. focus="list": se navega solo con
+				-- flechas/j/k, sin tipear para filtrar.
+				"<leader>pb",
 				function()
-					require("snacks").picker.buffers()
+					require("snacks").picker.buffers({ focus = "list" })
 				end,
 				desc = "Find Buffers",
 			},
