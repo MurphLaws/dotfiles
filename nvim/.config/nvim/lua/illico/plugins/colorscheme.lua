@@ -6,6 +6,8 @@ return {
 		opts = {
 			style = "darker",
 			transparent = true,
+			-- fg más blanco que el #a0a8b7 de "darker" (mismo valor que ghostty)
+			colors = { fg = "#dde1e7" },
 		},
 		config = function(_, opts)
 			require("onedark").setup(opts)
