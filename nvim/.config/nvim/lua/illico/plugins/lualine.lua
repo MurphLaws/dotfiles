@@ -17,24 +17,7 @@ return {
 		local cyan2 = "#1bd5eb"
 		local purple = "#b0a3eb"
 		local cream = "#fcfcfa"
-		local amber = yellow
-		local peach = red
-
-		local function set_buftab_hl()
-			vim.api.nvim_set_hl(0, "BufTabCurrent", { fg = amber, bold = true })
-			vim.api.nvim_set_hl(0, "BufTabModified", { fg = peach })
-		end
-		set_buftab_hl()
-		vim.api.nvim_create_autocmd("ColorScheme", {
-			group = vim.api.nvim_create_augroup("BufTabColors", { clear = true }),
-			callback = set_buftab_hl,
-		})
-
-		_G.IllicoSwitchBuf = function(bufnr)
-			pcall(vim.api.nvim_set_current_buf, tonumber(bufnr))
-		end
-
-		local MAX_LEN = 20
+		local orange = "#ff9e64" -- tokyonight orange (filename con cambios sin guardar)
 
 		local function is_empty_noname(buf)
 			if vim.api.nvim_buf_get_name(buf) ~= "" then
@@ -74,33 +57,9 @@ return {
 			end, { desc = "tabline: jump to buffer #" .. i, silent = true })
 		end
 
-		local function buffers_tabline()
-			local current_buf = vim.api.nvim_get_current_buf()
-			local parts = {}
-			for _, buf in ipairs(listed_bufs()) do
-				local name = vim.api.nvim_buf_get_name(buf)
-				local fname = (name == "" and "[No Name]")
-					or vim.fn.fnamemodify(name, ":t"):sub(1, MAX_LEN)
-				local is_current = buf == current_buf
-				local is_modified = vim.bo[buf].modified
-
-				local mod = is_modified and " %#BufTabModified#●%*" or ""
-
-				local segment
-				if is_current then
-					segment = " %#BufTabCurrent#["
-						.. fname
-						.. "%*"
-						.. mod
-						.. "%#BufTabCurrent#]%* "
-				else
-					segment = "  " .. fname .. mod .. " "
-				end
-
-				table.insert(parts, "%" .. buf .. "@v:lua.IllicoSwitchBuf@" .. segment .. "%T")
-			end
-			return table.concat(parts, "")
-		end
+		-- La tabline de buffers se quitó; los buffers se ven con <leader>pb
+		-- (snacks) y se saltan con <leader>0-9.
+		vim.o.showtabline = 1
 
 		-- Tema estilo powerline slant: chip de modo de color, franja gris continua
 		local function mode_theme(color)
@@ -177,7 +136,13 @@ return {
 					{
 						"filename",
 						path = 0,
-						color = { fg = fg_text, bg = gray2 },
+						-- Naranja cuando el buffer tiene cambios sin guardar
+						color = function()
+							if vim.bo.modified then
+								return { fg = bg_dark, bg = orange, gui = "bold" }
+							end
+							return { fg = fg_text, bg = gray2 }
+						end,
 						separator = { left = "", right = "" },
 						symbols = {
 							modified = " ●",
@@ -228,11 +193,6 @@ return {
 				lualine_x = { "location" },
 				lualine_y = {},
 				lualine_z = {},
-			},
-			tabline = {
-				lualine_a = {
-					{ buffers_tabline },
-				},
 			},
 			winbar = {},
 			inactive_winbar = {},
