@@ -8,7 +8,7 @@ return {
 		local bg_dark = "#1f2329" -- fondo del terminal
 		local gray1 = "#282c34" -- franja base de la statusline
 		local gray2 = "#30363f" -- chips (branch, filename, filetype, lsp)
-		local fg_text = "#a0a8b7"
+		local fg_text = "#dde1e7"
 		local fg_dim = "#535965"
 		local red = "#e55561"
 		local green = "#8ebd6b"
@@ -16,7 +16,7 @@ return {
 		local cyan = "#48b0bd" -- chip de modo / location
 		local cyan2 = "#48b0bd"
 		local purple = "#bf68d9"
-		local cream = "#a0a8b7"
+		local cream = "#dde1e7"
 		local orange = "#cc9057" -- onedark orange (filename con cambios sin guardar)
 
 		local function is_empty_noname(buf)
