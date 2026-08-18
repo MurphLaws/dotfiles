@@ -58,6 +58,12 @@ vim.opt.timeoutlen = 300
 -- Se activa localmente en orgmode/markdown según sea necesario
 vim.opt.wrap = true
 
+-- Scroll suave por líneas visuales: sin esto la rueda del mouse salta líneas de
+-- buffer completas y no puede detenerse a mitad de una línea envuelta, lo que se
+-- siente "lagueado" en prosa envuelta (markdown). Con smoothscroll el viewport
+-- puede empezar a mitad de una línea envuelta y cada tick de rueda avanza parejo.
+vim.opt.smoothscroll = true
+
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
