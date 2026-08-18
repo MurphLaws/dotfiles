@@ -69,13 +69,14 @@ function M.compute(buf)
 			while #stack > 0 and stack[#stack] >= level do
 				table.remove(stack)
 			end
-			-- la línea del heading muestra las barras de los ancestros
+			-- la propia línea del heading incluye SU barra (además de las de los
+			-- ancestros): empujamos su nivel antes de registrar las barras.
+			table.insert(stack, level)
 			local list = {}
 			for _, l in ipairs(stack) do
 				list[#list + 1] = "RenderMarkdownH" .. math.min(l, 6)
 			end
 			bars[i] = list
-			table.insert(stack, level)
 		else
 			local list = {}
 			for _, l in ipairs(stack) do
