@@ -11,3 +11,6 @@ graphview-test/
 
 # Taskwarrior local config: never version (machine-specific)
 .taskrc
+
+# Juegos: binarios/artefactos de compilación, nunca versionar
+games/
