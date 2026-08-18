@@ -21,6 +21,7 @@ return {
 		{ "<leader>oc", "<cmd>Obsidian toggle_checkbox<cr>", desc = "Obsidian: Toggle checkbox" },
 		{ "<leader>oT", "<cmd>Obsidian template<cr>", desc = "Obsidian: Insert template" },
 		{ "<leader>ow", "<cmd>Obsidian workspace<cr>", desc = "Obsidian: Switch workspace" },
+		{ "<leader>oW", "<cmd>ObsidianWeekly<cr>", desc = "Obsidian: Weekly note (semana actual)" },
 	},
 	dependencies = {
 		"nvim-lua/plenary.nvim",
@@ -56,6 +57,54 @@ return {
 	},
 	config = function(_, opts)
 		require("obsidian").setup(opts)
+
+		-- ===== Nota semanal (:ObsidianWeekly / <leader>oW) =====
+		-- Crea (o abre) la nota de la semana ISO actual bajo ~/notes/weekly/.
+		-- Nombre de archivo = rango de semana. Título `#` = nombre de la semana.
+		-- Cada día (lunes→domingo) queda como `##` con un checkbox.
+		local function create_weekly_note()
+			local vault = vim.fn.expand("~/notes")
+			local now = os.time()
+			-- %u = día ISO (1=lunes ... 7=domingo); retrocedemos al lunes.
+			local iso_wday = tonumber(os.date("%u", now))
+			local monday = now - (iso_wday - 1) * 86400
+			local iso_year = os.date("%G", now)
+			local iso_week = os.date("%V", now)
+			local mon_str = os.date("%Y-%m-%d", monday)
+			local sun_str = os.date("%Y-%m-%d", monday + 6 * 86400)
+
+			local week_name = string.format("%s-W%s (%s — %s)", iso_year, iso_week, mon_str, sun_str)
+			local dir = vault .. "/weekly"
+			vim.fn.mkdir(dir, "p")
+			local path = dir .. "/" .. week_name .. ".md"
+
+			if vim.fn.filereadable(path) == 0 then
+				local days = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" }
+				local lines = {
+					"---",
+					"type: weekly",
+					string.format("week: %s-W%s", iso_year, iso_week),
+					string.format("range: %s/%s", mon_str, sun_str),
+					"tags: [weekly]",
+					"---",
+					"# " .. week_name,
+					"",
+				}
+				for i, day in ipairs(days) do
+					local d = os.date("%Y-%m-%d", monday + (i - 1) * 86400)
+					table.insert(lines, string.format("## %s · %s", day, d))
+					table.insert(lines, "- [ ] ")
+					table.insert(lines, "")
+				end
+				vim.fn.writefile(lines, path)
+			end
+
+			vim.cmd.edit(vim.fn.fnameescape(path))
+		end
+
+		vim.api.nvim_create_user_command("ObsidianWeekly", create_weekly_note, {
+			desc = "Obsidian: crear/abrir la nota de la semana actual",
+		})
 
 		-- Historial de saltos por wiki-link: al seguir un [[link]] se apila la
 		-- posición de origen y <BS> vuelve ahí. <BS> NO hace nada si no venís
