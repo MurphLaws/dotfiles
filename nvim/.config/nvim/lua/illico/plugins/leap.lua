@@ -10,8 +10,13 @@ return {
 			-- aparezca ningún resaltado hasta escribir las DOS letras.
 			leap.opts.preview = false
 
-			-- Ignorar mayúsculas/minúsculas al buscar (así "AB" salta a "ab").
-			leap.opts.case_sensitive = false
+			-- Ignorar mayúsculas/minúsculas al buscar (así "kp" salta a "KPI").
+			-- El fork nuevo de leap quitó `opts.case_sensitive`; ahora respeta
+			-- las opciones de Vim durante el salto vía `opts.vim_opts`. Forzamos
+			-- ignorecase y desactivamos smartcase para que ni siquiera al teclear
+			-- mayúsculas se vuelva sensible.
+			leap.opts.vim_opts["go.ignorecase"] = true
+			leap.opts.vim_opts["go.smartcase"] = false
 
 			-- Búsqueda bidireccional en TODA la ventana actual (adelante y atrás
 			-- a la vez), no solo hacia un lado.
