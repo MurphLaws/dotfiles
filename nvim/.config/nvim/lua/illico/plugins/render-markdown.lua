@@ -31,7 +31,9 @@ return {
 			enabled = true,
 			icon = "▎",
 			skip_level = 0,
-			skip_heading = false,
+			-- Corta la barra en la línea del propio heading para que cada
+			-- sección se vea como un bloque independiente (el break que se pidió).
+			skip_heading = true,
 		},
 		link = {
 			wiki = { icon = "" },
@@ -67,19 +69,31 @@ return {
 		end
 		enforce_strikethrough()
 
-		-- Barra de sección con el color de cada heading: render-markdown dibuja
-		-- todas las guías de indentación con un único highlight. Parcheamos
-		-- `Indent:line` para que la columna i (nivel de anidamiento i) use el
-		-- color del heading de nivel i (RenderMarkdownH1..H6). Con skip_level=0
-		-- la columna 1 = H1 (título) → barra roja; columna 2 = H2 → morada; etc.
+		-- Barra de sección con el color de cada heading. render-markdown dibuja
+		-- las guías por sección y de forma apilada: cada sección aporta solo su
+		-- `level_change` (normalmente 1 barra) mediante marcas inline en la
+		-- columna 0, no la profundidad absoluta. Por eso hay que derivar el
+		-- nivel ABSOLUTO de cada barra desde el nodo de la sección
+		-- (`self.node:level(false)`) y no del índice del bucle; de lo contrario
+		-- todas las barras tomaban H1 (rojo). Con el nivel absoluto, la barra
+		-- del título `#` = H1 (roja), `##` = H2 (morada), `###` = H3, etc.
 		local ok_indent, Indent = pcall(require, "render-markdown.lib.indent")
 		local ok_str, str = pcall(require, "render-markdown.lib.str")
 		if ok_indent and ok_str and Indent.line then
 			function Indent:line(virtual, level)
+				local base
 				if virtual then
 					level = self:level(level)
+					base = 0
 				else
 					assert(level, "level must be known for non-virtual lines")
+					-- Nivel absoluto del heading de esta sección menos las
+					-- barras que aporta = nivel del padre (base sobre la que
+					-- apilamos). base + i da el nivel real de la columna i.
+					local ok_lvl, cur = pcall(function()
+						return self.node:level(false)
+					end)
+					base = (ok_lvl and cur or level) - level
 				end
 				local line = self.context.config:line()
 				if level > 0 then
@@ -89,7 +103,7 @@ return {
 						line:pad(self.config.per_level * level)
 					else
 						for i = 1, level do
-							local hl_level = math.min(i + self.config.skip_level, 6)
+							local hl_level = math.max(1, math.min(base + i, 6))
 							line:text(icon, "RenderMarkdownH" .. hl_level)
 							line:pad(self.config.per_level - icon_width)
 						end
@@ -104,6 +118,19 @@ return {
 			callback = function()
 				underline_links()
 				enforce_strikethrough()
+			end,
+		})
+
+		-- render-markdown pinta la barra de sección como virt_text inline solo
+		-- en la fila real de cada línea; en las filas de wrap visual no hay
+		-- barra, así que un párrafo largo "corta" la guía vertical. Con `nowrap`
+		-- cada línea ocupa una sola fila y la barra queda continua. El texto
+		-- largo se navega con scroll horizontal.
+		vim.api.nvim_create_autocmd("FileType", {
+			group = vim.api.nvim_create_augroup("RenderMarkdownNoWrap", { clear = true }),
+			pattern = "markdown",
+			callback = function()
+				vim.opt_local.wrap = false
 			end,
 		})
 	end,
