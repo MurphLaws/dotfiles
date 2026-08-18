@@ -12,7 +12,7 @@ return {
 		anti_conceal = { enabled = false },
 		heading = {
 			sign = false,
-			icons = { "❯ ", "❯❯ ", "❯❯❯ ", "❯❯❯❯ ", "❯❯❯❯❯ ", "❯❯❯❯❯❯ " },
+			icons = { "# ", "## ", "### ", "#### ", "##### ", "###### " },
 			position = "inline",
 			backgrounds = {},
 		},
@@ -22,18 +22,13 @@ return {
 		bullet = {
 			icons = { "·", "◦", "▪", "‣" },
 		},
-		-- Guías verticales por sección, una barra por cada heading coloreada
-		-- según su nivel (título `#` = color H1, `##` = H2, ...). skip_level=0
-		-- para que el título también muestre su barra. El color por nivel se
-		-- logra parcheando el módulo indent más abajo (render-markdown usa un
-		-- único highlight de forma nativa).
+		-- Guías verticales por sección. Se dibujan en el `statuscolumn` (ver
+		-- illico.util.md_section_bars) en lugar del indent nativo de
+		-- render-markdown: el statuscolumn se repite en las filas envueltas
+		-- (wrap) y vive en el gutter, así la barra no se corta ni pisa el texto.
+		-- Por eso el indent nativo va deshabilitado.
 		indent = {
-			enabled = true,
-			icon = "▎",
-			skip_level = 0,
-			-- Corta la barra en la línea del propio heading para que cada
-			-- sección se vea como un bloque independiente (el break que se pidió).
-			skip_heading = true,
+			enabled = false,
 		},
 		link = {
 			wiki = { icon = "" },
@@ -76,50 +71,6 @@ return {
 			vim.api.nvim_set_hl(0, "RenderMarkdownDim", { link = "Comment", default = false })
 		end
 		enforce_dim()
-
-		-- Barra de sección con el color de cada heading. render-markdown dibuja
-		-- las guías por sección y de forma apilada: cada sección aporta solo su
-		-- `level_change` (normalmente 1 barra) mediante marcas inline en la
-		-- columna 0, no la profundidad absoluta. Por eso hay que derivar el
-		-- nivel ABSOLUTO de cada barra desde el nodo de la sección
-		-- (`self.node:level(false)`) y no del índice del bucle; de lo contrario
-		-- todas las barras tomaban H1 (rojo). Con el nivel absoluto, la barra
-		-- del título `#` = H1 (roja), `##` = H2 (morada), `###` = H3, etc.
-		local ok_indent, Indent = pcall(require, "render-markdown.lib.indent")
-		local ok_str, str = pcall(require, "render-markdown.lib.str")
-		if ok_indent and ok_str and Indent.line then
-			function Indent:line(virtual, level)
-				local base
-				if virtual then
-					level = self:level(level)
-					base = 0
-				else
-					assert(level, "level must be known for non-virtual lines")
-					-- Nivel absoluto del heading de esta sección menos las
-					-- barras que aporta = nivel del padre (base sobre la que
-					-- apilamos). base + i da el nivel real de la columna i.
-					local ok_lvl, cur = pcall(function()
-						return self.node:level(false)
-					end)
-					base = (ok_lvl and cur or level) - level
-				end
-				local line = self.context.config:line()
-				if level > 0 then
-					local icon = self.config.icon
-					local icon_width = str.width(icon)
-					if icon_width == 0 then
-						line:pad(self.config.per_level * level)
-					else
-						for i = 1, level do
-							local hl_level = math.max(1, math.min(base + i, 6))
-							line:text(icon, "RenderMarkdownH" .. hl_level)
-							line:pad(self.config.per_level - icon_width)
-						end
-					end
-				end
-				return line
-			end
-		end
 
 		-- Atenuar headings vacíos. render-markdown colorea el icono del heading
 		-- con `self.data.fg` y el TÍTULO lo colorea treesitter
@@ -192,18 +143,16 @@ return {
 			end,
 		})
 
-		-- render-markdown pinta la barra de sección como virt_text inline en la
-		-- fila real de cada línea. Con `wrap` + `breakindent` (nvim >= 0.10 tiene
-		-- en cuenta el virt_text inline) las líneas envueltas se indentan y
-		-- arrancan DESPUÉS de la barra, sin cruzarla ni pisar el contenido.
-		-- `linebreak` corta en límites de palabra.
+		-- Barras de sección en el statuscolumn (gutter): se repiten en las filas
+		-- envueltas y desplazan todo el texto por igual, así el wrap no corta la
+		-- guía ni pisa el contenido. `linebreak` corta en límites de palabra.
 		vim.api.nvim_create_autocmd("FileType", {
 			group = vim.api.nvim_create_augroup("RenderMarkdownWrap", { clear = true }),
 			pattern = "markdown",
 			callback = function()
 				vim.opt_local.wrap = true
-				vim.opt_local.breakindent = true
 				vim.opt_local.linebreak = true
+				require("illico.util.md_section_bars").attach(vim.api.nvim_get_current_buf())
 			end,
 		})
 	end,
