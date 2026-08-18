@@ -76,7 +76,7 @@ return {
 			local sun_str = os.date("%Y-%m-%d", monday + 6 * 86400)
 
 			local week_name = string.format("%s-W%s (%s — %s)", iso_year, iso_week, mon_str, sun_str)
-			local dir = vault .. "/weekly"
+			local dir = vault .. "/slalom/weekly"
 			vim.fn.mkdir(dir, "p")
 			local path = dir .. "/" .. week_name .. ".md"
 
