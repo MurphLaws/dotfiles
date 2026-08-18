@@ -6,15 +6,20 @@ return {
 	lazy = false,
 	keys = {
 		-- Picker de todos en todo el vault de notas, sin importar el cwd.
+		-- Usa el picker propio (texto del todo a la izquierda, archivo al final).
 		{
 			"<leader>st",
-			"<cmd>TodoTelescope cwd=~/notes<cr>",
+			function()
+				require("illico.util.todo_picker").find({ cwd = vim.fn.expand("~/notes") })
+			end,
 			desc = "Todos: buscar en el vault (~/notes)",
 		},
 		-- Picker de todos en el proyecto/cwd actual (código, etc.).
 		{
 			"<leader>sT",
-			"<cmd>TodoTelescope<cr>",
+			function()
+				require("illico.util.todo_picker").find({})
+			end,
 			desc = "Todos: buscar en el proyecto (cwd)",
 		},
 		-- Saltar al siguiente / anterior comentario TODO en el buffer.
