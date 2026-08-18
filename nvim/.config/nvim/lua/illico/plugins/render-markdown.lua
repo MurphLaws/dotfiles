@@ -19,6 +19,9 @@ return {
 		code = {
 			sign = false,
 		},
+		bullet = {
+			icons = { "·", "◦", "▪", "‣" },
+		},
 		link = {
 			wiki = { icon = "" },
 			hyperlink = "",
