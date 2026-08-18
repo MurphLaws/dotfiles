@@ -22,6 +22,7 @@ return {
 		{ "<leader>oT", "<cmd>Obsidian template<cr>", desc = "Obsidian: Insert template" },
 		{ "<leader>ow", "<cmd>Obsidian workspace<cr>", desc = "Obsidian: Switch workspace" },
 		{ "<leader>oW", "<cmd>ObsidianWeekly<cr>", desc = "Obsidian: Weekly note (semana actual)" },
+		{ "<leader>ok", "<cmd>ObsidianWork<cr>", desc = "Obsidian: Work item (slalom)" },
 		{ "<leader>ox", "<cmd>ObsidianExtractHeading<cr>", desc = "Obsidian: Heading actual → nota (con link)" },
 	},
 	dependencies = {
@@ -119,7 +120,60 @@ return {
 			desc = "Obsidian: crear/abrir la nota de la semana actual",
 		})
 
-		-- ===== Extraer heading a nota (:ObsidianExtractHeading / <leader>ox) =====
+		-- ===== Work item (:ObsidianWork / <leader>ok) =====
+		-- Crea una nota de trabajo/tema bajo ~/notes/slalom/ con un esquema
+		-- fijo: Main point, Notes, Additional things to investigate, Next
+		-- steps, Output; y frontmatter con jira/owner/status. Pide el título.
+		local function create_work_note()
+			vim.ui.input({ prompt = "Work item · título: " }, function(title)
+				if not title or title:gsub("%s+", "") == "" then
+					return
+				end
+				title = title:gsub("^%s+", ""):gsub("%s+$", "")
+				local vault = vim.fn.expand("~/notes")
+				local id = title:gsub(" ", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
+				local dir = vault .. "/slalom"
+				vim.fn.mkdir(dir, "p")
+				local path = dir .. "/" .. id .. ".md"
+
+				if vim.fn.filereadable(path) == 0 then
+					local lines = {
+						"---",
+						"type: work",
+						"jira: ",
+						"owner: Nicolas",
+						"status: open",
+						"tags: [slalom]",
+						"---",
+						"# " .. title,
+						"",
+						"## Main point",
+						"- ",
+						"",
+						"## Notes",
+						"",
+						"## Additional things to investigate",
+						"- ",
+						"",
+						"## Next steps",
+						"- ",
+						"",
+						"## Output",
+						"- ",
+						"",
+					}
+					vim.fn.writefile(lines, path)
+				end
+
+				vim.cmd.edit(vim.fn.fnameescape(path))
+			end)
+		end
+
+		vim.api.nvim_create_user_command("ObsidianWork", create_work_note, {
+			desc = "Obsidian: crear/abrir una nota de trabajo (slalom)",
+		})
+
+
 		-- Toma el heading bajo el cursor y todo su cuerpo (hasta el próximo
 		-- heading de nivel igual o superior), lo mueve a una nota nueva nombrada
 		-- según el título del heading y reemplaza la sección por un [[link]].
