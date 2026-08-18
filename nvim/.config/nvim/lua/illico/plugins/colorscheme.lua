@@ -57,6 +57,23 @@ return {
 			vim.api.nvim_set_hl(0, "@neorg.markup.strikethrough", { fg = p.fg_dim, strikethrough = true })
 			vim.api.nvim_set_hl(0, "@neorg.markup.verbatim", { fg = p.green })
 
+			-- Markdown énfasis: conserva el efecto característico (negrita, itálica,
+			-- tachado) pero con un tinte sutil de color, no tan marcado.
+			local em = {
+				bold = "#d7c39a", -- oro apagado, cálido y suave
+				italic = "#c3aed6", -- lavanda tenue
+				strike = "#8a9199", -- gris dim (tachado atenuado)
+			}
+			for _, suffix in ipairs({ "", ".markdown", ".markdown_inline" }) do
+				vim.api.nvim_set_hl(0, "@markup.strong" .. suffix, { fg = em.bold, bold = true })
+				vim.api.nvim_set_hl(0, "@markup.italic" .. suffix, { fg = em.italic, italic = true })
+				vim.api.nvim_set_hl(
+					0,
+					"@markup.strikethrough" .. suffix,
+					{ fg = em.strike, strikethrough = true }
+				)
+			end
+
 			local heading_palette = { p.coral, p.amber, p.green, p.sky, p.mauve, p.peach }
 			for i, color in ipairs(heading_palette) do
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".title", { fg = color, bold = true })
