@@ -185,6 +185,13 @@ return {
 
 		require("luasnip.loaders.from_vscode").lazy_load()
 
+		-- Source propio: completa valores del frontmatter (status, tags, ...)
+		-- dentro de la sección de metadata de las notas markdown.
+		local ok_fm, fm_source = pcall(require, "illico.util.cmp_frontmatter")
+		if ok_fm then
+			cmp.register_source("frontmatter", fm_source.new())
+		end
+
 		cmp.setup({
 			enabled = function()
 				local mode = vim.api.nvim_get_mode().mode
@@ -210,6 +217,7 @@ return {
 				end,
 			},
 			sources = cmp.config.sources({
+				{ name = "frontmatter", priority = 1000 },
 				{ name = "luasnip" },
 				{ name = "lazydev" },
 				{ name = "nvim_lsp" },
