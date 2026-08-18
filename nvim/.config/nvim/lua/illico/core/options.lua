@@ -94,6 +94,19 @@ vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
 -- is never touched — it stays a plain scratch buffer. This keeps launch fast and
 -- guarantees render-markdown is NOT loaded on start (it would be pulled in by a
 -- markdown filetype). This keeps launch fast.
+-- ===== `nvim <carpeta>`: entrar a la carpeta =====
+-- Al abrir Neovim con una carpeta como único argumento (p.ej. `nvim notes`),
+-- se hace `cd` dentro de ella. Así <leader>e (mini.files abre en cwd),
+-- Telescope y todo lo demás trabajan *dentro* de esa carpeta.
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		local argv = vim.fn.argv()
+		if #argv == 1 and vim.fn.isdirectory(argv[1]) == 1 then
+			vim.cmd.cd(vim.fn.fnamemodify(argv[1], ":p"))
+		end
+	end,
+})
+
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		vim.api.nvim_create_autocmd("BufEnter", {
