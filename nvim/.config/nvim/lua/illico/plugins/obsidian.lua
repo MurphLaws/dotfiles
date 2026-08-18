@@ -138,8 +138,8 @@ return {
 		-- Next steps, Output. Los campos repetidos del frontmatter se eligen con
 		-- pickers (vim.ui.select) para no re-teclearlos: status y tags. `jira`
 		-- se pide como texto (es único por ticket) y es opcional.
-		local TICKET_STATUSES = { "open", "in progress", "blocked", "in review", "done" }
-		local TICKET_TAGS = { "slalom", "ticket", "meeting", "eda", "research", "spike", "bug" }
+		local TICKET_STATUSES = require("illico.util.frontmatter").fields.status
+		local TICKET_TAGS = require("illico.util.frontmatter").fields.tags
 
 		-- Multi-select sencillo sobre vim.ui.select: se van eligiendo tags hasta
 		-- seleccionar "✓ done". `preseed` marca tags ya incluidos por defecto.
