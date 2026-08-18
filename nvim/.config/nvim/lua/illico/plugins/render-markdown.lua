@@ -20,7 +20,9 @@ return {
 			sign = false,
 		},
 		bullet = {
-			icons = { "·", "◦", "▪", "‣" },
+			-- Guion normal `-` como marcador de lista (en vez de •/◦/▪/‣),
+			-- coloreado de rojo vía RenderMarkdownBullet (ver enforce_bullet).
+			icons = { "-", "-", "-", "-" },
 		},
 		-- Guías verticales por sección. Se dibujan en el `statuscolumn` (ver
 		-- illico.util.md_section_bars) en lugar del indent nativo de
@@ -71,6 +73,12 @@ return {
 			vim.api.nvim_set_hl(0, "RenderMarkdownDim", { link = "Comment", default = false })
 		end
 		enforce_dim()
+
+		-- Marcador de lista en rojo (mismo rojo del título/H1 del tema).
+		local function enforce_bullet()
+			vim.api.nvim_set_hl(0, "RenderMarkdownBullet", { fg = "#e55561", default = false })
+		end
+		enforce_bullet()
 
 		-- Atenuar headings vacíos. render-markdown colorea el icono del heading
 		-- con `self.data.fg` y el TÍTULO lo colorea treesitter
@@ -140,6 +148,7 @@ return {
 				underline_links()
 				enforce_strikethrough()
 				enforce_dim()
+				enforce_bullet()
 			end,
 		})
 
