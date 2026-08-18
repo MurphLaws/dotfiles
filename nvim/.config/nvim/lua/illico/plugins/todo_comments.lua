@@ -81,6 +81,12 @@ return {
 			after = "fg", -- "fg" or "bg" or empty
 			pattern = [[.*<(KEYWORDS)\s*:]], -- pattern used for highlighting
 			comments_only = false,
+			-- Notas multilínea: el color del keyword abarca las líneas siguientes
+			-- hasta la primera línea en blanco (útil para POINTER/TODO largos en
+			-- markdown, no solo la primera línea).
+			multiline = true,
+			multiline_pattern = "^.", -- continúa mientras la línea no esté vacía
+			multiline_context = 20,
 			max_line_len = 400,
 			exclude = {},
 		},
@@ -96,4 +102,21 @@ return {
 			pattern = [[\b(KEYWORDS):]], -- ripgrep regex
 		},
 	},
+	config = function(_, opts)
+		require("todo-comments").setup(opts)
+
+		-- En markdown la continuación multilínea del plugin exige que la línea
+		-- sea un "comment" (captura de treesitter), lo que nunca ocurre en prosa
+		-- markdown, así que el color no pasaba de la primera línea. Como ya
+		-- usamos comments_only=false, destrabamos ese check en markdown para que
+		-- la nota abarque hasta la primera línea en blanco.
+		local hl = require("todo-comments.highlight")
+		local is_comment = hl.is_comment
+		hl.is_comment = function(buf, row, col)
+			if vim.bo[buf].filetype == "markdown" then
+				return true
+			end
+			return is_comment(buf, row, col)
+		end
+	end,
 }
