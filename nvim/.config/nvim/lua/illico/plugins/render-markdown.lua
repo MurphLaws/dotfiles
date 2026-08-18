@@ -39,9 +39,26 @@ return {
 			end
 		end
 		underline_links()
+
+		-- Tachado real en ~~texto~~: fuerza el atributo strikethrough en el
+		-- grupo de treesitter (y el legacy) por si el colorscheme lo pisa.
+		-- Requiere una terminal que soporte el SGR de tachado (kitty, wezterm,
+		-- ghostty; NO alacritty).
+		local function enforce_strikethrough()
+			for _, group in ipairs({ "@markup.strikethrough", "@text.strike" }) do
+				local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+				hl.strikethrough = true
+				vim.api.nvim_set_hl(0, group, hl)
+			end
+		end
+		enforce_strikethrough()
+
 		vim.api.nvim_create_autocmd("ColorScheme", {
 			group = vim.api.nvim_create_augroup("RenderMarkdownLinkUnderline", { clear = true }),
-			callback = underline_links,
+			callback = function()
+				underline_links()
+				enforce_strikethrough()
+			end,
 		})
 	end,
 }
