@@ -377,7 +377,63 @@ return {
 			end
 		end
 
+		-- Enlace de ancla markdown `[texto](#slug)` bajo el cursor (TOC dentro
+		-- del mismo documento). Devuelve label y anchor, o nil.
+		local function cursor_md_anchor()
+			local line = vim.api.nvim_get_current_line()
+			local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+			local from = 1
+			while true do
+				local s, e, label, anchor = line:find("%[(.-)%]%(#(.-)%)", from)
+				if not s then
+					return nil
+				end
+				if col >= s and col <= e then
+					return label, anchor
+				end
+				from = e + 1
+			end
+		end
+
+		-- Slug estilo GitHub: minúsculas, quita puntuación, espacios → guion.
+		-- Mantiene acentos (tal como generan la TOC :Obsidian toc y otros).
+		local function slugify(text)
+			text = vim.fn.tolower(text)
+			text = text:gsub("[%.,:;/%(%)%[%]%?!\"'`]", "")
+			text = text:gsub("¿", ""):gsub("¡", "")
+			text = vim.trim(text)
+			text = text:gsub("%s+", "-")
+			return text
+		end
+
+		-- Salta al heading del buffer que corresponde al enlace de ancla.
+		-- Empareja por texto del label (exacto) o por slug del heading.
+		-- Registra la posición en el jumplist nativo para volver con <C-o>.
+		local function jump_to_anchor(anchor, label)
+			local target = label and vim.trim(label) or nil
+			local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+			for i, l in ipairs(lines) do
+				local h = l:match("^#+%s+(.+)$")
+				if h then
+					h = vim.trim(h)
+					if (target and h == target) or slugify(h) == anchor then
+						vim.cmd("normal! m'")
+						vim.api.nvim_win_set_cursor(0, { i, 0 })
+						vim.cmd("normal! zz")
+						return true
+					end
+				end
+			end
+			return false
+		end
+
 		local function follow_link()
+			-- 1) Enlace de ancla a un heading del mismo documento (TOC).
+			local label, anchor = cursor_md_anchor()
+			if anchor and jump_to_anchor(anchor, label) then
+				return
+			end
+			-- 2) Wiki-link a otra nota (con historial para <BS>).
 			if cursor_on_wikilink() then
 				table.insert(link_stack, {
 					buf = vim.api.nvim_get_current_buf(),
