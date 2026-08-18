@@ -22,6 +22,7 @@ return {
 		{ "<leader>oT", "<cmd>Obsidian template<cr>", desc = "Obsidian: Insert template" },
 		{ "<leader>ow", "<cmd>Obsidian workspace<cr>", desc = "Obsidian: Switch workspace" },
 		{ "<leader>oW", "<cmd>ObsidianWeekly<cr>", desc = "Obsidian: Weekly note (semana actual)" },
+		{ "<leader>ox", "<cmd>ObsidianExtractHeading<cr>", desc = "Obsidian: Heading actual → nota (con link)" },
 	},
 	dependencies = {
 		"nvim-lua/plenary.nvim",
@@ -59,9 +60,10 @@ return {
 		require("obsidian").setup(opts)
 
 		-- ===== Nota semanal (:ObsidianWeekly / <leader>oW) =====
+		-- ===== Nota semanal (:ObsidianWeekly / <leader>oW) =====
 		-- Crea (o abre) la nota de la semana ISO actual bajo ~/notes/weekly/.
 		-- Nombre de archivo = rango de semana. Título `#` = nombre de la semana.
-		-- Cada día (lunes→domingo) queda como `##` con un checkbox.
+		-- Estructura: Weekly Plan → días (Tasks/Notes) → Weekly Review.
 		local function create_weekly_note()
 			local vault = vim.fn.expand("~/notes")
 			local now = os.time()
@@ -89,13 +91,26 @@ return {
 					"---",
 					"# " .. week_name,
 					"",
+					"## Weekly Plan",
+					"- ",
+					"",
 				}
 				for i, day in ipairs(days) do
 					local d = os.date("%Y-%m-%d", monday + (i - 1) * 86400)
 					table.insert(lines, string.format("## %s · %s", day, d))
+					table.insert(lines, "### Tasks")
 					table.insert(lines, "- [ ] ")
+					table.insert(lines, "### Notes")
 					table.insert(lines, "")
 				end
+				table.insert(lines, "## Weekly Review")
+				table.insert(lines, "### Wins")
+				table.insert(lines, "- ")
+				table.insert(lines, "### Blockers")
+				table.insert(lines, "- ")
+				table.insert(lines, "### Next week")
+				table.insert(lines, "- ")
+				table.insert(lines, "")
 				vim.fn.writefile(lines, path)
 			end
 
@@ -105,6 +120,81 @@ return {
 		vim.api.nvim_create_user_command("ObsidianWeekly", create_weekly_note, {
 			desc = "Obsidian: crear/abrir la nota de la semana actual",
 		})
+
+		-- ===== Extraer heading a nota (:ObsidianExtractHeading / <leader>ox) =====
+		-- Toma el heading bajo el cursor y todo su cuerpo (hasta el próximo
+		-- heading de nivel igual o superior), lo mueve a una nota nueva nombrada
+		-- según el título del heading y reemplaza la sección por un [[link]].
+		local function extract_heading_to_note()
+			local buf = vim.api.nvim_get_current_buf()
+			local vault = vim.fn.expand("~/notes")
+			if not vim.startswith(vim.api.nvim_buf_get_name(buf), vault) then
+				vim.notify("ExtractHeading: el buffer no está en el vault", vim.log.levels.WARN)
+				return
+			end
+			local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+			local cur = vim.api.nvim_win_get_cursor(0)[1] -- 1-based
+
+			-- Buscar hacia arriba el heading que contiene el cursor.
+			local start_idx, level, title
+			for i = cur, 1, -1 do
+				local h = lines[i]:match("^(#+)%s+")
+				if h then
+					start_idx = i
+					level = #h
+					title = lines[i]:gsub("^#+%s+", ""):gsub("%s+$", "")
+					break
+				end
+			end
+			if not start_idx then
+				vim.notify("ExtractHeading: no hay heading bajo el cursor", vim.log.levels.WARN)
+				return
+			end
+
+			-- Fin de la sección: próximo heading de nivel <= level.
+			local end_idx = #lines
+			for i = start_idx + 1, #lines do
+				local h = lines[i]:match("^(#+)%s+")
+				if h and #h <= level then
+					end_idx = i - 1
+					break
+				end
+			end
+
+			-- Cuerpo = líneas tras el heading hasta el fin de sección.
+			local body = {}
+			for i = start_idx + 1, end_idx do
+				table.insert(body, lines[i])
+			end
+
+			-- Nombre de nota a partir del título (mismo estilo que note_id_func).
+			local id = title:gsub(" ", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
+			if id == "" then
+				vim.notify("ExtractHeading: título vacío", vim.log.levels.WARN)
+				return
+			end
+			local path = vault .. "/" .. id .. ".md"
+			if vim.fn.filereadable(path) == 1 then
+				vim.notify("ExtractHeading: ya existe " .. id .. ".md", vim.log.levels.ERROR)
+				return
+			end
+
+			local note = { "# " .. title, "" }
+			for _, l in ipairs(body) do
+				table.insert(note, l)
+			end
+			vim.fn.writefile(note, path)
+
+			-- Reemplazar la sección original por el link (respeta el nivel).
+			local repl = { string.rep("#", level) .. " [[" .. id .. "]]" }
+			vim.api.nvim_buf_set_lines(buf, start_idx - 1, end_idx, false, repl)
+			vim.notify("ExtractHeading: creada " .. id .. ".md", vim.log.levels.INFO)
+		end
+
+		vim.api.nvim_create_user_command("ObsidianExtractHeading", extract_heading_to_note, {
+			desc = "Obsidian: mover el heading actual a una nota nueva y dejar un link",
+		})
+
 
 		-- Historial de saltos por wiki-link: al seguir un [[link]] se apila la
 		-- posición de origen y <BS> vuelve ahí. <BS> NO hace nada si no venís
