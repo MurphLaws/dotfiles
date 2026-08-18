@@ -98,9 +98,7 @@ return {
 				for i, day in ipairs(days) do
 					local d = os.date("%Y-%m-%d", monday + (i - 1) * 86400)
 					table.insert(lines, string.format("## %s · %s", day, d))
-					table.insert(lines, "### Tasks")
-					table.insert(lines, "- [ ] ")
-					table.insert(lines, "### Notes")
+					table.insert(lines, "")
 					table.insert(lines, "")
 				end
 				table.insert(lines, "## Weekly Review")
