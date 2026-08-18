@@ -28,7 +28,7 @@ return {
 		-- `##` y más profundas sí muestran su barra.
 		indent = {
 			enabled = true,
-			icon = "▏",
+			icon = "▎",
 			skip_level = 1,
 			skip_heading = false,
 		},
@@ -66,11 +66,22 @@ return {
 		end
 		enforce_strikethrough()
 
+		-- Guías de sección con el color del heading: render-markdown usa un
+		-- único highlight (RenderMarkdownIndent) para todas las barras, así que
+		-- lo enlazamos al color de `##` (RenderMarkdownH2). Como las notas usan
+		-- `#` (título) + `##` (secciones), cada barra queda del color de su
+		-- heading.
+		local function color_indent()
+			vim.api.nvim_set_hl(0, "RenderMarkdownIndent", { link = "RenderMarkdownH2" })
+		end
+		color_indent()
+
 		vim.api.nvim_create_autocmd("ColorScheme", {
 			group = vim.api.nvim_create_augroup("RenderMarkdownLinkUnderline", { clear = true }),
 			callback = function()
 				underline_links()
 				enforce_strikethrough()
+				color_indent()
 			end,
 		})
 	end,
