@@ -20,9 +20,17 @@ return {
 			sign = false,
 		},
 		bullet = {
-			-- Guion normal `-` como marcador de lista (en vez de •/◦/▪/‣),
-			-- coloreado de rojo vía RenderMarkdownBullet (ver enforce_bullet).
-			icons = { "-", "-", "-", "-" },
+			-- Marcador según el caracter fuente: `-` sigue siendo un guion,
+			-- mientras que `*` se dibuja como `•` para distinguir a simple vista
+			-- las dos clases de lista. Ambos se colorean de rojo vía
+			-- RenderMarkdownBullet (ver enforce_bullet). `+` cae en el guion.
+			icons = function(ctx)
+				local marker = (ctx.value or ""):sub(1, 1)
+				if marker == "*" then
+					return "•"
+				end
+				return "-"
+			end,
 		},
 		-- Guías verticales por sección. Se dibujan en el `statuscolumn` (ver
 		-- illico.util.md_section_bars) en lugar del indent nativo de
