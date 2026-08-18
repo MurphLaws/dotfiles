@@ -60,7 +60,18 @@ return {
 	config = function(_, opts)
 		require("obsidian").setup(opts)
 
-		-- ===== Nota semanal (:ObsidianWeekly / <leader>oW) =====
+		-- Abre una nota respetando 'winfixbuf': si la ventana actual está fija
+		-- (p.ej. el explorador mini.files), abre en un split en vez de fallar
+		-- con E1513. Si no, edita en la ventana actual.
+		local function open_note(path)
+			local esc = vim.fn.fnameescape(path)
+			if vim.wo.winfixbuf then
+				vim.cmd("botright vsplit " .. esc)
+			else
+				vim.cmd.edit(esc)
+			end
+		end
+
 		-- ===== Nota semanal (:ObsidianWeekly / <leader>oW) =====
 		-- Crea (o abre) la nota de la semana ISO actual bajo ~/notes/weekly/.
 		-- Nombre de archivo = rango de semana. Título `#` = nombre de la semana.
@@ -113,7 +124,7 @@ return {
 				vim.fn.writefile(lines, path)
 			end
 
-			vim.cmd.edit(vim.fn.fnameescape(path))
+			open_note(path)
 		end
 
 		vim.api.nvim_create_user_command("ObsidianWeekly", create_weekly_note, {
@@ -131,7 +142,7 @@ return {
 				end
 				title = title:gsub("^%s+", ""):gsub("%s+$", "")
 				local vault = vim.fn.expand("~/notes")
-				local id = title:gsub(" ", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
+				local id = title:gsub("[%s/]+", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
 				local dir = vault .. "/slalom/tickets"
 				vim.fn.mkdir(dir, "p")
 				local path = dir .. "/" .. id .. ".md"
@@ -164,7 +175,7 @@ return {
 					vim.fn.writefile(lines, path)
 				end
 
-				vim.cmd.edit(vim.fn.fnameescape(path))
+				open_note(path)
 			end)
 		end
 
