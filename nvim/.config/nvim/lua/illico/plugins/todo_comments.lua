@@ -1,6 +1,38 @@
 return {
 	"folke/todo-comments.nvim",
 	dependencies = { "nvim-lua/plenary.nvim" },
+	-- lazy=false para que el resaltado de TODO/FIXIT/... esté activo desde el
+	-- arranque en cualquier buffer (incl. markdown), no solo al pulsar una key.
+	lazy = false,
+	keys = {
+		-- Picker de todos en todo el vault de notas, sin importar el cwd.
+		{
+			"<leader>st",
+			"<cmd>TodoTelescope cwd=~/notes<cr>",
+			desc = "Todos: buscar en el vault (~/notes)",
+		},
+		-- Picker de todos en el proyecto/cwd actual (código, etc.).
+		{
+			"<leader>sT",
+			"<cmd>TodoTelescope<cr>",
+			desc = "Todos: buscar en el proyecto (cwd)",
+		},
+		-- Saltar al siguiente / anterior comentario TODO en el buffer.
+		{
+			"]t",
+			function()
+				require("todo-comments").jump_next()
+			end,
+			desc = "Todos: siguiente",
+		},
+		{
+			"[t",
+			function()
+				require("todo-comments").jump_prev()
+			end,
+			desc = "Todos: anterior",
+		},
+	},
 	opts = {
 		keywords = {
 			TODO = {
