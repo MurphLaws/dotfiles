@@ -69,6 +69,14 @@ return {
 		end
 		enforce_strikethrough()
 
+		-- Color atenuado para headings vacíos (sin contenido antes del
+		-- siguiente heading de igual o mayor jerarquía). Se aplica al icono y
+		-- al texto del heading mediante el parche de heading de más abajo.
+		local function enforce_dim()
+			vim.api.nvim_set_hl(0, "RenderMarkdownDim", { link = "Comment", default = false })
+		end
+		enforce_dim()
+
 		-- Barra de sección con el color de cada heading. render-markdown dibuja
 		-- las guías por sección y de forma apilada: cada sección aporta solo su
 		-- `level_change` (normalmente 1 barra) mediante marcas inline en la
@@ -113,24 +121,89 @@ return {
 			end
 		end
 
+		-- Atenuar headings vacíos. render-markdown colorea el icono del heading
+		-- con `self.data.fg` y el TÍTULO lo colorea treesitter
+		-- (@markup.heading.N). Para atenuar ambos envolvemos el render de
+		-- heading: si la sección no tiene contenido (solo líneas en blanco antes
+		-- del siguiente heading de nivel <= al actual, o EOF) usamos el color
+		-- atenuado en el icono y añadimos una marca de mayor prioridad sobre el
+		-- texto. Un heading seguido por uno más profundo (nivel mayor) SÍ tiene
+		-- estructura, así que no se atenúa.
+		local ok_head, Heading = pcall(require, "render-markdown.render.markdown.heading")
+		if ok_head and Heading.setup and Heading.run then
+			local function heading_is_empty(node, level)
+				local buf = node.buf
+				local lines = vim.api.nvim_buf_get_lines(buf, node.start_row + 1, -1, false)
+				for _, line in ipairs(lines) do
+					local s = line:match("^%s*(.-)%s*$")
+					if s == "" then
+						-- línea en blanco: seguir buscando
+					elseif s:match("^```") or s:match("^~~~") then
+						return false -- bloque de código = contenido
+					else
+						local hashes = s:match("^(#+)%s")
+						if hashes then
+							-- otro heading: vacío solo si es de igual o mayor
+							-- jerarquía (nivel <=); uno más profundo es contenido.
+							return #hashes <= level
+						end
+						return false -- texto plano = contenido
+					end
+				end
+				return true -- EOF sin contenido
+			end
+
+			local orig_setup = Heading.setup
+			function Heading:setup(...)
+				local ok = orig_setup(self, ...)
+				self._dim = false
+				if ok and self.data and self.data.atx then
+					if heading_is_empty(self.node, self.data.level) then
+						self._dim = true
+						self.data.fg = "RenderMarkdownDim"
+					end
+				end
+				return ok
+			end
+
+			local orig_run = Heading.run
+			function Heading:run(...)
+				orig_run(self, ...)
+				if self._dim then
+					local inline = self.node:child("inline")
+					if inline then
+						self.marks:add(self.config, "head_icon", inline.start_row, inline.start_col, {
+							end_row = inline.end_row,
+							end_col = inline.end_col,
+							hl_group = "RenderMarkdownDim",
+							priority = 5000,
+						})
+					end
+				end
+			end
+		end
+
 		vim.api.nvim_create_autocmd("ColorScheme", {
 			group = vim.api.nvim_create_augroup("RenderMarkdownLinkUnderline", { clear = true }),
 			callback = function()
 				underline_links()
 				enforce_strikethrough()
+				enforce_dim()
 			end,
 		})
 
-		-- render-markdown pinta la barra de sección como virt_text inline solo
-		-- en la fila real de cada línea; en las filas de wrap visual no hay
-		-- barra, así que un párrafo largo "corta" la guía vertical. Con `nowrap`
-		-- cada línea ocupa una sola fila y la barra queda continua. El texto
-		-- largo se navega con scroll horizontal.
+		-- render-markdown pinta la barra de sección como virt_text inline en la
+		-- fila real de cada línea. Con `wrap` + `breakindent` (nvim >= 0.10 tiene
+		-- en cuenta el virt_text inline) las líneas envueltas se indentan y
+		-- arrancan DESPUÉS de la barra, sin cruzarla ni pisar el contenido.
+		-- `linebreak` corta en límites de palabra.
 		vim.api.nvim_create_autocmd("FileType", {
-			group = vim.api.nvim_create_augroup("RenderMarkdownNoWrap", { clear = true }),
+			group = vim.api.nvim_create_augroup("RenderMarkdownWrap", { clear = true }),
 			pattern = "markdown",
 			callback = function()
-				vim.opt_local.wrap = false
+				vim.opt_local.wrap = true
+				vim.opt_local.breakindent = true
+				vim.opt_local.linebreak = true
 			end,
 		})
 	end,
