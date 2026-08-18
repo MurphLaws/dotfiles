@@ -33,21 +33,25 @@ function M.compute(buf)
 		return
 	end
 	local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-	local bars = {}
-	local max = 0
-	local stack = {} -- niveles de heading abiertos
+	local n = #lines
+
+	-- 1. Localiza headings (respetando frontmatter y bloques de código) y marca
+	--    qué líneas tienen contenido (no en blanco).
+	local headings = {} -- { { line = i, level = L }, ... }
+	local nonblank = {}
 	local in_fence = false
 	local in_frontmatter = false
-
 	for i, line in ipairs(lines) do
 		local s = line:gsub("^%s+", "")
+		nonblank[i] = s ~= ""
 
-		-- Frontmatter YAML delimitado por `---` en la primera línea.
 		if i == 1 and s == "---" then
 			in_frontmatter = true
-		elseif in_frontmatter and s == "---" then
-			in_frontmatter = false
-			bars[i] = {}
+			goto continue
+		elseif in_frontmatter then
+			if s == "---" then
+				in_frontmatter = false
+			end
 			goto continue
 		end
 
@@ -55,41 +59,58 @@ function M.compute(buf)
 		if is_fence then
 			in_fence = not in_fence
 		end
-
-		local level
-		if not in_frontmatter and not in_fence and not is_fence then
+		if not in_fence and not is_fence then
 			local hashes = s:match("^(#+)%s")
 			if hashes then
-				level = #hashes
+				headings[#headings + 1] = { line = i, level = #hashes }
 			end
 		end
-
-		if level then
-			-- cerrar secciones de nivel igual o más profundo
-			while #stack > 0 and stack[#stack] >= level do
-				table.remove(stack)
-			end
-			-- la propia línea del heading incluye SU barra (además de las de los
-			-- ancestros): empujamos su nivel antes de registrar las barras.
-			table.insert(stack, level)
-			local list = {}
-			for _, l in ipairs(stack) do
-				list[#list + 1] = "RenderMarkdownH" .. math.min(l, 6)
-			end
-			bars[i] = list
-		else
-			local list = {}
-			for _, l in ipairs(stack) do
-				list[#list + 1] = "RenderMarkdownH" .. math.min(l, 6)
-			end
-			bars[i] = list
-		end
-
-		if #bars[i] > max then
-			max = #bars[i]
-		end
-
 		::continue::
+	end
+
+	-- 2. Cada sección abarca desde su heading hasta su ÚLTIMA línea con
+	--    contenido (antes de que la cierre un heading de nivel <=). Las líneas
+	--    en blanco finales quedan fuera → así la barra de un nivel se "rompe"
+	--    entre secciones hermanas, pero cubre la línea de su propio heading.
+	--    El heading de nivel más alto (título) abarca todo → columna continua.
+	local sections = {}
+	for idx, hd in ipairs(headings) do
+		local boundary = n + 1
+		for j = idx + 1, #headings do
+			if headings[j].level <= hd.level then
+				boundary = headings[j].line
+				break
+			end
+		end
+		local stop = hd.line
+		for i = hd.line, boundary - 1 do
+			if nonblank[i] then
+				stop = i
+			end
+		end
+		sections[#sections + 1] = { start = hd.line, stop = stop, level = hd.level }
+	end
+
+	-- 3. Barras por línea: una por cada sección que la contiene, ordenadas por
+	--    nivel ascendente (externa = nivel más alto/ancestro).
+	local bars = {}
+	local max = 0
+	for i = 1, n do
+		local levels = {}
+		for _, sec in ipairs(sections) do
+			if i >= sec.start and i <= sec.stop then
+				levels[#levels + 1] = sec.level
+			end
+		end
+		table.sort(levels)
+		local list = {}
+		for _, l in ipairs(levels) do
+			list[#list + 1] = "RenderMarkdownH" .. math.min(l, 6)
+		end
+		bars[i] = list
+		if #list > max then
+			max = #list
+		end
 	end
 
 	M.cache[buf] = { bars = bars, max = max }
