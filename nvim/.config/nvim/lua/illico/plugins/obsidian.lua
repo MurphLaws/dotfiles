@@ -132,7 +132,7 @@ return {
 				title = title:gsub("^%s+", ""):gsub("%s+$", "")
 				local vault = vim.fn.expand("~/notes")
 				local id = title:gsub(" ", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
-				local dir = vault .. "/slalom"
+				local dir = vault .. "/slalom/tickets"
 				vim.fn.mkdir(dir, "p")
 				local path = dir .. "/" .. id .. ".md"
 
