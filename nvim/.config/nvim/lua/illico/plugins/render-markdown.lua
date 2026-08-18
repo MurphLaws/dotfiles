@@ -22,6 +22,16 @@ return {
 		bullet = {
 			icons = { "·", "◦", "▪", "‣" },
 		},
+		-- Guías verticales tipo "hilo de Reddit": indenta el contenido según
+		-- el nivel del heading y dibuja una línea a la izquierda que cubre toda
+		-- la sección. skip_level=1 → el título `#` no indenta; las secciones
+		-- `##` y más profundas sí muestran su barra.
+		indent = {
+			enabled = true,
+			icon = "▏",
+			skip_level = 1,
+			skip_heading = false,
+		},
 		link = {
 			wiki = { icon = "" },
 			hyperlink = "",
