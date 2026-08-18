@@ -10,7 +10,7 @@ return {
 	keys = {
 		{ "<leader>on", "<cmd>Obsidian new<cr>", desc = "Obsidian: New note" },
 		{ "<leader>oo", "<cmd>Obsidian open<cr>", desc = "Obsidian: Open in app" },
-		{ "<leader>os", "<cmd>Obsidian search<cr>", desc = "Obsidian: Search notes" },
+		{ "<leader>o/", "<cmd>Obsidian search<cr>", desc = "Obsidian: Search notes" },
 		{ "<leader>oq", "<cmd>Obsidian quick_switch<cr>", desc = "Obsidian: Quick switch" },
 		{ "<leader>ot", "<cmd>Obsidian today<cr>", desc = "Obsidian: Today's daily note" },
 		{ "<leader>ob", "<cmd>Obsidian backlinks<cr>", desc = "Obsidian: Backlinks" },
@@ -21,8 +21,8 @@ return {
 		{ "<leader>oc", "<cmd>Obsidian toggle_checkbox<cr>", desc = "Obsidian: Toggle checkbox" },
 		{ "<leader>oT", "<cmd>Obsidian template<cr>", desc = "Obsidian: Insert template" },
 		{ "<leader>ow", "<cmd>Obsidian workspace<cr>", desc = "Obsidian: Switch workspace" },
-		{ "<leader>oW", "<cmd>ObsidianWeekly<cr>", desc = "Obsidian: Weekly note (semana actual)" },
-		{ "<leader>ok", "<cmd>ObsidianTicket<cr>", desc = "Obsidian: Ticket (slalom)" },
+		{ "<leader>osw", "<cmd>ObsidianWeekly<cr>", desc = "Slalom: Weekly note (semana actual)" },
+		{ "<leader>ost", "<cmd>ObsidianTicket<cr>", desc = "Slalom: Ticket" },
 		{ "<leader>ox", "<cmd>ObsidianExtractHeading<cr>", desc = "Obsidian: Heading actual → nota (con link)" },
 	},
 	dependencies = {
