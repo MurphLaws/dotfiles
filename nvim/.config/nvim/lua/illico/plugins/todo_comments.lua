@@ -60,6 +60,11 @@ return {
 				color = "optim",
 				alt = { "optimize", "optimizable", "perf", "performance" },
 			},
+			POINTER = {
+				icon = " ", -- flecha sólida
+				color = "pointer",
+				alt = { "pointer", "ptr" },
+			},
 		},
 		colors = {
 			error = { "DiagnosticError", "ErrorMsg", "#DC2626" }, -- red
@@ -68,6 +73,7 @@ return {
 			hint = { "DiagnosticHint", "#10B981" }, -- green
 			default = { "Identifier", "#7C3AED" }, -- purple
 			optim = { "#F97316" }, -- orange
+			pointer = { "#FF7A00" }, -- bright orange
 		},
 		highlight = {
 			before = "", -- "fg" or "bg" or empty
