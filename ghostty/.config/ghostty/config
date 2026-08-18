@@ -1,5 +1,7 @@
 # Font Configuration
 font-family = JetBrainsMono Nerd Font Mono
+# Fallback para el glyph del logo Slalom (U+F8000). Ver fonts/slalom/.
+font-family = SlalomSymbols
 font-style = Bold
 font-style-bold = ExtraBold
 
