@@ -23,6 +23,7 @@ return {
 		{ "<leader>ow", "<cmd>Obsidian workspace<cr>", desc = "Obsidian: Switch workspace" },
 		{ "<leader>osw", "<cmd>ObsidianWeekly<cr>", desc = "Slalom: Weekly note (semana actual)" },
 		{ "<leader>ost", "<cmd>ObsidianTicket<cr>", desc = "Slalom: Ticket" },
+		{ "<leader>oss", "<cmd>ObsidianSetStatus<cr>", desc = "Slalom: Set status (picker)" },
 		{ "<leader>ox", "<cmd>ObsidianExtractHeading<cr>", desc = "Obsidian: Heading actual → nota (con link)" },
 	},
 	dependencies = {
@@ -131,56 +132,152 @@ return {
 			desc = "Obsidian: crear/abrir la nota de la semana actual",
 		})
 
-		-- ===== Ticket (:ObsidianTicket / <leader>ok) =====
-		-- Crea una nota de ticket/tema bajo ~/notes/slalom/ con un esquema
-		-- fijo: Main point, Notes, Additional things to investigate, Next
-		-- steps, Output; y frontmatter con jira/owner/status. Pide el título.
+		-- ===== Ticket (:ObsidianTicket / <leader>ost) =====
+		-- Crea una nota de ticket/tema bajo ~/notes/slalom/tickets con un
+		-- esquema fijo: Main point, Notes, Additional things to investigate,
+		-- Next steps, Output. Los campos repetidos del frontmatter se eligen con
+		-- pickers (vim.ui.select) para no re-teclearlos: status y tags. `jira`
+		-- se pide como texto (es único por ticket) y es opcional.
+		local TICKET_STATUSES = { "open", "in progress", "blocked", "in review", "done" }
+		local TICKET_TAGS = { "slalom", "ticket", "meeting", "eda", "research", "spike", "bug" }
+
+		-- Multi-select sencillo sobre vim.ui.select: se van eligiendo tags hasta
+		-- seleccionar "✓ done". `preseed` marca tags ya incluidos por defecto.
+		local function pick_tags(preseed, cb)
+			local selected = {}
+			for _, t in ipairs(preseed or {}) do
+				selected[#selected + 1] = t
+			end
+			local function remaining()
+				local pool = {}
+				for _, t in ipairs(TICKET_TAGS) do
+					if not vim.tbl_contains(selected, t) then
+						pool[#pool + 1] = t
+					end
+				end
+				return pool
+			end
+			local function step()
+				local pool = remaining()
+				local choices = { "✓ done (" .. table.concat(selected, ", ") .. ")" }
+				for _, t in ipairs(pool) do
+					choices[#choices + 1] = t
+				end
+				vim.ui.select(choices, { prompt = "Tags:" }, function(choice)
+					if not choice or choice:match("^✓ done") then
+						cb(selected)
+						return
+					end
+					selected[#selected + 1] = choice
+					step()
+				end)
+			end
+			step()
+		end
+
 		local function create_ticket_note()
 			vim.ui.input({ prompt = "Ticket · título: " }, function(title)
 				if not title or title:gsub("%s+", "") == "" then
 					return
 				end
 				title = title:gsub("^%s+", ""):gsub("%s+$", "")
-				local vault = vim.fn.expand("~/notes")
-				local id = title:gsub("[%s/]+", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
-				local dir = vault .. "/slalom/tickets"
-				vim.fn.mkdir(dir, "p")
-				local path = dir .. "/" .. id .. ".md"
 
-				if vim.fn.filereadable(path) == 0 then
-					local lines = {
-						"---",
-						"type: ticket",
-						"jira: ",
-						"owner: Nicolas",
-						"status: open",
-						"tags: [slalom, ticket]",
-						"---",
-						"# " .. title,
-						"",
-						"## Main point",
-						"",
-						"## Notes",
-						"",
-						"## Additional things to investigate",
-						"- ",
-						"",
-						"## Next steps",
-						"- ",
-						"",
-						"## Output",
-						"- ",
-						"",
-					}
-					vim.fn.writefile(lines, path)
-				end
+				vim.ui.select(TICKET_STATUSES, { prompt = "Status:" }, function(status)
+					status = status or "open"
 
-				open_note(path)
+					pick_tags({ "slalom", "ticket" }, function(tags)
+						vim.ui.input({ prompt = "Jira (opcional): " }, function(jira)
+							jira = (jira or ""):gsub("^%s+", ""):gsub("%s+$", "")
+
+							local vault = vim.fn.expand("~/notes")
+							local id = title:gsub("[%s/]+", "-"):gsub("[^A-Za-z0-9á-úÁ-Úñ%-_]", ""):lower()
+							local dir = vault .. "/slalom/tickets"
+							vim.fn.mkdir(dir, "p")
+							local path = dir .. "/" .. id .. ".md"
+
+							if vim.fn.filereadable(path) == 0 then
+								local lines = {
+									"---",
+									"type: ticket",
+									"jira: " .. jira,
+									"owner: Nicolas",
+									"status: " .. status,
+									"tags: [" .. table.concat(tags, ", ") .. "]",
+									"---",
+									"# " .. title,
+									"",
+									"## Main point",
+									"",
+									"## Notes",
+									"",
+									"## Additional things to investigate",
+									"- ",
+									"",
+									"## Next steps",
+									"- ",
+									"",
+									"## Output",
+									"- ",
+									"",
+								}
+								vim.fn.writefile(lines, path)
+							end
+
+							open_note(path)
+						end)
+					end)
+				end)
 			end)
 		end
 
 		vim.api.nvim_create_user_command("ObsidianTicket", create_ticket_note, {
 			desc = "Obsidian: crear/abrir un ticket (slalom)",
+		})
+
+		-- ===== Cambiar status (:ObsidianSetStatus / <leader>oss) =====
+		-- Elige un status con picker y actualiza (o inserta) la línea
+		-- `status:` del frontmatter de la nota actual.
+		local function set_status()
+			vim.ui.select(TICKET_STATUSES, { prompt = "Status:" }, function(status)
+				if not status then
+					return
+				end
+				local buf = vim.api.nvim_get_current_buf()
+				local total = vim.api.nvim_buf_line_count(buf)
+				local first = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ""
+				if first ~= "---" then
+					vim.notify("La nota no tiene frontmatter YAML (--- al inicio)", vim.log.levels.WARN)
+					return
+				end
+				-- Busca el cierre del frontmatter y la línea status dentro de él.
+				local status_line, fm_end
+				for i = 1, total do
+					local l = vim.api.nvim_buf_get_lines(buf, i, i + 1, false)[1]
+					if l == nil then
+						break
+					end
+					if i > 0 and l == "---" then
+						fm_end = i
+						break
+					end
+					if l:match("^status:%s") then
+						status_line = i
+					end
+				end
+				if status_line then
+					vim.api.nvim_buf_set_lines(buf, status_line, status_line + 1, false, { "status: " .. status })
+				elseif fm_end then
+					vim.api.nvim_buf_set_lines(buf, fm_end, fm_end, false, { "status: " .. status })
+				else
+					vim.notify("Frontmatter sin cierre (---)", vim.log.levels.WARN)
+					return
+				end
+				vim.notify("status: " .. status)
+			end)
+		end
+
+		vim.api.nvim_create_user_command("ObsidianSetStatus", set_status, {
+			desc = "Obsidian: cambiar el status del frontmatter (picker)",
 		})
 
 
