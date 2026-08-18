@@ -112,6 +112,7 @@ return {
 				local o = { buffer = ev.buf }
 				o.desc = "Obsidian: follow link (con historial)"
 				vim.keymap.set("n", "gf", follow_link, o)
+				vim.keymap.set("n", "<CR>", follow_link, o)
 				vim.keymap.set("n", "<leader>of", follow_link, o)
 				o.desc = "Obsidian: volver del último link seguido"
 				vim.keymap.set("n", "<BS>", jump_back, o)
