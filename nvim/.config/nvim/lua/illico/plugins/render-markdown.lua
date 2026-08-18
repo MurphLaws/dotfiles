@@ -22,14 +22,15 @@ return {
 		bullet = {
 			icons = { "·", "◦", "▪", "‣" },
 		},
-		-- Guías verticales tipo "hilo de Reddit": indenta el contenido según
-		-- el nivel del heading y dibuja una línea a la izquierda que cubre toda
-		-- la sección. skip_level=1 → el título `#` no indenta; las secciones
-		-- `##` y más profundas sí muestran su barra.
+		-- Guías verticales por sección, una barra por cada heading coloreada
+		-- según su nivel (título `#` = color H1, `##` = H2, ...). skip_level=0
+		-- para que el título también muestre su barra. El color por nivel se
+		-- logra parcheando el módulo indent más abajo (render-markdown usa un
+		-- único highlight de forma nativa).
 		indent = {
 			enabled = true,
 			icon = "▎",
-			skip_level = 1,
+			skip_level = 0,
 			skip_heading = false,
 		},
 		link = {
@@ -66,22 +67,43 @@ return {
 		end
 		enforce_strikethrough()
 
-		-- Guías de sección con el color del heading: render-markdown usa un
-		-- único highlight (RenderMarkdownIndent) para todas las barras, así que
-		-- lo enlazamos al color de `##` (RenderMarkdownH2). Como las notas usan
-		-- `#` (título) + `##` (secciones), cada barra queda del color de su
-		-- heading.
-		local function color_indent()
-			vim.api.nvim_set_hl(0, "RenderMarkdownIndent", { link = "RenderMarkdownH2" })
+		-- Barra de sección con el color de cada heading: render-markdown dibuja
+		-- todas las guías de indentación con un único highlight. Parcheamos
+		-- `Indent:line` para que la columna i (nivel de anidamiento i) use el
+		-- color del heading de nivel i (RenderMarkdownH1..H6). Con skip_level=0
+		-- la columna 1 = H1 (título) → barra roja; columna 2 = H2 → morada; etc.
+		local ok_indent, Indent = pcall(require, "render-markdown.lib.indent")
+		local ok_str, str = pcall(require, "render-markdown.lib.str")
+		if ok_indent and ok_str and Indent.line then
+			function Indent:line(virtual, level)
+				if virtual then
+					level = self:level(level)
+				else
+					assert(level, "level must be known for non-virtual lines")
+				end
+				local line = self.context.config:line()
+				if level > 0 then
+					local icon = self.config.icon
+					local icon_width = str.width(icon)
+					if icon_width == 0 then
+						line:pad(self.config.per_level * level)
+					else
+						for i = 1, level do
+							local hl_level = math.min(i + self.config.skip_level, 6)
+							line:text(icon, "RenderMarkdownH" .. hl_level)
+							line:pad(self.config.per_level - icon_width)
+						end
+					end
+				end
+				return line
+			end
 		end
-		color_indent()
 
 		vim.api.nvim_create_autocmd("ColorScheme", {
 			group = vim.api.nvim_create_augroup("RenderMarkdownLinkUnderline", { clear = true }),
 			callback = function()
 				underline_links()
 				enforce_strikethrough()
-				color_indent()
 			end,
 		})
 	end,
