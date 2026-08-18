@@ -61,7 +61,7 @@ return {
 				alt = { "optimize", "optimizable", "perf", "performance" },
 			},
 			POINTER = {
-				icon = " ", -- flecha sólida
+				icon = "➜ ", -- flecha punchy
 				color = "pointer",
 				alt = { "pointer", "ptr" },
 			},
