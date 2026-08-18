@@ -43,21 +43,27 @@ end
 
 function source:complete(params, callback)
 	local before = params.context.cursor_before_line
-	-- Nombre del campo al inicio de la línea: `status:`, `tags:`, ...
+	-- Nombre del campo al inicio de la línea: `status:`, `jira:`, `tags:`, ...
 	local key = before:match("^(%w[%w_%-]*):")
-	local values = key and fm.fields[key]
-	if not values then
+	if not key then
+		callback({ items = {}, isIncomplete = false })
+		return
+	end
+	local values = fm.values(key)
+	if #values == 0 then
 		callback({ items = {}, isIncomplete = false })
 		return
 	end
 
 	local cmp = require("cmp")
 	local items = {}
-	for _, v in ipairs(values) do
+	for _, entry in ipairs(values) do
 		items[#items + 1] = {
-			label = v,
-			insertText = v,
+			label = entry.value,
+			insertText = entry.value,
 			kind = cmp.lsp.CompletionItemKind.EnumMember,
+			-- Marca de dónde viene el valor en el menú del autocompletado.
+			labelDetails = { description = entry.dynamic and "vault" or "preset" },
 		}
 	end
 	callback({ items = items, isIncomplete = false })
