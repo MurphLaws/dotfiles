@@ -10,6 +10,9 @@ return {
 			-- aparezca ningún resaltado hasta escribir las DOS letras.
 			leap.opts.preview = false
 
+			-- Ignorar mayúsculas/minúsculas al buscar (así "AB" salta a "ab").
+			leap.opts.case_sensitive = false
+
 			-- Búsqueda bidireccional en TODA la ventana actual (adelante y atrás
 			-- a la vez), no solo hacia un lado.
 			local function leap_window()
