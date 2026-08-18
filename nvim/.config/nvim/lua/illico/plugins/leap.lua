@@ -5,6 +5,11 @@ return {
 		config = function()
 			local leap = require("leap")
 
+			-- Leap necesita 2 caracteres para saltar. Por defecto muestra un
+			-- "preview" (fase 1) ya con la 1ª letra; lo desactivamos para que no
+			-- aparezca ningún resaltado hasta escribir las DOS letras.
+			leap.opts.preview = false
+
 			-- Búsqueda bidireccional en TODA la ventana actual (adelante y atrás
 			-- a la vez), no solo hacia un lado.
 			local function leap_window()
@@ -38,6 +43,15 @@ return {
 				vim.api.nvim_set_hl(0, "LeapBackdrop", { link = "Comment", default = false })
 			end
 
+			-- Matches y etiquetas de salto en rosa (destacan sobre el backdrop).
+			local PINK = "#ff6ac1"
+			local function set_leap_hl()
+				-- Match: rosa sobre el texto (sin fondo, para no tapar).
+				vim.api.nvim_set_hl(0, "LeapMatch", { fg = PINK, bold = true, nocombine = true })
+				-- Label: la letra de salto, invertida en rosa para máxima lectura.
+				vim.api.nvim_set_hl(0, "LeapLabel", { fg = "#1e222a", bg = PINK, bold = true, nocombine = true })
+			end
+
 			local function backdrop_on()
 				for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 					local cfg = vim.api.nvim_win_get_config(win)
@@ -69,9 +83,16 @@ return {
 			end
 
 			set_backdrop_hl()
+			set_leap_hl()
 
 			local grp = vim.api.nvim_create_augroup("illico_leap_backdrop", { clear = true })
-			vim.api.nvim_create_autocmd("ColorScheme", { group = grp, callback = set_backdrop_hl })
+			vim.api.nvim_create_autocmd("ColorScheme", {
+				group = grp,
+				callback = function()
+					set_backdrop_hl()
+					set_leap_hl()
+				end,
+			})
 			vim.api.nvim_create_autocmd("User", { pattern = "LeapEnter", group = grp, callback = backdrop_on })
 			vim.api.nvim_create_autocmd("User", { pattern = "LeapLeave", group = grp, callback = backdrop_off })
 		end,
