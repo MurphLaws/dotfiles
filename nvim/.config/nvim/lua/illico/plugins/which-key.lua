@@ -37,7 +37,7 @@ return {
 			{ "<leader>G", group = "Godot" },
 			{ "<leader>l", group = "LSP" },
 			{ "<leader>o", group = "Obsidian" },
-			{ "<leader>os", group = "Slalom", icon = { icon = "", color = "blue" } },
+			{ "<leader>os", group = "Slalom", icon = { icon = "", color = "blue" } },
 			{ "<leader>O", group = "Org" },
 			{ "<leader>s", group = "Search" },
 			{ "<leader>t", group = "Toggle" },
