@@ -80,6 +80,16 @@ return {
 				vim.api.nvim_set_hl(0, "@neorg.headings." .. i .. ".prefix", { fg = color, bold = true })
 			end
 
+			-- Markdown headings: paleta propia (frío -> cálido) distinta al ciclo
+			-- rojo/morado por defecto de onedark. Cubre las variantes de
+			-- treesitter y, por herencia, RenderMarkdownH1..H6.
+			local md_heading_palette = { p.mauve, p.blue, p.sky, p.green, p.amber, p.peach }
+			for i, color in ipairs(md_heading_palette) do
+				for _, suffix in ipairs({ "", ".markdown" }) do
+					vim.api.nvim_set_hl(0, "@markup.heading." .. i .. suffix, { fg = color, bold = true })
+				end
+			end
+
 			-- Expose accents to other plugins (lualine, mini.icons, incline, etc).
 			-- Global names kept for back-compat; values are onedark darker.
 			_G.superset_palette = p
