@@ -71,7 +71,7 @@ return {
 				alt = { "pointer", "ptr" },
 			},
 			QUESTION = {
-				icon = " ", -- question mark
+				icon = " ", -- question mark
 				color = "question",
 				alt = { "question", "ask", "q" },
 			},
