@@ -42,22 +42,22 @@ return {
 		keywords = {
 			TODO = {
 				icon = " ", -- clipboard/plan
-				color = "info",
+				color = "todo",
 				alt = { "todo" },
 			},
 			DONE = {
 				icon = " ", -- checkmark
-				color = "hint",
+				color = "done",
 				alt = { "done", "completed" },
 			},
 			FIXIT = {
 				icon = " ", -- wrench
-				color = "warning",
+				color = "fix",
 				alt = { "fix", "fixme" },
 			},
 			BUGGED = {
 				icon = " ", -- bug
-				color = "error",
+				color = "bug",
 				alt = { "bug", "issue" },
 			},
 			OPTIM = {
@@ -67,7 +67,7 @@ return {
 			},
 			POINTER = {
 				icon = "➜ ", -- flecha punchy
-				color = "default",
+				color = "pointer",
 				alt = { "pointer", "ptr" },
 			},
 			QUESTION = {
@@ -76,14 +76,16 @@ return {
 				alt = { "question", "ask", "q" },
 			},
 		},
+		-- Paleta propia, distinta a la del markdown (rojo H1, morado H2,
+		-- cian enlaces, verde frontmatter) para que los keywords resalten.
 		colors = {
-			error = { "DiagnosticError", "ErrorMsg", "#DC2626" }, -- red
-			warning = { "DiagnosticWarn", "WarningMsg", "#FBBF24" }, -- yellow
-			info = { "DiagnosticInfo", "#2563EB" }, -- blue
-			hint = { "DiagnosticHint", "#10B981" }, -- green
-			default = { "Identifier", "#7C3AED" }, -- purple
-			optim = { "#F97316" }, -- orange
-			question = { "#06B6D4" }, -- cyan
+			todo = { "#3B82F6" }, -- blue
+			done = { "#9CA3AF" }, -- gray
+			fix = { "#F59E0B" }, -- amber
+			bug = { "#E11D8F" }, -- magenta
+			optim = { "#FB923C" }, -- orange
+			pointer = { "#FACC15" }, -- gold / yellow
+			question = { "#F472B6" }, -- pink
 		},
 		highlight = {
 			before = "", -- "fg" or "bg" or empty
