@@ -33,6 +33,42 @@ alias neorg="nvim ~/notes/index.norg"
 alias cop="copilot --allow-all-tools"
 alias copauto="copilot --autopilot --allow-all-tools"
 
+# Sync ~/notes: commit all .md and image files with a timestamp, block
+# anything else from being staged, then push.
+ns() {
+  local notes_dir="$HOME/notes"
+  local allowed_pattern='\.(md|png|jpg|jpeg|gif|svg|webp|bmp|tiff?|heic)$'
+
+  cd "$notes_dir" || { echo "❌  ~/notes not found"; return 1 }
+
+  # Detect files that would be staged but aren't md/image.
+  local dirty
+  dirty=$(git status --porcelain | awk '{print $2}' \
+    | grep -viE "$allowed_pattern" \
+    | grep -v '^\s*$')
+
+  if [[ -n "$dirty" ]]; then
+    echo "⚠️  Blocked — only .md and image files are allowed:"
+    echo "$dirty"
+    cd - > /dev/null
+    return 1
+  fi
+
+  # Stage allowed files only (excludes everything else via .gitignore allowlist).
+  git add -A
+
+  # Nothing to commit?
+  if git diff --cached --quiet; then
+    echo "✅  Notes already up to date — nothing to commit."
+    cd - > /dev/null
+    return 0
+  fi
+
+  local msg="notes: sync $(date '+%Y-%m-%d %H:%M')"
+  git commit -m "$msg" && git push && echo "✅  $msg"
+  cd - > /dev/null
+}
+
 # Load Powerlevel10k config
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
