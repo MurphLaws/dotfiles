@@ -26,6 +26,13 @@ alias nvimconfig="cd ~/.config/nvim/lua/illico/ && nvim ."
 alias gamedev="godot && cd ~/3dproto/ && nvim ."
 alias neorg="nvim ~/notes/index.norg"
 
+# Copilot CLI: autopilot with every tool/command auto-approved so it never
+# stalls on "could not request permission" prompts. These flags only affect
+# TOOL approvals — clarifying questions and user input still reach you.
+# Swap --allow-all-tools for --yolo to also auto-allow all paths and URLs.
+alias cop="copilot --allow-all-tools"
+alias copauto="copilot --autopilot --allow-all-tools"
+
 # Load Powerlevel10k config
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
