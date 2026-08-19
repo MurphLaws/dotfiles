@@ -67,7 +67,7 @@ return {
 			},
 			POINTER = {
 				icon = "➜ ", -- flecha punchy
-				color = "pointer",
+				color = "default",
 				alt = { "pointer", "ptr" },
 			},
 			QUESTION = {
@@ -83,7 +83,6 @@ return {
 			hint = { "DiagnosticHint", "#10B981" }, -- green
 			default = { "Identifier", "#7C3AED" }, -- purple
 			optim = { "#F97316" }, -- orange
-			pointer = { "#FF7A00" }, -- bright orange
 			question = { "#06B6D4" }, -- cyan
 		},
 		highlight = {
