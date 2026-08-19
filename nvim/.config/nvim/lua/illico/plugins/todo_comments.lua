@@ -70,6 +70,11 @@ return {
 				color = "pointer",
 				alt = { "pointer", "ptr" },
 			},
+			QUESTION = {
+				icon = " ", -- question mark
+				color = "question",
+				alt = { "question", "ask", "q" },
+			},
 		},
 		colors = {
 			error = { "DiagnosticError", "ErrorMsg", "#DC2626" }, -- red
@@ -79,6 +84,7 @@ return {
 			default = { "Identifier", "#7C3AED" }, -- purple
 			optim = { "#F97316" }, -- orange
 			pointer = { "#FF7A00" }, -- bright orange
+			question = { "#06B6D4" }, -- cyan
 		},
 		highlight = {
 			before = "", -- "fg" or "bg" or empty
