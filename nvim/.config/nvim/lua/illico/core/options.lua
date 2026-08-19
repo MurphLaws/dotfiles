@@ -23,7 +23,7 @@ vim.opt.confirm = true
 
 vim.opt.nu = true
 vim.opt.relativenumber = true
-vim.opt.signcolumn = "yes"
+vim.opt.signcolumn = "yes:2"
 vim.opt.termguicolors = true
 
 vim.opt.swapfile = false

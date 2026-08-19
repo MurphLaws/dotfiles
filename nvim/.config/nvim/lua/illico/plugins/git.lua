@@ -15,6 +15,7 @@ return {
         untracked    = { text = "┆" },
       },
       signcolumn = true,
+      sign_priority = 6, -- left of todo-comments (priority 10)
       numhl = false,
       linehl = false,
       word_diff = false,
