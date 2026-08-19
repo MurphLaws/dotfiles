@@ -15,7 +15,7 @@ return {
 			width = 0.7,
 			height = 1,
 			options = {
-				signcolumn = "yes:1",
+				signcolumn = "yes:2",
 				number = false,
 				relativenumber = false,
 				cursorline = false,
