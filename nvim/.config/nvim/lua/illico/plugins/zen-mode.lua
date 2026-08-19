@@ -15,7 +15,7 @@ return {
 			width = 0.7,
 			height = 1,
 			options = {
-				signcolumn = "no",
+				signcolumn = "yes:1",
 				number = false,
 				relativenumber = false,
 				cursorline = false,
@@ -27,7 +27,7 @@ return {
 		plugins = {
 			options = { enabled = true, ruler = false, showcmd = false },
 			twilight = { enabled = false },
-			gitsigns = { enabled = false },
+			gitsigns = { enabled = true },
 			tmux = { enabled = false },
 		},
 		on_open = function()
