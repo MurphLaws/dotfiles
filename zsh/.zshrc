@@ -41,9 +41,10 @@ ns() {
 
   cd "$notes_dir" || { echo "❌  ~/notes not found"; return 1 }
 
-  # Detect files that would be staged but aren't md/image.
+  # Use -z (NUL-terminated) so filenames with spaces/special chars are safe.
   local dirty
-  dirty=$(git status --porcelain | awk '{print $2}' \
+  dirty=$(git status --porcelain -z | tr '\0' '\n' \
+    | sed 's/^...//' \
     | grep -viE "$allowed_pattern" \
     | grep -v '^\s*$')
 
