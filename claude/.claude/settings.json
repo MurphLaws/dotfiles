@@ -332,6 +332,6 @@
   "effortLevel": "medium",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
+  "theme": "dark-ansi",
   "skipAutoPermissionPrompt": true
 }
