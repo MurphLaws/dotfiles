@@ -4,13 +4,21 @@ return {
 		ft = { "norg" },
 		version = "*",
 
-		-- Neorg's tree-sitter-norg and tree-sitter-norg-meta parsers are
-		-- installed via luarocks into lazy-rocks, not nvim-treesitter's parser
-		-- dir. Add those paths to runtimepath so nvim can find norg_meta.so.
+		-- El parser de norg no está en el registro de nvim-treesitter `main`, así
+		-- que vive fuera de su install_dir (si estuviera dentro, cada :TSUpdate
+		-- avisaría "Parser not available for language norg"). Las queries las
+		-- trae neorg en su propio queries/norg/.
+		--
+		-- lazy.nvim reconstruye el runtimepath, así que pack/*/start/* no entra
+		-- solo: hay que añadirlo a mano.
 		init = function()
-			local rocks_root = vim.fn.stdpath("data") .. "/lazy-rocks"
-			for _, rock in ipairs({ "tree-sitter-norg", "tree-sitter-norg-meta" }) do
-				local path = rocks_root .. "/" .. rock .. "/lib/lua/5.1"
+			local extra = {
+				vim.fn.stdpath("data") .. "/site/pack/manual/start/tree-sitter-norg",
+				-- Ruta antigua por si algún día se instala vía luarocks.
+				vim.fn.stdpath("data") .. "/lazy-rocks/tree-sitter-norg/lib/lua/5.1",
+				vim.fn.stdpath("data") .. "/lazy-rocks/tree-sitter-norg-meta/lib/lua/5.1",
+			}
+			for _, path in ipairs(extra) do
 				if vim.fn.isdirectory(path) == 1 then
 					vim.opt.runtimepath:append(path)
 				end

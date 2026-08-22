@@ -3,7 +3,9 @@ return {
 	event = "VeryLazy",
 	ft = { "org" },
 	dependencies = {
-		{ "nvim-treesitter/nvim-treesitter", lazy = true },
+		-- Sin `lazy = true`: la rama `main` de nvim-treesitter no soporta
+		-- lazy-loading y ese flag competía con el `lazy = false` de su spec.
+		{ "nvim-treesitter/nvim-treesitter" },
 		{ "akinsho/org-bullets.nvim" },
 	},
 	config = function()
