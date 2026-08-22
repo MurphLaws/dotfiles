@@ -1,6 +1,10 @@
--- lua/plugins/leap.lua
+-- Spec duplicado de leap (el archivo está mal nombrado: nunca tuvo nada de
+-- auto-pairs). Quedó obsoleto — usa `leap.util`, que el fork nuevo renombró a
+-- `leap.user`, y redeclaraba `s`/`S` en conflicto con leap.lua.
+-- Desactivado al pasar a flash.nvim.
 return {
 	"ggandor/leap.nvim",
+	enabled = false,
 	config = function()
 		local leap = require("leap")
 

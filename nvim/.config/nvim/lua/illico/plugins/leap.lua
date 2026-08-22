@@ -2,6 +2,10 @@ return {
 	{
 		"ggandor/leap.nvim",
 		url = "https://codeberg.org/andyg/leap.nvim",
+		-- Reemplazado por flash.nvim (ver flash.lua). Flash es incremental: no hay
+		-- límite de 2 caracteres, se sigue escribiendo hasta que la etiqueta que
+		-- quieres aparece sola. Se deja el spec por si hay que volver.
+		enabled = false,
 		config = function()
 			local leap = require("leap")
 
