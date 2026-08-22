@@ -1,5 +1,8 @@
 return {
 	"nvim-mini/mini.files",
+	-- Reemplazado por oil.nvim (ver oil.lua). Se deja el spec desactivado en
+	-- vez de borrarlo, por si hay que volver.
+	enabled = false,
 	version = false,
 	keys = {
 		{
@@ -23,13 +26,55 @@ return {
 			use_as_default_explorer = false,
 		},
 		content = {
+			-- Ruido que nunca se toca a mano (proyectos Godot y dotfiles de
+			-- repo). Solo quedan escenas/scripts, assets e imágenes.
 			filter = function(entry)
-				return not entry.name:match("%.uid$")
+				local hidden = {
+					[".godot"] = true,
+					[".editorconfig"] = true,
+					[".gitattributes"] = true,
+					[".gitignore"] = true,
+					[".DS_Store"] = true,
+				}
+				if hidden[entry.name] then
+					return false
+				end
+				return not entry.name:match("%.uid$") and not entry.name:match("%.import$")
 			end,
 		},
 	},
 	config = function(_, opts)
-		require("mini.files").setup(opts)
+		local mf = require("mini.files")
+		mf.setup(opts)
+
+		-- Los bookmarks (`ma` para marcar, `'a` para saltar) viven dentro del
+		-- objeto explorador, y <leader>e crea uno nuevo en cada apertura para
+		-- abrir siempre en el cwd. Se cachean aquí al marcarlos y se reponen al
+		-- abrir, para que sobrevivan al toggle.
+		local saved_bookmarks = {}
+		local set_bookmark = mf.set_bookmark
+		mf.set_bookmark = function(id, path, bm_opts)
+			-- El id `'` es el "antes del último salto" que mini.files gestiona
+			-- solo; no tiene sentido persistirlo.
+			if id ~= "'" then
+				saved_bookmarks[id] = { path = path, opts = bm_opts }
+			end
+			return set_bookmark(id, path, bm_opts)
+		end
+
+		vim.api.nvim_create_autocmd("User", {
+			pattern = "MiniFilesExplorerOpen",
+			callback = function()
+				for id, bm in pairs(saved_bookmarks) do
+					-- El directorio puede haber desaparecido desde que se marcó;
+					-- set_bookmark lanza error en ese caso.
+					local ok = pcall(set_bookmark, id, bm.path, bm.opts)
+					if not ok then
+						saved_bookmarks[id] = nil
+					end
+				end
+			end,
+		})
 
 		-- Make sure mini.files floats render above zen-mode and other floats.
 		vim.api.nvim_create_autocmd("User", {
