@@ -37,4 +37,13 @@ return {
 			},
 		},
 	},
+	{
+		-- Normal es transparente a propósito (heredamos el fondo de Ghostty), así
+		-- que nvim-notify no encuentra un color de fondo del que partir y avisa en
+		-- cada notificación. Le damos el bg del terminal explícitamente.
+		"rcarriga/nvim-notify",
+		opts = {
+			background_colour = "#1f2329",
+		},
+	},
 }
