@@ -6,6 +6,14 @@ return {
 
 		opts = {
 			input = { enabled = true },
+			-- Scratch: buffers persistentes por proyecto (cwd + rama de git).
+			-- Se guardan en ~/.local/share/nvim/scratch, sobreviven a cerrar nvim
+			-- y se pueden ejecutar con <cr> si el filetype es lua.
+			scratch = {
+				enabled = true,
+				ft = "markdown",
+				win = { width = 120, height = 30, border = "rounded" },
+			},
 			picker = {
 				enabled = true,
 				-- Enruta vim.ui.select por el picker: code actions, LSP,
@@ -14,6 +22,22 @@ return {
 				-- Layout estilo telescope: input + lista a la izquierda,
 				-- preview a la derecha (el del screenshot). Limpio y consistente.
 				layout = { preset = "telescope" },
+				sources = {
+					explorer = {
+						-- Ruido que nunca se toca a mano en un proyecto Godot:
+						-- metadatos del editor, imports generados y dotfiles de
+						-- repo. Solo quedan escenas/scripts, assets e imágenes.
+						exclude = {
+							".godot",
+							"*.import",
+							"*.uid",
+							".editorconfig",
+							".gitattributes",
+							".gitignore",
+							".DS_Store",
+						},
+					},
+				},
 			},
 			notifier = {
 				enabled = true,
@@ -179,6 +203,29 @@ return {
 					})
 				end,
 				desc = "Toggle Zen Mode",
+			},
+
+			-- Scratch buffers
+			{
+				"<leader>.",
+				function()
+					require("illico.util.scratch").file()
+				end,
+				desc = "Toggle Scratch Buffer (archivo actual)",
+			},
+			{
+				"<leader>,",
+				function()
+					require("snacks").scratch()
+				end,
+				desc = "Toggle Scratch Buffer (proyecto)",
+			},
+			{
+				"<leader>S",
+				function()
+					require("snacks").scratch.select()
+				end,
+				desc = "Select Scratch Buffer",
 			},
 		},
 	},
