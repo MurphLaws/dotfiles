@@ -14,3 +14,7 @@ graphview-test/
 
 # Juegos: binarios/artefactos de compilación, nunca versionar
 games/
+
+# Claude: artefactos de runtime (backups/cache), nunca versionar
+claude/.claude/backups/
+claude/.claude/cache/
