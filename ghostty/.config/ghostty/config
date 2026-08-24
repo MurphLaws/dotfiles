@@ -4,6 +4,12 @@ font-family = JetBrainsMono Nerd Font Mono
 font-family = SlalomSymbols
 font-style = Bold
 font-style-bold = ExtraBold
+# La base es Bold, asi que hay que fijar EXPLICITAMENTE las caras italicas: si no,
+# ghostty no resuelve una italica que combine con "Bold" y el texto _italic_ /
+# **bold** italic sale recto (solo cambia el color). Con estas, la cursiva se
+# inclina de verdad usando las caras reales de JetBrainsMono.
+font-style-italic = Bold Italic
+font-style-bold-italic = ExtraBold Italic
 
 font-size = 19
 font-thicken = true
