@@ -26,6 +26,12 @@ vim.opt.relativenumber = true
 vim.opt.signcolumn = "yes:2"
 vim.opt.termguicolors = true
 
+-- Título del terminal = nombre del archivo actual. tmux lo lee como
+-- #{pane_title} y así nombra la ventana (tab) con el fichero abierto en nvim
+-- (ver automatic-rename-format en ~/.tmux.conf). %t = tail (solo el nombre).
+vim.opt.title = true
+vim.opt.titlestring = "%t"
+
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undofile = true
