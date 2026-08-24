@@ -42,8 +42,11 @@ ns() {
   cd "$notes_dir" || { echo "❌  ~/notes not found"; return 1 }
 
   # Use -z (NUL-terminated) so filenames with spaces/special chars are safe.
+  # --untracked-files=all expands new folders into individual files instead
+  # of collapsing them into one "?? folder/" line (which broke the
+  # extension check for any new directory of notes/images).
   local dirty
-  dirty=$(git status --porcelain -z | tr '\0' '\n' \
+  dirty=$(git status --porcelain -z --untracked-files=all | tr '\0' '\n' \
     | sed 's/^...//' \
     | grep -viE "$allowed_pattern" \
     | grep -v '^\s*$')
