@@ -122,3 +122,19 @@ require press-and-hold:
 - [mason.nvim](https://github.com/williamboman/mason.nvim)
 - [nvim-ts-autotag](https://github.com/windwp/nvim-ts-autotag)
 - [leap.nvim](https://codeberg.org/andyg/leap.nvim)
+
+## clipvault: valores rapidos al portapapeles
+
+Guarda cosas que uso seguido (PIDs, ids, usuarios, codigos) en el Keychain de
+macOS y las copia por nombre. Vive en `zsh/.config/zsh/conf.d/clipvault.zsh`.
+
+```sh
+cbset PID      # pide el valor (oculto) y lo guarda cifrado en el Keychain
+cb             # fzf sobre las llaves; la elegida va al portapapeles
+cb PID         # copia el valor de PID directo
+cbls           # lista las llaves
+cbrm PID       # borra la llave
+```
+
+El portapapeles se limpia solo a los 30s (`CLIPVAULT_CLEAR`), solo si no copiaste
+otra cosa mientras tanto.
