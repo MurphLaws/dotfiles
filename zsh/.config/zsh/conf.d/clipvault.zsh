@@ -68,7 +68,7 @@ cb() {
     return 1
   fi
   printf '%s' "$val" | pbcopy
-  print -u2 "copiado: $key (se limpia en ${CLIPVAULT_CLEAR}s)"
+  print -u2 "copiado: $key"
   if [[ "$CLIPVAULT_CLEAR" == <-> && "$CLIPVAULT_CLEAR" -gt 0 ]]; then
     ( sleep "$CLIPVAULT_CLEAR"; [[ "$(pbpaste)" == "$val" ]] && printf '' | pbcopy ) &!
   fi
