@@ -17,6 +17,10 @@ return {
 			-- Side indicators (End of Buffer)
 			vim.opt.fillchars:append({ eob = "·" })
 
+			-- Separadores entre buffers: glifo grueso (más "grande") pero
+			-- totalmente transparente (bg = NONE, sin color propio).
+			vim.opt.fillchars:append({ vert = "┃", horiz = "━", horizup = "┻", horizdown = "┳", vertleft = "┫", vertright = "┣", verthoriz = "╋" })
+
 			vim.cmd.colorscheme("onedark")
 
 			-- nvim hereda siempre la transparencia de Ghostty.
@@ -26,6 +30,12 @@ return {
 				hl.bg = ghostty_bg
 				vim.api.nvim_set_hl(0, group, hl)
 			end
+
+			-- Separador entre buffers: sin bg propio (transparente, hereda de
+			-- Ghostty) para que el glifo grueso de arriba no se vea como un
+			-- bloque de color sólido.
+			vim.api.nvim_set_hl(0, "WinSeparator", { fg = "#535965", bg = "NONE" })
+			vim.api.nvim_set_hl(0, "VertSplit", { fg = "#535965", bg = "NONE" })
 
 			-- Paleta onedark darker, mapeada a las claves de acento que el resto
 			-- de la config ya consume (lualine, mini.icons, org/neorg overrides).
