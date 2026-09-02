@@ -40,7 +40,50 @@
     "defaultMode": "auto"
   },
   "model": "opus[1m]",
-  "hooks": {
+  "enabledPlugins": {
+    "claude-hud@claude-hud": true,
+    "clangd-lsp@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "engram@engram": true
+  },
+  "extraKnownMarketplaces": {
+    "railway-skills": {
+      "source": {
+        "source": "github",
+        "repo": "railwayapp/railway-skills"
+      }
+    },
+    "claude-hud": {
+      "source": {
+        "source": "github",
+        "repo": "jarrodwatts/claude-hud"
+      }
+    },
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "engram": {
+      "source": {
+        "source": "github",
+        "repo": "Gentleman-Programming/engram"
+      }
+    }
+  },
+  "effortLevel": "medium",
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark-ansi",
+  "skipAutoPermissionPrompt": true,
+  "_disabled_hooks": {
     "SessionStart": [
       {
         "hooks": [
@@ -287,51 +330,8 @@
       }
     ]
   },
-  "statusLine": {
+  "_disabled_statusLine": {
     "type": "command",
     "command": "node \"/Users/illico/.claude/hooks/gsd-statusline.js\""
-  },
-  "enabledPlugins": {
-    "claude-hud@claude-hud": true,
-    "clangd-lsp@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true,
-    "engram@engram": true
-  },
-  "extraKnownMarketplaces": {
-    "railway-skills": {
-      "source": {
-        "source": "github",
-        "repo": "railwayapp/railway-skills"
-      }
-    },
-    "claude-hud": {
-      "source": {
-        "source": "github",
-        "repo": "jarrodwatts/claude-hud"
-      }
-    },
-    "thedotmack": {
-      "source": {
-        "source": "github",
-        "repo": "thedotmack/claude-mem"
-      }
-    },
-    "claude-plugins-official": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-plugins-official"
-      }
-    },
-    "engram": {
-      "source": {
-        "source": "github",
-        "repo": "Gentleman-Programming/engram"
-      }
-    }
-  },
-  "effortLevel": "medium",
-  "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "dark-ansi",
-  "skipAutoPermissionPrompt": true
+  }
 }
