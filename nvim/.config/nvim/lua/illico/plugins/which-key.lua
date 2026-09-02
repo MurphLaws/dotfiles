@@ -30,6 +30,7 @@ return {
 		-- Register keymap groups
 		wk.add({
 			{ "<leader>f", group = "Find" },
+			{ "<leader>a", group = "Agentic" },
 			{ "<leader>b", group = "Buffer" },
 			{ "<leader>c", group = "Code" },
 			{ "<leader>d", group = "Debug" },
