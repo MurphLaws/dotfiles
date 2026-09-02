@@ -11,7 +11,7 @@ Stow/Brewfile.
 
 ada-url, brotli, c-ares, ca-certificates, fmt, fzf, gettext, hdrhistogram_c, icu4c, json-c, libevent, libffi, libnghttp2, libnghttp3, libngtcp2, libunistring, libuv, llhttp, lpeg, luajit, luv, lz4, merve, nbytes, ncurses, neovim, node, openssl, pcre2, readline, ripgrep, simdjson, simdutf, sqlite, stow, task, tmux, tree, tree-sitter, unibilium, utf8proc, uvwasi, xz, zstd
 
-**Casks:** codex, copilot-cli
+**Casks:** copilot-cli
 
 ## macOS defaults
 
@@ -51,6 +51,7 @@ require press-and-hold:
 - [nvim-lsp-file-operations](https://github.com/antosha417/nvim-lsp-file-operations)
 - [incline.nvim](https://github.com/b0o/incline.nvim)
 - [lualine-pretty-path](https://github.com/bwpge/lualine-pretty-path)
+- [agentic.nvim](https://github.com/carlos-algms/agentic.nvim)
 - [focus.nvim](https://github.com/casedami/focus.nvim)
 - [catppuccin/nvim](https://github.com/catppuccin/nvim)
 - [mini.animate](https://github.com/echasnovski/mini.animate)
@@ -122,6 +123,90 @@ require press-and-hold:
 - [mason.nvim](https://github.com/williamboman/mason.nvim)
 - [nvim-ts-autotag](https://github.com/windwp/nvim-ts-autotag)
 - [leap.nvim](https://codeberg.org/andyg/leap.nvim)
+
+## agentic.nvim: Claude dentro de Neovim
+
+Chat con agentes ACP en Neovim (`<C-\>` para abrir/cerrar, `:checkhealth
+agentic` para diagnosticar). El spec vive en
+`nvim/.config/nvim/lua/illico/plugins/agentic.lua`.
+
+### Diff inline
+
+`diff_preview.layout = "inline"` en el spec: cuando el agente propone una
+edición, el diff se pinta unificado sobre el archivo real con virtual lines
+(rojo lo que sale, verde lo que entra, y resaltado por palabra dentro de la
+línea), sin abrir un segundo búfer ni un split lado a lado. Los colores salen de
+`DiffAdd` / `DiffDelete` del colorscheme. `]c` / `[c` salta entre hunks.
+
+Excepción: si el archivo aún no existe, no hay nada sobre lo que pintar, así que
+muestra el contenido propuesto en un búfer temporal `ruta (suggestion N)`.
+
+Cambiar el layout requiere reiniciar Neovim, no basta con recargar el plugin.
+
+### Atajos
+
+Globales (`<leader>` es espacio):
+
+| Tecla | Acción |
+| --- | --- |
+| `<C-\>` | abrir/cerrar el chat (normal, visual, insert) |
+| `<leader>aa` | añadir el archivo actual o la selección al contexto |
+| `<leader>ad` / `<leader>aD` | añadir el diagnóstico de la línea / todos los del buffer |
+| `<leader>an` | sesión nueva (varias a la vez, en paralelo) |
+| `<leader>al` / `<leader>ar` | listar sesiones vivas / restaurar una anterior |
+| `<leader>as` | detener la generación sin matar la sesión |
+| `<leader>ap` | cambiar de proveedor a mitad de conversación |
+| `<leader>aL` | rotar el layout de la ventana |
+| `<leader>ao` / `<leader>ac` / `<leader>aX` | abrir / cerrar / destruir sesión |
+
+Dentro de la ventana del chat (`<localLeader>` también es espacio, así que estos
+tapan temporalmente los grupos globales `<space>s`, `<space>t`, `<space>o`,
+`<space>l`, `<space>p` mientras el foco está en el chat):
+
+| Tecla | Acción |
+| --- | --- |
+| `<CR>` / `<C-s>` | enviar el prompt |
+| `<S-Tab>` | cambiar de modo (Manual, Plan, Accept Edits, Bypass, …) |
+| `q` | cerrar la ventana (la sesión sigue viva) |
+| `@` / `/` | autocompletar archivos / slash commands |
+| `<Tab>` | aceptar el autocompletado |
+| `<C-v>` (insert) o `<localLeader>p` | pegar imagen del portapapeles |
+| `<localLeader>m` / `<localLeader>t` | cambiar modelo / nivel de razonamiento |
+| `<localLeader>s` / `<localLeader>o` | cambiar proveedor / abrir opciones |
+| `<localLeader>l` / `<localLeader>[` / `<localLeader>]` | elegir, anterior y siguiente sesión |
+| `<localLeader>D` | destruir la sesión |
+| `]]` / `[[` | siguiente / anterior encabezado |
+| `]t` / `[t` | siguiente / anterior tool call |
+| `]c` / `[c` | siguiente / anterior hunk en el diff |
+| `1` `2` `3` … | responder a una petición de permiso |
+| `<C-n>` / `<C-p>` | moverse entre opciones de permiso |
+
+**Única dependencia externa** (el plugin no instala binarios a propósito):
+
+```sh
+npm i -g @agentclientprotocol/claude-agent-acp
+```
+
+Si no está instalado, el spec cae automáticamente a `npx --yes
+@agentclientprotocol/claude-agent-acp`, así que en una máquina nueva funciona
+solo con Node; el primer arranque es más lento. El spec también busca el binario
+en las rutas globales de pnpm, bun, volta, nvm y Homebrew, no solo en el `PATH`.
+
+No hay que reconfigurar nada de Claude: el adaptador arranca el Claude Agent SDK
+con `settingSources = user/project/local`, así que reutiliza `~/.claude` tal
+cual — `CLAUDE.md`, las skills de `claude/.claude/skills/` (gsd, build-prd,
+job-finder, …), los subagentes, los hooks, los servidores MCP y los plugins
+declarados en `enabledPlugins` / `extraKnownMarketplaces` de
+`claude/.claude/settings.json` (engram, vercel, claude-hud). La autenticación es
+la misma del terminal: si `claude` funciona en la shell, agentic funciona.
+
+En una máquina nueva, los plugins de Claude se restauran solos al abrir `claude`
+porque los marketplaces y los plugins habilitados están versionados en
+`settings.json`; lo que no se versiona es `claude/.claude/plugins/` (caché).
+
+Las sesiones son intercambiables: una conversación empezada en Neovim se retoma
+con `claude --resume` y al revés. Lo que no está ahí es lo que vive en la TUI de
+Claude Code (`/loop`, `/workflows`, FleetView, tareas en segundo plano).
 
 ## clipvault: valores rapidos al portapapeles
 
