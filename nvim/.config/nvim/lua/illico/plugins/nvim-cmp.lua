@@ -18,6 +18,7 @@ return {
 		"nvim-treesitter/nvim-treesitter",
 		"onsails/lspkind.nvim", -- vs-code pictograms
 		"roobert/tailwindcss-colorizer-cmp.nvim",
+		"zbirenbaum/copilot-cmp",
 	},
 	config = function()
 		local cmp = require("cmp")
@@ -218,6 +219,7 @@ return {
 			},
 			sources = cmp.config.sources({
 				{ name = "frontmatter", priority = 1000 },
+				{ name = "copilot", priority = 900 },
 				{ name = "luasnip" },
 				{ name = "lazydev" },
 				{ name = "nvim_lsp" },
@@ -304,6 +306,7 @@ return {
 
 					vim_item.menu = ({
 						buffer = "[Buffer]",
+						copilot = "[Copilot]",
 						nvim_lsp = "[LSP]",
 						luasnip = "[LuaSnip]",
 						nvim_lua = "[Lua]",

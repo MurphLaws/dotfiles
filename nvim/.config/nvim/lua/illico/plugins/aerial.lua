@@ -74,6 +74,6 @@ return {
 	cmd = { "AerialToggle", "AerialOpen" },
 	keys = {
 		{ "<leader>O", outline("right"), desc = "Outline lateral plegado (aerial)" },
-		{ "<leader>a", outline("float"), desc = "Outline flotante plegado (aerial)" },
+		{ "<leader>A", outline("float"), desc = "Outline flotante plegado (aerial)" },
 	},
 }
