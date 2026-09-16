@@ -30,14 +30,13 @@ return {
 		-- Register keymap groups
 		wk.add({
 			{ "<leader>f", group = "Find" },
-			{ "<leader>a", group = "Agentic" },
 			{ "<leader>b", group = "Buffer" },
 			{ "<leader>c", group = "Code" },
 			{ "<leader>d", group = "Debug" },
 			{ "<leader>g", group = "Git" },
 			{ "<leader>G", group = "Godot" },
 			{ "<leader>l", group = "LSP" },
-			{ "<leader>o", group = "Obsidian" },
+			{ "<leader>o", group = "Org" },
 			{ "<leader>os", group = "Slalom", icon = { icon = "󸀀", color = "blue" } },
 			{ "<leader>O", group = "Org" },
 			{ "<leader>s", group = "Search" },

@@ -3,7 +3,7 @@ return {
 	event = "VeryLazy",
 	opts = {
 		default = {
-			dir_path = vim.fn.expand("~/.cache/claude-prompt-images"),
+			dir_path = vim.fn.expand("~/.cache/pasted-images"),
 			file_name = "%Y%m%d-%H%M%S",
 			use_absolute_path = true,
 			relative_to_current_file = false,
