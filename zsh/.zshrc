@@ -1,4 +1,8 @@
-export PATH="$(brew --prefix rustup)/bin:$PATH"
+# Ruta fija en vez de `$(brew --prefix rustup)`: ese comando arranca brew (y
+# Ruby) en CADA shell, ANTES del instant prompt de p10k, así que el prompt no
+# aparecía hasta que brew terminara (segundos con el caché frío o con el
+# antivirus corporativo escaneando el exec).
+export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # Enable Powerlevel10k instant prompt.
@@ -24,7 +28,6 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 alias nvimconfig="cd ~/.config/nvim/lua/illico/ && nvim ."
 alias gamedev="godot && cd ~/3dproto/ && nvim ."
-alias neorg="nvim ~/notes/index.norg"
 
 # Copilot CLI: autopilot with every tool/command auto-approved so it never
 # stalls on "could not request permission" prompts. These flags only affect
@@ -80,7 +83,10 @@ ns() {
 # 🟢 P10K GIT FORCE OVERRIDES (Arreglo Visual)
 # ------------------------------------------------------------------------------
 # 1. Fuerza a p10k a esperar el estado de git (evita que lo oculte por lentitud)
-typeset -g POWERLEVEL9K_VCS_MAX_SYNC_LATENCY_SECONDS=5
+# Bajado de 5 a 1: con 5, cada prompt dentro de un repo grande podía quedarse
+# bloqueado hasta 5 segundos esperando a gitstatusd. Con 1, espera máximo 1 s
+# y si git tarda más, el segmento se rellena async sin congelar el prompt.
+typeset -g POWERLEVEL9K_VCS_MAX_SYNC_LATENCY_SECONDS=1
 
 # 2. Define iconos explícitos para subida (push) y bajada (pull)
 typeset -g POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON='⇣'
@@ -95,8 +101,6 @@ typeset -g POWERLEVEL9K_VCS_COMMITS_AHEAD_BACKGROUND=23  # Dark Cyan/Teal
 typeset -g POWERLEVEL9K_VCS_COMMITS_BEHIND_FOREGROUND=255
 typeset -g POWERLEVEL9K_VCS_COMMITS_BEHIND_BACKGROUND=23
 # ------------------------------------------------------------------------------
-
-export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 
 # >>> conda initialize (lazy) >>>
 # El init real (conda shell.zsh hook) corre Python y cuesta ~300-470 ms en CADA
@@ -145,3 +149,7 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 
 # TinyTeX (LaTeX local)
 export PATH="$PATH:$HOME/Library/TinyTeX/bin/universal-darwin"
+
+# >>> Charter Access Tooling profile selector >>>
+[[ -r "/Users/nicolaslasso/Downloads/charter-access-tooling/shell/profile.zsh" ]] && source "/Users/nicolaslasso/Downloads/charter-access-tooling/shell/profile.zsh"
+# <<< Charter Access Tooling profile selector <<<
