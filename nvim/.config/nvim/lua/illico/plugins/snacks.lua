@@ -207,13 +207,6 @@ return {
 
 			-- Scratch buffers
 			{
-				"<leader>.",
-				function()
-					require("illico.util.scratch").file()
-				end,
-				desc = "Toggle Scratch Buffer (archivo actual)",
-			},
-			{
 				"<leader>,",
 				function()
 					require("snacks").scratch()

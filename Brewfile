@@ -23,8 +23,3 @@ brew "tree"
 # Brings the power of Copilot coding agent directly to your terminal
 cask "copilot-cli"
 npm "tree-sitter-cli"
-# Adaptador ACP que usa agentic.nvim en Neovim (Claude Agent SDK sobre el
-# Agent Client Protocol). Aviso: `brew bundle` ignora las entradas `npm`, no las
-# instala; el spec de agentic.nvim cae a `npx` si el binario no está, pero para
-# fijarlo: npm i -g @agentclientprotocol/claude-agent-acp
-npm "@agentclientprotocol/claude-agent-acp"

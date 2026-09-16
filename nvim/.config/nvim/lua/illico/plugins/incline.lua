@@ -40,9 +40,6 @@ return {
 					"iCloud/org"
 				)
 
-				-- Shorten Claude Code temp buffer paths
-				display_path = display_path:gsub(".*/T/claude%-prompt%-[%w%-]+", "Claude")
-
 				-- Shorten macOS temp folder paths (/private/var/folders/...)
 				display_path = display_path:gsub("^/private/var/folders/.*", "tmp")
 
@@ -125,7 +122,19 @@ return {
 
 				local result = {}
 
-				table.insert(result, { "▊ ", guifg = "#8aadf4" })
+				-- Colores del tema activo, no hexes fijos: los pasteles
+				-- anteriores (catppuccin oscuro) eran ilegibles en fondos claros.
+				local function theme_fg(group, fallback)
+					local h = vim.api.nvim_get_hl(0, { name = group, link = false })
+					return h.fg and ("#%06x"):format(h.fg) or fallback
+				end
+				local accent = theme_fg("Directory", "#8aadf4")
+				local dim = theme_fg("Comment", "#6e738d")
+				local text = theme_fg("Normal", "#cad3f5")
+				local warn = theme_fg("DiagnosticWarn", "#eed49f")
+				local err = theme_fg("DiagnosticError", "#ed8796")
+
+				table.insert(result, { "▊ ", guifg = accent })
 
 				-- Add diagnostic labels
 				vim.list_extend(result, get_diagnostic_label())
@@ -135,7 +144,7 @@ return {
 
 				-- Add directory path when available
 				if display_path ~= "" and display_path ~= "." then
-					table.insert(result, { display_path .. "/", guifg = "#91d7e3" })
+					table.insert(result, { display_path .. "/", guifg = dim })
 					table.insert(result, { " " })
 				end
 
@@ -146,23 +155,23 @@ return {
 				end
 
 				-- Add file icon and name
-				table.insert(result, { (ft_icon or "") .. " ", guifg = ft_color or "#8aadf4", guibg = "none" })
+				table.insert(result, { (ft_icon or "") .. " ", guifg = ft_color or accent, guibg = "none" })
 				table.insert(result, {
 					filename,
 					gui = modified and "bold,italic" or "bold",
-					guifg = modified and "#eed49f" or "#cad3f5",
+					guifg = modified and warn or text,
 				})
 
 				-- Modified indicator
 				if modified then
-					table.insert(result, { " ● ", guifg = "#ed8796" })
+					table.insert(result, { " ● ", guifg = err })
 				else
 					table.insert(result, { " " })
 				end
 
 				-- Add window number
-				table.insert(result, { "│ ", guifg = "#6e738d" })
-				table.insert(result, { " " .. vim.api.nvim_win_get_number(props.win) .. " ", guifg = "#8aadf4" })
+				table.insert(result, { "│ ", guifg = dim })
+				table.insert(result, { " " .. vim.api.nvim_win_get_number(props.win) .. " ", guifg = accent })
 
 				return result
 			end,
