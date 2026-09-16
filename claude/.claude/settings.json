@@ -39,7 +39,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5[1m]",
   "enabledPlugins": {
     "claude-hud@claude-hud": true,
     "clangd-lsp@claude-plugins-official": true,
