@@ -1,8 +1,4 @@
-# Ruta fija en vez de `$(brew --prefix rustup)`: ese comando arranca brew (y
-# Ruby) en CADA shell, ANTES del instant prompt de p10k, así que el prompt no
-# aparecía hasta que brew terminara (segundos con el caché frío o con el
-# antivirus corporativo escaneando el exec).
-export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
+# rustc/cargo vienen del formula "rust" de brew y ya están en /opt/homebrew/bin.
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # Enable Powerlevel10k instant prompt.
@@ -10,24 +6,60 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="powerlevel10k/powerlevel10k"
-plugins=(git)
+# ------------------------------------------------------------------------------
+# Shell base (reemplaza a oh-my-zsh; respaldo en ~/.zshrc.omz-backup)
+# ------------------------------------------------------------------------------
 
-# Auto-update desactivado: el chequeo hacía una petición de red a GitHub en cada
-# arranque (~635 ms, 60% del tiempo de inicio y origen de los picos de varios
-# segundos). Actualiza a mano cuando quieras con: omz update
-zstyle ':omz:update' mode disabled
+# Historial
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
+setopt share_history hist_ignore_dups hist_ignore_space hist_verify
+setopt inc_append_history extended_history
+setopt auto_cd interactive_comments no_beep
 
-# compinit cacheado: salta la auditoría/recompilación del dump de completado si
-# ya existe y tiene menos de ~20 h (oh-my-zsh lo regenera igual a diario).
+# Keybindings estilo emacs + búsqueda en historial con flechas
+bindkey -e
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+
+# Completado: fpath de brew + compinit cacheado (regenera si el dump tiene >20 h)
+fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
+autoload -Uz compinit
 ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump-${ZSH_VERSION}"
+if [[ -n ${ZSH_COMPDUMP}(#qN.mh-20) ]]; then
+  compinit -C -d "$ZSH_COMPDUMP"
+else
+  compinit -d "$ZSH_COMPDUMP"
+fi
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z-_}={A-Za-z_-}' 'r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' list-colors ''
 
-source $ZSH/oh-my-zsh.sh
+# Alias de git (el plugin git de oh-my-zsh, copiado; helpers aparte)
+source "$HOME/.zsh/git-helpers.zsh"
+source "$HOME/.zsh/git-aliases.zsh"
+source "$HOME/.zsh/task-next-green.zsh"
 
+# Integracion de fzf: Ctrl-T inserta archivos en la linea de comandos,
+# Ctrl-R busca en el historial, Alt-C hace cd, y ** + Tab autocompleta.
+source <(fzf --zsh)
+
+# Tema: Powerlevel10k directo (la estética vive en ~/.p10k.zsh, igual que antes)
+source "$HOME/.zsh/powerlevel10k/powerlevel10k.zsh-theme"
+
+# Sugerencias inline grises desde el historial (→ para aceptar)
+source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+# ------------------------------------------------------------------------------
 # User configuration
+# ------------------------------------------------------------------------------
 alias nvimconfig="cd ~/.config/nvim/lua/illico/ && nvim ."
 alias gamedev="godot && cd ~/3dproto/ && nvim ."
+alias neorg="nvim ~/notes/index.norg"
 
 # Copilot CLI: autopilot with every tool/command auto-approved so it never
 # stalls on "could not request permission" prompts. These flags only affect
@@ -83,10 +115,7 @@ ns() {
 # 🟢 P10K GIT FORCE OVERRIDES (Arreglo Visual)
 # ------------------------------------------------------------------------------
 # 1. Fuerza a p10k a esperar el estado de git (evita que lo oculte por lentitud)
-# Bajado de 5 a 1: con 5, cada prompt dentro de un repo grande podía quedarse
-# bloqueado hasta 5 segundos esperando a gitstatusd. Con 1, espera máximo 1 s
-# y si git tarda más, el segmento se rellena async sin congelar el prompt.
-typeset -g POWERLEVEL9K_VCS_MAX_SYNC_LATENCY_SECONDS=1
+typeset -g POWERLEVEL9K_VCS_MAX_SYNC_LATENCY_SECONDS=5
 
 # 2. Define iconos explícitos para subida (push) y bajada (pull)
 typeset -g POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON='⇣'
@@ -101,6 +130,8 @@ typeset -g POWERLEVEL9K_VCS_COMMITS_AHEAD_BACKGROUND=23  # Dark Cyan/Teal
 typeset -g POWERLEVEL9K_VCS_COMMITS_BEHIND_FOREGROUND=255
 typeset -g POWERLEVEL9K_VCS_COMMITS_BEHIND_BACKGROUND=23
 # ------------------------------------------------------------------------------
+
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 
 # >>> conda initialize (lazy) >>>
 # El init real (conda shell.zsh hook) corre Python y cuesta ~300-470 ms en CADA
@@ -126,10 +157,13 @@ conda() {
 # <<< conda initialize (lazy) <<<
 
 export SUMO_HOME=/opt/homebrew/Cellar/sumo/1.20.0/share/sumo
-# Avoid startup error when no JDK is installed.
-if /usr/libexec/java_home -v 1.8 >/dev/null 2>&1; then
-  export JAVA_HOME="$('/usr/libexec/java_home' -v 1.8)"
+# JAVA_HOME solo si hay algún JDK instalado. El glob evita invocar java_home
+# (~25 ms) en cada shell cuando no hay ninguno.
+_jdks=(/Library/Java/JavaVirtualMachines/*(N))
+if (( $#_jdks )) && /usr/libexec/java_home -v 1.8 >/dev/null 2>&1; then
+  export JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
 fi
+unset _jdks
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 export EDITOR=nvim
@@ -137,8 +171,6 @@ export EDITOR=nvim
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-
-export EDITOR=nvim
 
 # Auto-source shell config from stow packages
 for conf in "$HOME/.config/zsh/conf.d/"*.zsh(N); do
@@ -151,5 +183,5 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 export PATH="$PATH:$HOME/Library/TinyTeX/bin/universal-darwin"
 
 # >>> Charter Access Tooling profile selector >>>
-[[ -r "/Users/nicolaslasso/Downloads/charter-access-tooling/shell/profile.zsh" ]] && source "/Users/nicolaslasso/Downloads/charter-access-tooling/shell/profile.zsh"
+[[ -r "/Users/nicolaslasso/Charter Repos/charter-access-tooling/shell/profile.zsh" ]] && source "/Users/nicolaslasso/Charter Repos/charter-access-tooling/shell/profile.zsh"
 # <<< Charter Access Tooling profile selector <<<
