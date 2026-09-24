@@ -39,6 +39,8 @@ claude/.claude/remote-settings.json
 claude/.claude/.last-cleanup
 claude/.claude/*.bak-*
 claude/.claude/daemon/
+claude/.claude/daemon.lock
+claude/.claude/daemon.status.json
 claude/.claude/daemon.log
 claude/.claude/daemon-auth-cooldown
 claude/.claude/daemon-auth-status.json
