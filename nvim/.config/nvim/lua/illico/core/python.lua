@@ -1,7 +1,7 @@
 -- Neovim Python provider — independent of any project conda env.
--- Lives in `nvim-py` (pynvim), so reinstalling project envs (lacardio, etc.)
--- never breaks Neovim.
-local nvim_py_bin = "/opt/miniconda3/envs/nvim-py/bin"
+-- Lives in `~/.local/share/nvim-py` (venv plano con pynvim), so reinstalling
+-- project envs (kaggle, lerobot, etc.) never breaks Neovim.
+local nvim_py_bin = vim.fn.expand("~/.local/share/nvim-py/bin")
 
 vim.g.python3_host_prog = nvim_py_bin .. "/python"
 

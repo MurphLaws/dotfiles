@@ -8,7 +8,7 @@
 --   personal/refile.org   inbox personal (capture `p`; luego refile)
 --   <vault>/*.org         las notas, archivos sueltos en la raíz del vault
 --                         (<leader>on pregunta el vault)
---   personal/diario.org, personal/enlaces.org (captures `j` y `e`)
+--   personal/diario/<fecha>.org (capture `j`), personal/enlaces.org (capture `e`)
 --
 -- Atajos globales: <leader>oa agenda, <leader>oc capture, <leader>on nota
 -- nueva con prompts (título, descripción, tags). El resto son buffer-local y
@@ -140,13 +140,41 @@ return {
 				j = {
 					description = "Diario",
 					template = "* %<%H:%M> %?",
-					target = ORG_DIR .. "/personal/diario.org",
-					datetree = true,
+					-- %<...> se expande al capturar: un archivo por día con la fecha
+					target = ORG_DIR .. "/personal/diario/%<%Y-%m-%d>.org",
 				},
 			},
 		})
 
+		-- Si el destino de una captura no existe (p. ej. el diario del día), el
+		-- plugin pregunta "Create now?" con vim.fn.confirm — prompt que al cerrar
+		-- con :x/ZZ no se redibuja y parece un cuelgue. Pre-creamos el destino en
+		-- silencio (misma lógica del plugin, sin la pregunta).
+		require("orgmode").capture.on_pre_refile = function(_, opts)
+			local file = opts.template:get_target()
+			if vim.fn.filereadable(file) == 0 then
+				vim.fn.mkdir(vim.fn.fnamemodify(file, ":h"), "p")
+				vim.fn.writefile({}, file)
+			end
+		end
+
 		vim.keymap.set("n", "<leader>on", org_new_note, { desc = "Org: nueva nota (con prompts)" })
+
+		-- En buffers de captura (son temporales; :x/:q no son el camino y el
+		-- prompt de confirmación queda invisible): ZZ = finalizar (<C-c>) y
+		-- ZQ = descartar, como cierres naturales.
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "org",
+			group = vim.api.nvim_create_augroup("illico_org_capture_close", { clear = true }),
+			callback = function(ev)
+				vim.schedule(function()
+					if vim.b[ev.buf].org_capture then
+						vim.keymap.set("n", "ZZ", "<C-c>", { buffer = ev.buf, remap = true, desc = "Capture: guardar y cerrar" })
+						vim.keymap.set("n", "ZQ", "<leader>ok", { buffer = ev.buf, remap = true, desc = "Capture: descartar" })
+					end
+				end)
+			end,
+		})
 
 		-- <leader>op: promueve el headline bajo el cursor a su propio archivo.
 		-- Solo pregunta el vault: crea ~/org/<vault>/<slug-del-título>.org con
