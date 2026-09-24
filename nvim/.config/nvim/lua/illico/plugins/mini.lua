@@ -79,7 +79,9 @@ return {
 			end
 
 			animate.setup({
-				cursor = { timing = timing(80) }, -- cursor glide between positions
+				-- Deslizamiento del cursor apagado: hacía sentir lento el cursor
+				-- (80ms de animación por movimiento, encima de smear-cursor).
+				cursor = { enable = false },
 				scroll = { timing = timing(120) }, -- smooth scrolling (<C-d>/<C-u>/zz/n/N…)
 				resize = { timing = timing(80) }, -- animated window resize
 				open = { timing = timing(120) }, -- float window open

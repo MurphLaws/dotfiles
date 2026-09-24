@@ -188,6 +188,15 @@ return {
 				desc = "Show Notification History",
 			},
 
+			-- Zoom de ventana (reemplaza a vim-maximizer, misma tecla)
+			{
+				"<leader>sm",
+				function()
+					require("snacks").zoom()
+				end,
+				desc = "Maximize/minimize a split",
+			},
+
 			-- Zen mode
 			{
 				"<leader>tz",
