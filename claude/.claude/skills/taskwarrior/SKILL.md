@@ -20,7 +20,7 @@ If the user says "plan task 1" or "think about task 1", use **plan**.
 
 1. **Get task details**: Run `task <id> export` to get the full task JSON (description, project, tags, priority, annotations, dependencies, etc.)
 
-2. **Read the associated note**: Get the task UUID from the export, then read the note file at `~/.task/notes/<uuid>.md`. This file may contain detailed context, instructions, or requirements for the task. If the file doesn't exist, proceed without it.
+2. **Read the associated note**: Check the `zknote` UDA in the export (also available via `task _get <id>.zknote`). If set, it holds a path relative to the zk notebook at `~/zk` — read `~/zk/<zknote>`. This file may contain detailed context, instructions, or requirements for the task. If the UDA is empty or the file doesn't exist, proceed without it.
 
 3. **Check dependencies**: If the task has dependencies (`depends` field in the JSON), run `task <dep_uuid> export` for each dependency to understand what this task depends on and whether those are completed.
 
@@ -28,7 +28,7 @@ If the user says "plan task 1" or "think about task 1", use **plan**.
 
 ## Plan mode
 
-After gathering context, append a plan to the note file (`~/.task/notes/<uuid>.md`):
+After gathering context, append a plan to the linked zk note (`~/zk/<zknote>`). If the task has no note yet, create one the same way `task note <id>` does: run `cd ~/zk && zk new --group task --title "<task description>" --print-path --no-input` (the `task` group prefixes the filename with `task-`), then link it with `task <id> modify zknote:<filename>`. Then append to it:
 
 - Add a separator line: `──────────────────────────────────────` (a long line of `─` characters)
 - Below it, write a heading `## Plan` followed by the date

@@ -1,0 +1,44 @@
+#!/bin/sh
+# tasknote — abre la nota zk vinculada a una tarea de taskwarrior.
+# Si la tarea no tiene nota, crea una (grupo "task" → archivo task-<slug>.md)
+# y la vincula en el UDA zknote. Se invoca como `task note <id>` vía alias.
+set -e
+
+ZK_DIR="${ZK_NOTEBOOK_DIR:-$HOME/zk}"
+export ZK_DIR
+
+# Sin argumentos: recolectar vínculos muertos. El icono refleja el UDA
+# zknote, no la existencia del archivo, así que si la nota se borró a mano
+# (rm) el vínculo queda huérfano hasta pasar por aquí.
+if [ -z "$1" ]; then
+    task rc.verbose=nothing zknote.any: export 2>/dev/null | python3 -c '
+import json, os, subprocess, sys
+zk = os.environ["ZK_DIR"]
+tasks = json.load(sys.stdin) if sys.stdin.readable() else []
+dead = [t for t in tasks if t.get("zknote") and not os.path.exists(os.path.join(zk, t["zknote"]))]
+for t in dead:
+    subprocess.run(["task", "rc.confirmation=off", "rc.verbose=nothing", t["uuid"], "modify", "zknote:"], check=False)
+    print("vínculo eliminado: [%s] %s -> %s" % (t.get("id", "-"), t["description"], t["zknote"]))
+if not dead:
+    print("sin vínculos muertos")
+'
+    exit 0
+fi
+
+uuid=$(task _get "$1".uuid)
+if [ -z "$uuid" ]; then
+    echo "tasknote: no existe la tarea '$1'" >&2
+    exit 1
+fi
+
+note=$(task _get "$uuid".zknote)
+
+if [ -z "$note" ]; then
+    title=$(task _get "$uuid".description)
+    path=$(cd "$ZK_DIR" && zk new --group task --title "$title" --print-path --no-input)
+    note=${path#"$ZK_DIR/"}
+    task rc.confirmation=off rc.verbose=nothing "$uuid" modify zknote:"$note"
+    echo "nota creada y vinculada: $note"
+fi
+
+exec "${EDITOR:-nvim}" "$ZK_DIR/$note"

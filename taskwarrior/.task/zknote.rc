@@ -1,0 +1,8 @@
+# Notas zk vinculadas a tareas (ver taskwarrior/.local/bin/tasknote).
+# Incluido desde ~/.taskrc, que no se versiona por ser local de máquina.
+uda.zknote.type=string
+uda.zknote.label=Note
+report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.countdown,due.relative,until.remaining,description,urgency,zknote.indicator
+report.next.labels=ID,Active,Age,Deps,P,Project,Tag,Recur,S,Due,Until,Description,Urg,Note
+uda.zknote.indicator=  
+alias.note=execute /Users/nicolaslasso/.local/bin/tasknote
