@@ -105,9 +105,14 @@ return {
 				},
 			},
 			-- Python
+			-- Sin pythonPath, pyright usa el python del sistema y no ve los
+			-- paquetes del env activo (conda/venv) → "could not be resolved".
 			pyright = {
 				settings = {
 					python = {
+						pythonPath = (vim.env.VIRTUAL_ENV and vim.env.VIRTUAL_ENV .. "/bin/python")
+							or (vim.env.CONDA_PREFIX and vim.env.CONDA_PREFIX .. "/bin/python")
+							or vim.fn.exepath("python3"),
 						analysis = {
 							typeCheckingMode = "basic",
 							diagnosticSeverityOverrides = {
