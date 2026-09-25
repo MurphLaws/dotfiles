@@ -2,7 +2,6 @@
   "aerial.nvim": { "branch": "nvim-0.11", "commit": "c5e56945d9703f7079ccff484b35d0e4c231dd6c" },
   "blink.cmp": { "branch": "main", "commit": "78336bc89ee5365633bcf754d93df01678b5c08f" },
   "conform.nvim": { "branch": "master", "commit": "016802de402556da54c36bd7359b441266b01cdd" },
-  "copilot.lua": { "branch": "master", "commit": "f76a0a281de089e27b605ec8017093f1aab73b07" },
   "flash.nvim": { "branch": "main", "commit": "5f0f270fdc7c5b0c21d903ee85b9cb06f2ac636a" },
   "focus.nvim": { "branch": "main", "commit": "0f51cb7ff2640737858249015b6af0ea6cb28904" },
   "friendly-snippets": { "branch": "main", "commit": "b4d01b0fdf3c9a549961c2f9ffe8dc09be166219" },
