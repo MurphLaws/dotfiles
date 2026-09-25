@@ -181,7 +181,3 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 
 # TinyTeX (LaTeX local)
 export PATH="$PATH:$HOME/Library/TinyTeX/bin/universal-darwin"
-
-# >>> Charter Access Tooling profile selector >>>
-[[ -r "/Users/nicolaslasso/Charter Repos/charter-access-tooling/shell/profile.zsh" ]] && source "/Users/nicolaslasso/Charter Repos/charter-access-tooling/shell/profile.zsh"
-# <<< Charter Access Tooling profile selector <<<
