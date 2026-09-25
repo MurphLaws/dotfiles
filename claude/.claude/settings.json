@@ -44,7 +44,8 @@
     "claude-hud@claude-hud": true,
     "clangd-lsp@claude-plugins-official": true,
     "vercel@claude-plugins-official": true,
-    "engram@engram": true
+    "engram@engram": true,
+    "ponytail@ponytail": true
   },
   "extraKnownMarketplaces": {
     "railway-skills": {
@@ -75,6 +76,12 @@
       "source": {
         "source": "github",
         "repo": "Gentleman-Programming/engram"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
       }
     }
   },
