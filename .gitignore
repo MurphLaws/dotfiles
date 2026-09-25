@@ -4,6 +4,20 @@ __pycache__/
 # Secretos: nunca versionar. El real vive solo en ~/.config/zsh/conf.d/secrets.zsh
 secrets.zsh
 *.local.zsh
+
+# Llaves y credenciales: nunca versionar, en ninguna forma.
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.env
+.env.*
+*.env
+credentials*
+*token*
+*.secret
 graphview-test/
 
 # Copilot local personal instructions (home-only, never commit)
