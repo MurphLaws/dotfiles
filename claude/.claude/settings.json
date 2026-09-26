@@ -90,7 +90,12 @@
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
   "skipAutoPermissionPrompt": true,
-  "_disabled_hooks": {
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c 'cols=${COLUMNS:-}; case \"$cols\" in \"\"|*[!0-9]*) cols=$(stty size </dev/tty 2>/dev/null | awk '\"'\"'{print $2}'\"'\"');; esac; case \"$cols\" in \"\"|*[!0-9]*) cols=120;; esac; export COLUMNS=$(( cols > 4 ? cols - 4 : 1 )); plugin_dir=$(ls -d \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/*/claude-hud/*/ 2>/dev/null | awk -F/ '\"'\"'{ print $(NF-1) \"\\t\" $(0) }'\"'\"' | grep -E '\"'\"'^[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]'\"'\"' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1 | cut -f2-); exec \"/opt/homebrew/opt/node@22/bin/node\" \"${plugin_dir}dist/index.js\"'",
+    "padding": 0
+  },
+  "hooks": {
     "SessionStart": [
       {
         "hooks": [
@@ -115,15 +120,6 @@
           {
             "type": "command",
             "command": "bash \"/Users/illico/.claude/hooks/gsd-session-state.sh\""
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/illico/.claude/hooks/ccmux-session-start.sh"
           }
         ]
       }
@@ -219,15 +215,6 @@
             "async": true
           }
         ]
-      },
-      {
-        "matcher": "idle_prompt|permission_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/illico/.claude/hooks/ccmux-state-notify.sh"
-          }
-        ]
       }
     ],
     "Stop": [
@@ -258,15 +245,6 @@
             "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
             "timeout": 10,
             "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/illico/.claude/hooks/ccmux-session-end.sh"
           }
         ]
       }
@@ -336,14 +314,5 @@
         ]
       }
     ]
-  },
-  "_disabled_statusLine": {
-    "type": "command",
-    "command": "node \"/Users/illico/.claude/hooks/gsd-statusline.js\""
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash -c 'cols=${COLUMNS:-}; case \"$cols\" in \"\"|*[!0-9]*) cols=$(stty size </dev/tty 2>/dev/null | awk '\"'\"'{print $2}'\"'\"');; esac; case \"$cols\" in \"\"|*[!0-9]*) cols=120;; esac; export COLUMNS=$(( cols > 4 ? cols - 4 : 1 )); plugin_dir=$(ls -d \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/*/claude-hud/*/ 2>/dev/null | awk -F/ '\"'\"'{ print $(NF-1) \"\\t\" $(0) }'\"'\"' | grep -E '\"'\"'^[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]'\"'\"' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1 | cut -f2-); exec \"/opt/homebrew/opt/node@22/bin/node\" \"${plugin_dir}dist/index.js\"'",
-    "padding": 0
   }
 }
