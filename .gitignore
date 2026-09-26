@@ -65,3 +65,4 @@ claude/.claude/tasks/
 # Zsh: plugins y tema clonados desde sus propios repos, no se versionan aquí
 zsh/.zsh/plugins/
 zsh/.zsh/powerlevel10k/
+claude/.claude/skills/synced/
