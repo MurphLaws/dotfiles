@@ -37,7 +37,8 @@ games/
 #   git add -f claude/.claude/projects/*/memory
 claude/.claude/backups/
 claude/.claude/cache/
-claude/.claude/plugins/
+claude/.claude/plugins/*
+!claude/.claude/plugins/claude-hud/
 claude/.claude/projects/
 claude/.claude/sessions/
 claude/.claude/session-env/
