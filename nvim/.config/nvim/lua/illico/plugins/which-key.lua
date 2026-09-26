@@ -42,6 +42,7 @@ return {
 			{ "<leader>s", group = "Search" },
 			{ "<leader>t", group = "Toggle" },
 			{ "<leader>w", group = "Window" },
+			{ "<leader>z", group = "Zk" },
 		})
 	end,
 }
