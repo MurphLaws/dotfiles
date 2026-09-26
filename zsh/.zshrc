@@ -61,6 +61,56 @@ alias nvimconfig="cd ~/.config/nvim/lua/illico/ && nvim ."
 alias gamedev="godot && cd ~/3dproto/ && nvim ."
 alias neorg="nvim ~/notes/index.norg"
 
+# ls con estado de git vía eza, en cuadrícula horizontal. Fuera de un repo
+# marca las carpetas que son repos con | (limpio, verde) o + (con cambios,
+# amarillo) y su rama, y ordena: carpetas normales, archivos, repos limpios y
+# repos con cambios. Dentro de un repo muestra el estado de cada archivo
+# (M modificado, N nuevo, etc.). Con argumentos (ls -a, ls ~/x) no reordena.
+# Los nombres de los repos van en naranja: eza solo permite colorear carpetas
+# por nombre desde un theme.yml, así que se genera uno por llamada con los
+# repos del directorio actual. En `ls` los "- -" de lo que no es repo quedan
+# ocultos (xx=8, estilo "oculto"); `ll` los conserva junto con permisos,
+# tamaño y fecha. `\ls` usa el ls original.
+export EZA_COLORS="Gc=38;2;152;195;121:Gd=38;2;229;192;123:Gm=38;2;97;175;239:Go=38;2;198;120;221"
+_eza_git() {
+  local -a view=(${(s: :)1}); shift
+  if git rev-parse --is-inside-work-tree &>/dev/null; then
+    eza --long --grid --git --group-directories-first $view "$@"
+    return
+  fi
+  if (( $# )); then
+    eza --long --grid --git-repos --group-directories-first $view "$@"
+    return
+  fi
+
+  local -a folders files clean dirty
+  local f
+  for f in *(N); do
+    if [[ -e $f/.git ]]; then
+      if [[ -n $(git -C $f status --porcelain 2>/dev/null) ]]; then
+        dirty+=$f
+      else
+        clean+=$f
+      fi
+    elif [[ -d $f ]]; then
+      folders+=$f
+    else
+      files+=$f
+    fi
+  done
+  (( $#folders + $#files + $#clean + $#dirty )) || return
+
+  local theme_dir="${TMPDIR:-/tmp}/eza-repos-$USER"
+  mkdir -p $theme_dir
+  print -r -- "filenames:" > $theme_dir/theme.yml
+  for f in $clean $dirty; do
+    print -r -- "  \"${${f//\\/\\\\}//\"/\\\"}\": {filename: {foreground: \"#d19a66\", is_bold: true}}" >> $theme_dir/theme.yml
+  done
+  EZA_CONFIG_DIR=$theme_dir eza --long --grid --list-dirs --sort=none --git-repos $view -- $folders $files $clean $dirty
+}
+ls() { EZA_COLORS="$EZA_COLORS:xx=8" _eza_git "--no-permissions --no-user --no-filesize --no-time" "$@" }
+ll() { _eza_git "--time-style=relative" "$@" }
+
 # Copilot CLI: autopilot with every tool/command auto-approved so it never
 # stalls on "could not request permission" prompts. These flags only affect
 # TOOL approvals — clarifying questions and user input still reach you.
@@ -181,3 +231,4 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 
 # TinyTeX (LaTeX local)
 export PATH="$PATH:$HOME/Library/TinyTeX/bin/universal-darwin"
+export ZK_NOTEBOOK_DIR="$HOME/zk"
