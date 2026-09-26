@@ -60,3 +60,7 @@ claude/.claude/daemon-auth-cooldown
 claude/.claude/daemon-auth-status.json
 claude/.claude/jobs/
 claude/.claude/tasks/
+
+# Zsh: plugins y tema clonados desde sus propios repos, no se versionan aquí
+zsh/.zsh/plugins/
+zsh/.zsh/powerlevel10k/
