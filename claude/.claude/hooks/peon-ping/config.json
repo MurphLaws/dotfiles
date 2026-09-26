@@ -28,7 +28,7 @@
   "session_ttl_days": 7,
   "use_sound_effects_device": true,
   "linux_audio_player": "",
-  "headphones_only": true,
+  "headphones_only": false,
   "meeting_detect": false,
   "suppress_sound_when_tab_focused": false,
   "notification_position": "top-center",
@@ -56,7 +56,7 @@
   "focus_detect_mode": "all",
   "terminal_tab_title": true,
   "notification_all_screens": true,
-  "notification_title_marker": "\u25cf",
+  "notification_title_marker": "●",
   "notification_title_ide": false,
   "tts": {
     "enabled": false,
