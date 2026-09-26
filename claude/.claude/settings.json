@@ -110,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10
           }
         ]
@@ -204,7 +204,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           },
@@ -223,7 +223,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           },
@@ -242,7 +242,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -255,7 +255,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -268,7 +268,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -281,7 +281,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -294,7 +294,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -307,7 +307,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-ping/peon.sh",
+            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
