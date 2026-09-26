@@ -2,7 +2,21 @@
   "lineLayout": "expanded",
   "showSeparators": true,
   "pathLevels": 3,
-  "elementOrder": ["project", "addedDirs", "context", "usage", "promptCache", "memory", "environment", "tools", "skills", "mcp", "agents", "todos", "sessionTime"],
+  "elementOrder": [
+    "project",
+    "addedDirs",
+    "context",
+    "usage",
+    "promptCache",
+    "memory",
+    "environment",
+    "tools",
+    "skills",
+    "mcp",
+    "agents",
+    "todos",
+    "sessionTime"
+  ],
   "display": {
     "showModel": true,
     "showProvider": true,
@@ -33,8 +47,7 @@
     "showSkills": true,
     "showMcp": true,
     "showAgents": true,
-    "showTodos": true,
-    "customLine": "X[t] = c + φ1*X[t-1] + ... + φp*X[t-p] + ε[t]"
+    "showTodos": true
   },
   "gitStatus": {
     "enabled": true,
