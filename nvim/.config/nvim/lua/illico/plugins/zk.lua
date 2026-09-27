@@ -26,6 +26,9 @@ return {
 			callback = function(ev)
 				local client = vim.lsp.get_client_by_id(ev.data.client_id)
 				if client and client.name == "zk" then
+					-- Completado de [[ lo da solo marksman (soporta headings con #);
+					-- con los dos activos cada nota salía duplicada en el menú.
+					client.server_capabilities.completionProvider = nil
 					vim.keymap.set("n", "<CR>", function()
 						-- zk y marksman devuelven cada uno el mismo destino; sin esto,
 						-- los 2 resultados abren el quickfix en vez de saltar.

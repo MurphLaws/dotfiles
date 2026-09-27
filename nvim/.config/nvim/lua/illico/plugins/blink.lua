@@ -10,7 +10,12 @@ return {
 		keymap = { preset = "super-tab" },
 		sources = {
 			default = { "lsp", "path", "snippets", "buffer" },
-			per_filetype = { org = { "orgmode", "buffer", "path" } },
+			per_filetype = {
+				org = { "orgmode", "buffer", "path" },
+				-- En notas solo interesan links (LSP) y rutas; snippets/buffer
+				-- meten fechas y palabras sueltas en el menú de [[.
+				markdown = { "lsp", "path" },
+			},
 			providers = {
 				orgmode = {
 					name = "Orgmode",

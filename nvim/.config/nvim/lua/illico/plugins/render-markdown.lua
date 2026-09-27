@@ -41,7 +41,25 @@ return {
 			enabled = false,
 		},
 		link = {
-			wiki = { icon = "" },
+			wiki = {
+				icon = "",
+				-- Look de los wiki-links con heading: [[nota#head]] se muestra como
+				-- "nota › head", [[#head]] como "› head" y [[x|alias]] como "alias".
+				-- Un [[link]] sin # se deja como está (return nil).
+				body = function(ctx)
+					if ctx.alias then
+						return ctx.alias
+					end
+					local note, heading = ctx.destination:match("^(.-)#(.+)$")
+					if not heading then
+						return nil
+					end
+					if note == "" then
+						return "› " .. heading
+					end
+					return note .. " › " .. heading
+				end,
+			},
 			hyperlink = "",
 			custom = {
 				web = { pattern = "^http", icon = "" },
@@ -73,6 +91,18 @@ return {
 			end
 		end
 		enforce_strikethrough()
+
+		-- **Negrita** y _cursiva_ con color propio: la fuente base de ghostty es
+		-- Bold, así que el peso ExtraBold apenas se nota; el color distingue.
+		local function enforce_strong()
+			for _, group in ipairs({ "@markup.strong", "@text.strong" }) do
+				vim.api.nvim_set_hl(0, group, { fg = "#d19a66", bold = true })
+			end
+			for _, group in ipairs({ "@markup.italic", "@text.emphasis" }) do
+				vim.api.nvim_set_hl(0, group, { fg = "#c678dd", italic = true })
+			end
+		end
+		enforce_strong()
 
 		-- Color atenuado para headings vacíos (sin contenido antes del
 		-- siguiente heading de igual o mayor jerarquía). Se aplica al icono y
@@ -155,21 +185,20 @@ return {
 			callback = function()
 				underline_links()
 				enforce_strikethrough()
+				enforce_strong()
 				enforce_dim()
 				enforce_bullet()
 			end,
 		})
 
-		-- Barras de sección en el statuscolumn (gutter): se repiten en las filas
-		-- envueltas y desplazan todo el texto por igual, así el wrap no corta la
-		-- guía ni pisa el contenido. `linebreak` corta en límites de palabra.
+		-- `linebreak` corta el wrap en límites de palabra. Las barras de sección
+		-- del statuscolumn (illico.util.md_section_bars) quedaron desactivadas.
 		vim.api.nvim_create_autocmd("FileType", {
 			group = vim.api.nvim_create_augroup("RenderMarkdownWrap", { clear = true }),
 			pattern = "markdown",
 			callback = function()
 				vim.opt_local.wrap = true
 				vim.opt_local.linebreak = true
-				require("illico.util.md_section_bars").attach(vim.api.nvim_get_current_buf())
 			end,
 		})
 	end,
