@@ -5,4 +5,4 @@ uda.zknote.label=Note
 report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.countdown,due.relative,until.remaining,description,urgency,zknote.indicator
 report.next.labels=ID,Active,Age,Deps,P,Project,Tag,Recur,S,Due,Until,Description,Urg,Note
 uda.zknote.indicator=󱗖 
-alias.note=execute /Users/nicolaslasso/.local/bin/tasknote
+alias.note=execute $HOME/.local/bin/tasknote

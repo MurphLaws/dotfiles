@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"/opt/homebrew/bin/node\" \"/Users/illico/.claude/hooks/gsd-check-update.js\""
+            "command": "\"node\" \"$HOME/.claude/hooks/gsd-check-update.js\""
           }
         ]
       },
@@ -55,7 +55,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10
           }
         ]
@@ -64,7 +64,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"/Users/illico/.claude/hooks/gsd-session-state.sh\""
+            "command": "bash \"$HOME/.claude/hooks/gsd-session-state.sh\""
           }
         ]
       }
@@ -75,7 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"/opt/homebrew/bin/node\" \"/Users/illico/.claude/hooks/gsd-context-monitor.js\"",
+            "command": "\"node\" \"$HOME/.claude/hooks/gsd-context-monitor.js\"",
             "timeout": 10
           }
         ]
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"/opt/homebrew/bin/node\" \"/Users/illico/.claude/hooks/gsd-read-injection-scanner.js\"",
+            "command": "\"node\" \"$HOME/.claude/hooks/gsd-read-injection-scanner.js\"",
             "timeout": 5
           }
         ]
@@ -95,7 +95,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"/Users/illico/.claude/hooks/gsd-phase-boundary.sh\"",
+            "command": "bash \"$HOME/.claude/hooks/gsd-phase-boundary.sh\"",
             "timeout": 5
           }
         ]
@@ -107,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"/opt/homebrew/bin/node\" \"/Users/illico/.claude/hooks/gsd-prompt-guard.js\"",
+            "command": "\"node\" \"$HOME/.claude/hooks/gsd-prompt-guard.js\"",
             "timeout": 5
           }
         ]
@@ -117,7 +117,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"/opt/homebrew/bin/node\" \"/Users/illico/.claude/hooks/gsd-read-guard.js\"",
+            "command": "\"node\" \"$HOME/.claude/hooks/gsd-read-guard.js\"",
             "timeout": 5
           }
         ]
@@ -127,7 +127,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"/opt/homebrew/bin/node\" \"/Users/illico/.claude/hooks/gsd-workflow-guard.js\"",
+            "command": "\"node\" \"$HOME/.claude/hooks/gsd-workflow-guard.js\"",
             "timeout": 5
           }
         ]
@@ -137,7 +137,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"/Users/illico/.claude/hooks/gsd-validate-commit.sh\"",
+            "command": "bash \"$HOME/.claude/hooks/gsd-validate-commit.sh\"",
             "timeout": 5
           }
         ]
@@ -149,13 +149,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           },
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/tmux-claude-done.sh",
+            "command": "$HOME/.claude/hooks/tmux-claude-done.sh",
             "timeout": 5,
             "async": true
           }
@@ -168,13 +168,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           },
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/tmux-claude-done.sh",
+            "command": "$HOME/.claude/hooks/tmux-claude-done.sh",
             "timeout": 5,
             "async": true
           }
@@ -187,7 +187,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -200,7 +200,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -213,7 +213,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -226,7 +226,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -239,7 +239,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -252,7 +252,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/illico/.claude/hooks/peon-gate.sh",
+            "command": "$HOME/.claude/hooks/peon-gate.sh",
             "timeout": 10,
             "async": true
           }
@@ -262,7 +262,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash -c 'cols=${COLUMNS:-}; case \"$cols\" in \"\"|*[!0-9]*) cols=$(stty size </dev/tty 2>/dev/null | awk '\"'\"'{print $2}'\"'\"');; esac; case \"$cols\" in \"\"|*[!0-9]*) cols=120;; esac; export COLUMNS=$(( cols > 4 ? cols - 4 : 1 )); plugin_dir=$(ls -d \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/*/claude-hud/*/ 2>/dev/null | awk -F/ '\"'\"'{ print $(NF-1) \"\\t\" $(0) }'\"'\"' | grep -E '\"'\"'^[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]'\"'\"' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1 | cut -f2-); exec \"/opt/homebrew/opt/node@22/bin/node\" \"${plugin_dir}dist/index.js\"'",
+    "command": "bash -c 'cols=${COLUMNS:-}; case \"$cols\" in \"\"|*[!0-9]*) cols=$(stty size </dev/tty 2>/dev/null | awk '\"'\"'{print $2}'\"'\"');; esac; case \"$cols\" in \"\"|*[!0-9]*) cols=120;; esac; export COLUMNS=$(( cols > 4 ? cols - 4 : 1 )); plugin_dir=$(ls -d \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/*/claude-hud/*/ 2>/dev/null | awk -F/ '\"'\"'{ print $(NF-1) \"\\t\" $(0) }'\"'\"' | grep -E '\"'\"'^[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]'\"'\"' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1 | cut -f2-); exec \"node\" \"${plugin_dir}dist/index.js\"'",
     "padding": 0
   },
   "enabledPlugins": {
