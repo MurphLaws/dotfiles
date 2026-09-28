@@ -12,29 +12,31 @@ sonidos (ver la sección de Copilot).
 > `/Users/illico` por tu `$HOME` real después de clonar:
 > `grep -rl "/Users/illico" ~/dotfiles` te dice qué archivos tocar.
 
-## 1. Requisitos
-
-```
-brew install stow git neovim tmux jq eza
-brew install --cask ghostty karabiner-elements font-jetbrains-mono-nerd-font
-```
-
-Opcionales según lo que uses en esa máquina: `taskwarrior`, `zk`.
-
-## 2. Clonar y enlazar
+## 1. Instalar (un solo comando)
 
 ```
 git clone https://github.com/MurphLaws/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-stow zsh tmux nvim ghostty fonts karabiner taskwarrior claude copilot
+~/dotfiles/bootstrap.sh
 ```
 
-Stow crea symlinks desde `$HOME` hacia el repo. Si un paquete falla por
-conflicto ("existing target"), es que ya hay un archivo real en esa ruta:
-muévelo (`mv ~/.config/nvim ~/.config/nvim.bak`) y repite el `stow` de ese
-paquete. Enlaza solo los paquetes que apliquen: si la máquina no tiene
-Claude Code, omite `claude`… salvo que quieras peon-ping (ver abajo, el
-adaptador vive dentro del paquete `claude`).
+Luego cierra Ghostty con Cmd+Q y ábrelo de nuevo. `bootstrap.sh` se puede
+repetir sin riesgo. Hace lo que clonar solo no hace:
+
+- Instala todo el `Brewfile`, incluida la JetBrains Mono Nerd Font (sin
+  ella Ghostty no tiene negrita ni itálica) y Ghostty.
+- Clona powerlevel10k y zsh-autosuggestions (no se versionan).
+- Copia `SlalomSymbols.ttf` a `~/Library/Fonts`.
+- Respalda `~/Library/Application Support/com.mitchellh.ghostty/config`:
+  Ghostty lo lee *después* de `~/.config/ghostty/config` y pisa tamaño,
+  fuente y tema.
+- Respalda (`*.bak-FECHA`) cualquier archivo real que choque y corre
+  `stow` de todos los paquetes.
+
+## 2. Manual (si no quieres el script)
+
+`brew bundle --file ~/dotfiles/Brewfile`, luego
+`stow zsh tmux nvim ghostty karabiner taskwarrior claude copilot`. Si un
+paquete falla con "existing target", mueve ese archivo a `.bak` y repite.
 
 ## 3. Notas por paquete
 
@@ -43,8 +45,8 @@ adaptador vive dentro del paquete `claude`).
   config) y fija la ventana en 191×47 celdas; ajusta si esa pantalla es
   más chica.
 - **nvim**: al primer arranque, lazy.nvim instala los plugins solo.
-- **fonts**: contiene `SlalomSymbols` (glyph propio); la fuente principal
-  es JetBrains Mono Nerd Font del cask de arriba.
+- **fonts**: no se stowea; `bootstrap.sh` copia `SlalomSymbols` a
+  `~/Library/Fonts`. La fuente principal viene del `Brewfile`.
 - **claude**: settings, hooks, skills y `CLAUDE.md` de Claude Code.
   Recuerda el reemplazo de `/Users/illico` si aplica.
 
