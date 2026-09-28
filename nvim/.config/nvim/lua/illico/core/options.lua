@@ -21,6 +21,9 @@ vim.opt.cursorline = true -- Resalta la línea donde está el cursor
 -- cierran sin preguntar nada.
 vim.opt.confirm = true
 
+-- Oculta las "~" de las líneas vacías tras el final del buffer.
+vim.opt.fillchars = { eob = " " }
+
 vim.opt.nu = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = "yes:2"
