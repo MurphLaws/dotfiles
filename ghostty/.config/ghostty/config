@@ -36,6 +36,10 @@ palette = 13=#bf68d9
 palette = 14=#48b0bd
 palette = 15=#f2f4f8
 
+# Tamaño inicial de la ventana en celdas (medido del tamaño de uso habitual).
+window-width = 191
+window-height = 47
+
 # Window — fullscreen no-nativo: "pantalla completa" es una ventana maximizada
 # en el Space actual (no un Space aparte), así QuartoSplit puede dividirla.
 macos-non-native-fullscreen = true
