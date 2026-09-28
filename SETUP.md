@@ -99,7 +99,46 @@ Cómo funciona cada pieza:
   neutro; `/skills` (o pedir una skill por nombre, p. ej. "clean") debe
   encontrarlas; al enviar un prompt debe sonar el peon.
 
-## 6. Si las configs no cambian
+## 6. Cambios recientes (2026-09-25 a 2026-09-28)
+
+Para el agente que configure otra máquina: esto es lo que cambió en estos
+días y lo que implica. Después de `git pull`, vuelve a correr
+`./bootstrap.sh` (es idempotente) y revisa cada punto.
+
+- **bootstrap.sh + Brewfile** (`270f8d1`): antes clonar no bastaba. Ahora
+  el script instala fuentes, Ghostty, zk y el resto, clona p10k y
+  zsh-autosuggestions, respalda la config de Ghostty en Application Support
+  y hace `stow`. `.zprofile` ya usa `$HOME` en vez de `/Users/illico`.
+- **Ghostty**: ventana por defecto 191×47 (`6c745a8`); si la pantalla es
+  más chica, bájalo en `ghostty/.config/ghostty/config`. La base de
+  texto es `font-style = Bold`, así que sin JetBrains Mono Nerd Font
+  instalada todo se ve distinto.
+- **tmux** (`a843c5e`): `default-terminal` pasó de `screen-256color` a
+  `tmux-256color` para tener itálicas reales dentro de tmux. Verifica con
+  `infocmp tmux-256color`; si falla, falta el terminfo (`brew install
+  ncurses` y reinicia tmux con `tmux kill-server`). El dashboard de ngrok
+  se lanza con `TERM=screen-256color ngrok ...`.
+- **nvim**: se ocultan las `~` de fin de buffer (`00f2f28`); notas
+  markdown pulidas (`94fdb96`): blink solo usa lsp y path en markdown, el
+  completado de `[[` lo da marksman, render-markdown muestra
+  `[[nota#head]]` como "nota › head". zk-nvim (`4696845`): `<leader>zi`
+  inserta link y `<CR>` sigue links. Requiere `zk` (Brewfile) y marksman
+  (lo instala Mason al abrir nvim). El notebook vive en `~/zk`
+  (`ZK_NOTEBOOK_DIR`, exportado en `.zshrc`) y **no está en este repo**:
+  clónalo o créalo aparte.
+- **zsh** (`5d356d8`): `ls`/`ll` son funciones con `eza` que muestran el
+  estado git de cada carpeta; `\ls` usa el ls original. Requiere `eza`.
+- **Claude Code**: `settings.json` usa modelo `opus` (`0a3d638`); los
+  hooks de peon-ping y GSD están activos (`e05f139`) y `peon-gate.sh`
+  (`964619a`) respeta `headphones_only` usando el tipo de dispositivo de
+  CoreAudio (funciona con macOS en español; necesita `jq`). claude-hud sin
+  la línea personalizada (`c2e6574`). La skill `pdf-to-epub` se versiona
+  (`67d8a3c`); sus dependencias de Python están en su
+  `requirements.txt`. `skills/synced/` se ignora.
+- **Copilot CLI** (`a4a1943`): paquete `copilot` que reutiliza
+  instrucciones, skills y peon-ping de Claude (sección 4).
+
+## 7. Si las configs no cambian
 
 Clonar no basta: sin `stow` no hay symlinks y todo se ve igual.
 
