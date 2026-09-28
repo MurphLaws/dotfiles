@@ -66,3 +66,8 @@ claude/.claude/tasks/
 zsh/.zsh/plugins/
 zsh/.zsh/powerlevel10k/
 claude/.claude/skills/synced/
+
+# peon-ping: el runtime lo instala `peon-ping-setup` (brew tap peonping/tap).
+# Solo viaja en el repo la configuración; los scripts, packs y estado, no.
+claude/.claude/hooks/peon-ping/*
+!claude/.claude/hooks/peon-ping/config.json

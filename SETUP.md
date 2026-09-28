@@ -63,9 +63,9 @@ Cómo funciona cada pieza:
 
 - **Skills**: Copilot CLI usa el mismo formato `SKILL.md` que Claude Code
   y busca skills personales en `~/.copilot/skills`. Ese directorio es un
-  symlink a las skills del paquete `claude`, así que las ~136 skills
-  quedan disponibles en ambos agentes sin duplicar nada. Ojo: las skills
-  que dependen de herramientas exclusivas de Claude Code (subagentes GSD,
+  symlink a las skills del paquete `claude`, así que quedan disponibles en
+  ambos agentes sin duplicar nada. Ojo: las skills
+  que dependen de herramientas exclusivas de Claude Code (subagentes,
   artifacts, MCP concretos) funcionarán parcialmente o no funcionarán en
   Copilot; las de puro texto/instrucciones (clean, build-prd,
   human-writing, humanizar-es, job-finder, pdf-to-epub…) funcionan igual.
@@ -126,10 +126,12 @@ días y lo que implica. Después de `git pull`, vuelve a correr
   (lo instala Mason al abrir nvim). El notebook vive en `~/zk`
   (`ZK_NOTEBOOK_DIR`, exportado en `.zshrc`) y **no está en este repo**:
   clónalo o créalo aparte.
-- **zsh** (`5d356d8`): `ls`/`ll` son funciones con `eza` que muestran el
-  estado git de cada carpeta; `\ls` usa el ls original. Requiere `eza`.
+- **zsh**: `ls`/`ll` son funciones con `eza`. `ls` es una cuadrícula limpia de
+  nombres y, fuera de un repo, colorea las carpetas que son repos (verde =
+  limpio, amarillo = con cambios); `ll` añade la vista detallada con rama y
+  estado en columnas. `\ls` usa el ls original. Requiere `eza`.
 - **Claude Code**: `settings.json` usa modelo `opus` (`0a3d638`); los
-  hooks de peon-ping y GSD están activos (`e05f139`) y `peon-gate.sh`
+  hooks de peon-ping están activos y `peon-gate.sh`
   (`964619a`) respeta `headphones_only` usando el tipo de dispositivo de
   CoreAudio (funciona con macOS en español; necesita `jq`). claude-hud sin
   la línea personalizada (`c2e6574`). La skill `pdf-to-epub` se versiona
