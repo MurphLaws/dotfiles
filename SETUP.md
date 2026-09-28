@@ -96,3 +96,18 @@ Cómo funciona cada pieza:
 - En Copilot CLI: pregunta algo en español y debe responder en español
   neutro; `/skills` (o pedir una skill por nombre, p. ej. "clean") debe
   encontrarlas; al enviar un prompt debe sonar el peon.
+
+## 6. Si las configs no cambian
+
+Clonar no basta: sin `stow` no hay symlinks y todo se ve igual.
+
+- Confirma que son symlinks y no archivos reales:
+  `ls -la ~/.zshrc ~/.config/nvim ~/.config/ghostty` debe mostrar
+  `-> .../dotfiles/...`. Si ves un archivo o directorio normal, había un
+  conflicto: muévelo a `.bak` y repite el `stow` de ese paquete.
+- `stow -nv <paquete>` simula el enlace y muestra qué haría o qué choca.
+- Powerlevel10k lento o con cuadrados: falta la Nerd Font, o hay un
+  `.zshrc`/`.p10k.zsh` viejo que no es el symlink del repo.
+- Si el usuario no es `illico`: `grep -rl "/Users/illico" ~/dotfiles` y
+  reemplaza por tu `$HOME`.
+- Abre una terminal nueva (o reinicia Ghostty) después de enlazar.
