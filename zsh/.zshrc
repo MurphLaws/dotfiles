@@ -74,7 +74,7 @@ alias neorg="nvim ~/notes/index.norg"
 #
 # `ll` es la vista detallada: permisos, tamaño, fecha y, fuera de un repo, la
 # rama y el estado de cada repo en columnas. `\ls` usa el ls original.
-export EZA_COLORS="Gc=38;2;152;195;121:Gd=38;2;229;192;123:Gm=38;2;97;175;239:Go=38;2;198;120;221"
+export EZA_COLORS="di=0:Gc=38;2;152;195;121:Gd=38;2;229;192;123:Gm=38;2;97;175;239:Go=38;2;198;120;221"
 
 # Clasifica el directorio actual y lo imprime con los repos coloreados.
 # $@ = flags de presentación de eza (--grid, --long, etc.).

@@ -71,3 +71,9 @@ claude/.claude/skills/synced/
 # Solo viaja en el repo la configuración; los scripts, packs y estado, no.
 claude/.claude/hooks/peon-ping/*
 !claude/.claude/hooks/peon-ping/config.json
+
+# claude-hud: cachés de runtime, nunca versionar (la config sí viaja)
+claude/.claude/plugins/claude-hud/config-cache/
+claude/.claude/plugins/claude-hud/context-cache/
+claude/.claude/plugins/claude-hud/speed-cache/
+claude/.claude/plugins/claude-hud/transcript-cache/

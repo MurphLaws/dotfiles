@@ -7,7 +7,7 @@ font-style-bold = ExtraBold
 font-style-italic = Bold Italic
 font-style-bold-italic = ExtraBold Italic
 
-font-size = 19
+font-size = 16
 font-thicken = true
 
 # Theme — onedark darker (match nvim onedark.nvim style=darker)
