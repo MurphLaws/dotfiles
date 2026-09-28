@@ -25,7 +25,6 @@ brew "eza"
 brew "jq"
 brew "fd"
 brew "node@22"
-brew "zk"
 # Brings the power of Copilot coding agent directly to your terminal
 cask "copilot-cli"
 cask "ghostty"

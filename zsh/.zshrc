@@ -247,4 +247,3 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 
 # TinyTeX (LaTeX local)
 export PATH="$PATH:$HOME/Library/TinyTeX/bin/universal-darwin"
-export ZK_NOTEBOOK_DIR="$HOME/zk"
