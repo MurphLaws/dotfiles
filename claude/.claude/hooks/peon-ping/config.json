@@ -35,7 +35,7 @@
   "linux_audio_player": "",
   "debug": false,
   "debug_retention_days": 7,
-  "headphones_only": false,
+  "headphones_only": true,
   "meeting_detect": false,
   "focus_detect": false,
   "focus_detect_mode": "all",
