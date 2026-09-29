@@ -15,18 +15,12 @@ vim.api.nvim_set_hl(0, "CriticAdd", { fg = "#a6da95", bg = "#1e3a2a" })
 vim.api.nvim_set_hl(0, "CriticDel", { fg = "#ed8796", strikethrough = true })
 vim.api.nvim_set_hl(0, "CriticSub", { fg = "#91d7e3", bg = "#1e3040" })
 
--- Numeración jerárquica (1.1., 2.3.4) al inicio de línea: no es Markdown
--- válido, así que tree-sitter no la pinta; se resalta a mano, un color por
--- nivel de profundidad (el `\ze\s` hace que cada patrón solo aplique a su
--- profundidad exacta, sin solaparse).
-vim.api.nvim_set_hl(0, "MdListLvl2", { fg = "#eed49f", bold = true })
-vim.api.nvim_set_hl(0, "MdListLvl3", { fg = "#a6da95", bold = true })
-vim.api.nvim_set_hl(0, "MdListLvl4", { fg = "#c6a0f6", bold = true })
+-- Numeración jerárquica (1.1., 2.3.4): resaltado compartido con norg en
+-- lua/illico/numlist.lua. El nivel 1 (`1.`) ya lo pinta tree-sitter en
+-- markdown, por eso se engancha desde el nivel 2.
+require("illico.numlist").attach(2)
 
 local critic_patterns = {
-  { "MdListLvl2", [[^\s*\d\+\%(\.\d\+\)\{1}\.\?\ze\s]] },
-  { "MdListLvl3", [[^\s*\d\+\%(\.\d\+\)\{2}\.\?\ze\s]] },
-  { "MdListLvl4", [[^\s*\d\+\%(\.\d\+\)\{3,}\.\?\ze\s]] },
   { "CriticComment", [[{>>\_.\{-}<<}]] },
   { "CriticHighlight", [[{==\_.\{-}==}]] },
   { "CriticAdd", [[{++\_.\{-}++}]] },
@@ -78,35 +72,3 @@ cmap("x", "<leader>mh", vwrap("{==", "==}"), "Critic: resaltar selección")
 cmap("x", "<leader>ma", vwrap("{++", "++}"), "Critic: añadir selección")
 cmap("x", "<leader>md", vwrap("{--", "--}"), "Critic: borrar selección")
 cmap("x", "<leader>mc", vwrap("{==", "==}{>><<}"), "Critic: resaltar + comentar")
-
--- ── <leader><CR>: siguiente ítem de lista ──────────────────────────────────
--- Estilo org-mode: crea abajo una línea con el mismo marcador que la actual.
---   - [ ] tarea   → - [ ]      |  - viñeta → -
---   3. numerada   → 4.         |  1.1. jerárquica → 1.2.
-local function next_list_item()
-  local line = vim.api.nvim_get_current_line()
-  local pre
-  local indent = line:match("^(%s*[-*+] )%[.%] ")
-  if indent then
-    pre = indent .. "[ ] "
-  else
-    local bullet = line:match("^(%s*[-*+] )")
-    if bullet then
-      pre = bullet
-    else
-      local ind, num, tail = line:match("^(%s*)([%d%.]-%d)(%.?)%s")
-      if ind then
-        pre = ind .. num:gsub("(%d+)$", function(n) return tostring(n + 1) end) .. tail .. " "
-      end
-    end
-  end
-  local row = vim.api.nvim_win_get_cursor(0)[1]
-  vim.fn.append(row, pre or "")
-  vim.api.nvim_win_set_cursor(0, { row + 1, 0 })
-  vim.cmd("startinsert!")
-end
-cmap("n", "<leader><CR>", next_list_item, "Lista: siguiente ítem")
-cmap("i", "<leader><CR>", function()
-  vim.cmd("stopinsert")
-  next_list_item()
-end, "Lista: siguiente ítem")

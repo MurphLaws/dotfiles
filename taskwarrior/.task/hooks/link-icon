@@ -8,11 +8,14 @@ whose task has a non-empty `link` value. On any error, emits stdin verbatim
 so reports are never lost.
 """
 import json
+import os
 import re
 import subprocess
 import sys
 
 ICON = "  "  # two-space padding + nf-fa-link (Nerd Font)
+NOTE_ICON = " \U000f15d6"  # 󱗖 nota en ~/.task/notes/<uuid>.md (hook `note`)
+NOTE_DIR = os.path.expanduser("~/.task/notes")
 ANSI_RE = re.compile(r"\033\[[0-9;]*m")
 
 
@@ -82,11 +85,14 @@ def render(raw):
         return raw
 
     has_link = {}
+    has_note = {}
     for t in tasks:
         tid = str(t.get("id", ""))
-        link = t.get("link", "")
         if tid:
-            has_link[tid] = bool(link)
+            has_link[tid] = bool(t.get("link", ""))
+            has_note[tid] = os.path.exists(
+                os.path.join(NOTE_DIR, "%s.md" % t.get("uuid", ""))
+            )
 
     new_lines = list(lines)
     for i in range(body_start, body_end):
@@ -94,8 +100,13 @@ def render(raw):
         if len(row) < id_end:
             continue
         id_str = ANSI_RE.sub("", row[id_start:id_end]).strip()
-        if id_str.isdigit() and has_link.get(id_str):
-            new_lines[i] = row.rstrip() + ICON
+        if not id_str.isdigit():
+            continue
+        suffix = (ICON if has_link.get(id_str) else "") + (
+            NOTE_ICON if has_note.get(id_str) else ""
+        )
+        if suffix:
+            new_lines[i] = row.rstrip() + suffix
 
     return "\n".join(new_lines)
 

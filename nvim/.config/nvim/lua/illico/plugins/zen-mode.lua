@@ -2,7 +2,7 @@ return {
 	"folke/zen-mode.nvim",
 	keys = {
 		{
-			"<leader>Z",
+			"<leader>z",
 			function()
 				require("zen-mode").toggle()
 			end,
@@ -12,7 +12,7 @@ return {
 	opts = {
 		window = {
 			backdrop = 1,
-			width = 0.7,
+			width = 0.6,
 			height = 1,
 			options = {
 				signcolumn = "yes:2",

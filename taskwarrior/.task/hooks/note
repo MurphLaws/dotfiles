@@ -14,11 +14,19 @@ if [[ "$1" == "-p" || "$1" == "--project" ]]; then
     fi
     nvim "${NOTE_DIR}/projects/${project}.md"
 elif [[ $# -eq 1 ]]; then
+    # Nota norg en el vault, mismo esquema que las capturas de neorg:
+    # ~/notes/task-<slug>.norg con el slug de la descripción.
     uuid=$(task _get $1.uuid)
-    note="${NOTE_DIR}/${uuid}.md"
-    nvim $note || exit 1
+    title=$(task _get ${uuid}.description)
+    slug=$(printf '%s' "$title" | python3 -c '
+import re, sys, unicodedata
+s = unicodedata.normalize("NFKD", sys.stdin.read()).encode("ascii", "ignore").decode().lower()
+print(re.sub(r"[^a-z0-9]+", "-", s).strip("-"))')
+    note="${HOME}/notes/task-${slug:-sin-titulo}.norg"
+    nvim "$note" || exit 1
 
-    task ${uuid} mod note:$(date +%Y-%m-%dT%H:%M:%S) >/dev/null
+    # Marcar el UDA solo si la nota quedó en disco (salir sin guardar = sin nota).
+    [ -f "$note" ] && task ${uuid} mod note:$(date +%Y-%m-%dT%H:%M:%S) >/dev/null
 else
     nvim ${NOTE_DIR}/buffer
 fi

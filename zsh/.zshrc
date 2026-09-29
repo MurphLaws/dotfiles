@@ -42,6 +42,9 @@ zstyle ':completion:*' list-colors ''
 # Alias de git (el plugin git de oh-my-zsh, copiado; helpers aparte)
 source "$HOME/.zsh/git-helpers.zsh"
 source "$HOME/.zsh/git-aliases.zsh"
+# Taskwarrior vanilla + un solo extra: `task` a secas pinta de verde la
+# primera tarea (taskwarrior no colorea por posición). Con argumentos el
+# binario corre intacto. task-aliases.zsh queda sin cargar a propósito.
 source "$HOME/.zsh/task-next-green.zsh"
 
 # Integracion de fzf: Ctrl-T inserta archivos en la linea de comandos,
@@ -74,7 +77,7 @@ alias neorg="nvim ~/notes/index.norg"
 #
 # `ll` es la vista detallada: permisos, tamaño, fecha y, fuera de un repo, la
 # rama y el estado de cada repo en columnas. `\ls` usa el ls original.
-export EZA_COLORS="di=0:Gc=38;2;152;195;121:Gd=38;2;229;192;123:Gm=38;2;97;175;239:Go=38;2;198;120;221"
+export EZA_COLORS="di=1;34:Gc=38;2;152;195;121:Gd=38;2;229;192;123:Gm=38;2;97;175;239:Go=38;2;198;120;221"
 
 # Clasifica el directorio actual y lo imprime con los repos coloreados.
 # $@ = flags de presentación de eza (--grid, --long, etc.).
@@ -109,12 +112,12 @@ _eza_repos() {
 
 ls() {
   if git rev-parse --is-inside-work-tree &>/dev/null; then
-    EZA_COLORS="$EZA_COLORS:xx=8" eza --long --grid --git --group-directories-first \
+    EZA_COLORS="$EZA_COLORS:xx=8" eza --long --git --group-directories-first --sort=Name \
       --no-permissions --no-user --no-filesize --no-time "$@"
     return
   fi
-  (( $# )) && { eza --grid --group-directories-first "$@"; return }
-  _eza_repos --grid
+  (( $# )) && { eza --oneline --group-directories-first --sort=Name "$@"; return }
+  _eza_repos --oneline
 }
 
 ll() {

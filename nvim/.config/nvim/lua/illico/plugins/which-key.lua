@@ -36,13 +36,12 @@ return {
 			{ "<leader>g", group = "Git" },
 			{ "<leader>G", group = "Godot" },
 			{ "<leader>l", group = "LSP" },
+			{ "<leader>n", group = "Neorg" },
 			{ "<leader>o", group = "Org" },
 			{ "<leader>os", group = "Slalom", icon = { icon = "󸀀", color = "blue" } },
 			{ "<leader>O", group = "Org" },
 			{ "<leader>s", group = "Search" },
 			{ "<leader>t", group = "Toggle" },
-			{ "<leader>w", group = "Window" },
-			{ "<leader>z", group = "Zk" },
-		})
+			{ "<leader>w", group = "Window" },		})
 	end,
 }
