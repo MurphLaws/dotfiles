@@ -62,7 +62,10 @@ return {
 				if capture_title == "" then
 					capture_title = "sin-titulo"
 				end
-				return prefix .. "-" .. slugify(capture_title)
+				-- $/ = raíz del workspace actual. Sin él, neorg resuelve la ruta
+				-- relativa al archivo del buffer llamador y revienta ("Parent
+				-- for / not found") si capturas desde un buffer sin nombre.
+				return "$/" .. prefix .. "-" .. slugify(capture_title)
 			end
 		end
 
@@ -70,6 +73,8 @@ return {
 			load = {
 				["core.defaults"] = {},
 				["core.concealer"] = {},
+				-- El contador [x/y] (z%) de tareas, en el mismo azul de los links.
+				["core.todo-introspector"] = { config = { highlight_group = "NorgProgress" } },
 				["core.integrations.telescope"] = {},
 				["external.templates"] = {
 					config = {
@@ -98,6 +103,13 @@ return {
 				},
 			},
 		})
+
+		-- Bold/cursiva/tachado con color propio, mismos colores onedark que
+		-- se usan en render-markdown.lua (naranja/violeta; gris para tachado).
+		vim.api.nvim_set_hl(0, "@neorg.markup.bold", { fg = "#d19a66", bold = true })
+		vim.api.nvim_set_hl(0, "@neorg.markup.italic", { fg = "#c678dd", italic = true })
+		vim.api.nvim_set_hl(0, "@neorg.markup.strikethrough", { fg = "#5c6370", strikethrough = true })
+		vim.api.nvim_set_hl(0, "NorgProgress", { fg = "#61afef" })
 
 		-- Captura a pantalla completa: neorg-capture abre un :split hardcodeado
 		-- (sin opción de config), así que se mueve esa ventana a su propio tab

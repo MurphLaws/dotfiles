@@ -63,6 +63,7 @@ source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 alias nvimconfig="cd ~/.config/nvim/lua/illico/ && nvim ."
 alias gamedev="godot && cd ~/3dproto/ && nvim ."
 alias neorg="nvim ~/notes/index.norg"
+alias notes="nvim ~/notes/"
 
 # ls con estado de git vía eza.
 #
