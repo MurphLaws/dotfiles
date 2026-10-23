@@ -9,11 +9,21 @@
                         "product_id": 6519,
                         "vendor_id": 12951
                     }
+                },
+                {
+                    "identifiers": {
+                        "vendor_id": 12951,
+                        "product_id": 6519,
+                        "is_pointing_device": true
+                    },
+                    "ignore": true
                 }
             ],
             "name": "Default profile",
             "selected": true,
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+            "virtual_hid_keyboard": {
+                "keyboard_type_v2": "ansi"
+            }
         }
     ]
 }
