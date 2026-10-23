@@ -130,8 +130,8 @@ return {
 				end
 				local accent = theme_fg("Directory", "#8aadf4")
 				local dim = theme_fg("Comment", "#6e738d")
-				local text = theme_fg("Normal", "#cad3f5")
-				local warn = theme_fg("DiagnosticWarn", "#eed49f")
+				-- Hex fijo a propósito: el Normal de onedark es demasiado gris.
+				local text = "#f0f0f0"
 				local err = theme_fg("DiagnosticError", "#ed8796")
 
 				table.insert(result, { "▊ ", guifg = accent })
@@ -159,7 +159,7 @@ return {
 				table.insert(result, {
 					filename,
 					gui = modified and "bold,italic" or "bold",
-					guifg = modified and warn or text,
+					guifg = text,
 				})
 
 				-- Modified indicator
