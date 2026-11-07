@@ -7,7 +7,7 @@ font-style-bold = ExtraBold
 font-style-italic = Bold Italic
 font-style-bold-italic = ExtraBold Italic
 
-font-size = 16
+font-size = 19
 font-thicken = true
 
 # Theme — oxide (match nvim oxidescheme/nvim; valores del port oficial oxidescheme/ghostty)
