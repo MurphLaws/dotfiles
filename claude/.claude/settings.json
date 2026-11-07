@@ -39,7 +39,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
@@ -225,5 +225,10 @@
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
   "switchModelsOnFlag": true,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "autoCompactWindow": 400000
+    }
+  }
 }

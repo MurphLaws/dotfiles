@@ -16,8 +16,8 @@ return {
 			height = 1,
 			options = {
 				signcolumn = "yes:2",
-				number = false,
-				relativenumber = false,
+				number = true,
+				relativenumber = true,
 				cursorline = false,
 				cursorcolumn = false,
 				foldcolumn = "0",
@@ -42,6 +42,15 @@ return {
 				if view.bg_win and vim.api.nvim_win_is_valid(view.bg_win) then
 					vim.wo[view.bg_win].winblend = 0
 					vim.wo[view.bg_win].fillchars = "eob: "
+				end
+				-- zen-mode centra la VENTANA; con números + signcolumn el texto
+				-- queda corrido a la derecha. Desplazar la ventana media gutter
+				-- a la izquierda para que el TEXTO quede centrado.
+				if view.win and vim.api.nvim_win_is_valid(view.win) then
+					local textoff = vim.fn.getwininfo(view.win)[1].textoff
+					local cfg = vim.api.nvim_win_get_config(view.win)
+					cfg.col = math.max(0, cfg.col - math.floor(textoff / 2))
+					vim.api.nvim_win_set_config(view.win, cfg)
 				end
 			end)
 			-- focus.nvim auto-resizes the active window and eats zen-mode's

@@ -209,10 +209,10 @@ vim.api.nvim_create_autocmd("FileType", {
 		build_function_folds()
 
 		local opts = { buffer = args.buf, silent = true }
-		vim.keymap.set("n", "<leader>zm", fold_all_functions, vim.tbl_extend("force", opts, { desc = "Godot: fold all functions" }))
-		vim.keymap.set("n", "<leader>zr", unfold_all_functions, vim.tbl_extend("force", opts, { desc = "Godot: unfold all functions" }))
-		vim.keymap.set("n", "<leader>zc", fold_function_here, vim.tbl_extend("force", opts, { desc = "Godot: fold function under cursor" }))
-		vim.keymap.set("n", "<leader>zo", unfold_function_here, vim.tbl_extend("force", opts, { desc = "Godot: unfold function under cursor" }))
+		vim.keymap.set("n", "<leader>Gm", fold_all_functions, vim.tbl_extend("force", opts, { desc = "Godot: fold all functions" }))
+		vim.keymap.set("n", "<leader>Gr", unfold_all_functions, vim.tbl_extend("force", opts, { desc = "Godot: unfold all functions" }))
+		vim.keymap.set("n", "<leader>Gc", fold_function_here, vim.tbl_extend("force", opts, { desc = "Godot: fold function under cursor" }))
+		vim.keymap.set("n", "<leader>Go", unfold_function_here, vim.tbl_extend("force", opts, { desc = "Godot: unfold function under cursor" }))
 	end,
 })
 
